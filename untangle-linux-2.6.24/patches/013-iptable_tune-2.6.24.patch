@@ -1,0 +1,165 @@
+Index: linux-source-2.6.24/net/ipv4/netfilter/Kconfig
+===================================================================
+--- linux-source-2.6.24.orig/net/ipv4/netfilter/Kconfig	2007-12-27 05:20:16.000000000 +0000
++++ linux-source-2.6.24/net/ipv4/netfilter/Kconfig	2007-12-27 05:21:56.000000000 +0000
+@@ -398,6 +398,18 @@
+ 	  If you want to compile it as a module, say M here and read
+ 	  <file:Documentation/kbuild/modules.txt>.  If unsure, say `N'.
+ 
++# tune + specific targets
++config IP_NF_TUNE
++	tristate  'tune table support (adds a chain after POSTROUTING nat)'
++	depends on IP_NF_IPTABLES
++	help
++	  This option adds a `tune' table to iptables. This table is the very
++	  last in the netfilter framework and hooks in at the POSTROUTING
++	  chain.
++	
++	  If you want to compile it as a module, say M here and read
++	  <file:Documentation/modules.txt>.  If unsure, say `N'.
++
+ # ARP tables
+ config IP_NF_ARPTABLES
+ 	tristate "ARP tables support"
+Index: linux-source-2.6.24/net/ipv4/netfilter/Makefile
+===================================================================
+--- linux-source-2.6.24.orig/net/ipv4/netfilter/Makefile	2007-12-27 05:20:16.000000000 +0000
++++ linux-source-2.6.24/net/ipv4/netfilter/Makefile	2007-12-27 05:21:56.000000000 +0000
+@@ -45,6 +45,7 @@
+ obj-$(CONFIG_IP_NF_MANGLE) += iptable_mangle.o
+ obj-$(CONFIG_NF_NAT) += iptable_nat.o
+ obj-$(CONFIG_IP_NF_RAW) += iptable_raw.o
++obj-$(CONFIG_IP_NF_TUNE) += iptable_tune.o
+ 
+ # matches
+ obj-$(CONFIG_IP_NF_MATCH_ADDRTYPE) += ipt_addrtype.o
+Index: linux-source-2.6.24/net/ipv4/netfilter/iptable_tune.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ linux-source-2.6.24/net/ipv4/netfilter/iptable_tune.c	2007-12-27 05:21:56.000000000 +0000
+@@ -0,0 +1,125 @@
++/*
++ * 'raw' table, which is the very first hooked in at PRE_ROUTING and LOCAL_OUT .
++ *
++ * Copyright (C) 2003 Jozsef Kadlecsik <kadlec@blackhole.kfki.hu>
++ */
++#include <linux/module.h>
++#include <linux/netfilter_ipv4/ip_tables.h>
++#include <net/ip.h>
++
++#define TUNE_VALID_HOOKS ((1 << NF_IP_POST_ROUTING) | (1 << NF_IP_LOCAL_OUT))
++
++static struct
++{
++	struct ipt_replace repl;
++	struct ipt_standard entries[2];
++	struct ipt_error term;
++} initial_table __initdata = {
++	.repl = {
++		.name = "tune",
++		.valid_hooks = TUNE_VALID_HOOKS,
++		.num_entries = 3,
++		.size = sizeof(struct ipt_standard) * 2 + sizeof(struct ipt_error),
++		.hook_entry = {
++			[NF_IP_POST_ROUTING] = 0,
++			[NF_IP_LOCAL_OUT] = sizeof(struct ipt_standard)
++		},
++		.underflow = {
++			[NF_IP_POST_ROUTING] = 0,
++			[NF_IP_LOCAL_OUT]  = sizeof(struct ipt_standard)
++		},
++	},
++	.entries = {
++		IPT_STANDARD_INIT(NF_ACCEPT),	/* PRE_ROUTING */
++		IPT_STANDARD_INIT(NF_ACCEPT),	/* LOCAL_OUT */
++	},
++	.term = IPT_ERROR_INIT,			/* ERROR */
++};
++
++static struct xt_table packet_raw = {
++	.name = "tune",
++	.valid_hooks =  TUNE_VALID_HOOKS,
++	.lock = RW_LOCK_UNLOCKED,
++	.me = THIS_MODULE,
++	.af = AF_INET,
++};
++
++/* The work comes in here from netfilter.c. */
++static unsigned int
++ipt_hook(unsigned int hook,
++	 struct sk_buff *skb,
++	 const struct net_device *in,
++	 const struct net_device *out,
++	 int (*okfn)(struct sk_buff *))
++{
++	return ipt_do_table(skb, hook, in, out, &packet_raw);
++}
++
++static unsigned int
++ipt_local_hook(unsigned int hook,
++	       struct sk_buff *skb,
++	       const struct net_device *in,
++	       const struct net_device *out,
++	       int (*okfn)(struct sk_buff *))
++{
++	/* root is playing with raw sockets. */
++	if (skb->len < sizeof(struct iphdr) ||
++	    ip_hdrlen(skb) < sizeof(struct iphdr)) {
++		if (net_ratelimit())
++			printk("iptable_raw: ignoring short SOCK_RAW"
++			       "packet.\n");
++		return NF_ACCEPT;
++	}
++	return ipt_do_table(skb, hook, in, out, &packet_raw);
++}
++
++/* 'raw' is the very first table. */
++static struct nf_hook_ops ipt_ops[] = {
++	{
++		.hook = ipt_hook,
++		.owner = THIS_MODULE,
++		.pf = PF_INET,
++		.hooknum = NF_IP_POST_ROUTING,
++		.priority = NF_IP_PRI_LAST,
++		.owner = THIS_MODULE,
++	},
++	{
++		.hook = ipt_local_hook,
++		.owner = THIS_MODULE,
++		.pf = PF_INET,
++		.hooknum = NF_IP_LOCAL_OUT,
++		.priority = NF_IP_PRI_LAST,
++		.owner = THIS_MODULE,
++	},
++};
++
++static int __init iptable_raw_init(void)
++{
++	int ret;
++
++	/* Register table */
++	ret = ipt_register_table(&packet_raw, &initial_table.repl);
++	if (ret < 0)
++		return ret;
++
++	/* Register hooks */
++	ret = nf_register_hooks(ipt_ops, ARRAY_SIZE(ipt_ops));
++	if (ret < 0)
++		goto cleanup_table;
++
++	return ret;
++
++ cleanup_table:
++	ipt_unregister_table(&packet_raw);
++	return ret;
++}
++
++static void __exit iptable_raw_fini(void)
++{
++	nf_unregister_hooks(ipt_ops, ARRAY_SIZE(ipt_ops));
++	ipt_unregister_table(&packet_raw);
++}
++
++module_init(iptable_raw_init);
++module_exit(iptable_raw_fini);
++MODULE_LICENSE("GPL");

@@ -1,0 +1,34 @@
+#FIXME: make this better !!!
+
+BUILDDEPS=sudo fakeroot debhelper module-assistant module-init-tools kernel-wedge xmlto docbook-utils gs transfig bzip2 sharutils cpio rpm sed g++ lftp devscripts apt-utils \
+libc6-dev libqt3-mt-dev libgtk2.0-dev libxxf86misc-dev libxtst-dev libxxf86vm-dev libxinerama-dev libstdc++5 liburi-perl libncurses5-dev
+
+REPOSITORY=hardy
+
+EXTRADCHARGS:= --distributor Untangle
+
+include common.mk
+
+
+pkgs::	rmpkg metapkg
+
+
+# Get rid of packages we don't need.
+# Ugly alert. XXX
+legitify:
+	mkdir -p notlegit
+	for i in *deb; do dpkg-deb -I $$i | grep untangle | grep -v -q ${OURVERSION} || mv $$i notlegit; done
+	mv notlegit/linux-libc-dev*deb .
+	mv notlegit/linux-headers*_all.deb .
+	mv notlegit/linux-source*_all.deb .
+	mv notlegit/linux-restricted-modules-common*deb .
+	mv notlegit/nvidia-glx-new_*deb .
+
+
+# Utility rule to fetch the new ones
+getsrc:
+	sudo apt-get update
+	apt-get --download-only source linux-image
+	apt-get --download-only source linux-image-2.6.24-12-generic
+	apt-get --download-only source linux-restricted-modules-2.6.24-12-generic
+	apt-get --download-only source linux-ubuntu-modules-2.6.24-12-generic

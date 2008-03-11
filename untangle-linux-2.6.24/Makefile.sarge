@@ -1,0 +1,36 @@
+#FIXME: make this better !!!
+
+BUILDDEPS=sudo fakeroot debhelper module-assistant module-init-tools kernel-wedge xmlto docbook-utils gs transfig bzip2 sharutils cpio rpm sed gcc-3.4 g++ lftp devscripts apt-utils \
+libc6-dev libqt3-mt-dev libgtk2.0-dev libxtst-dev libstdc++5
+
+REPOSITORY=sarge
+
+EXTRAPATCHES:=100-bootsplash-3.1.6-2.6.24.patch
+
+include common.mk
+
+pkgs::	sargeumpkg sargemetapkg
+
+sargeumpkg:	${UMWORKDIR} force
+# Need something better than this.
+	sudo dpkg -i linux-headers-${KVER}-${KDEBVER}_${KVER}-${KUPVER}${OURVERSION}_all.deb linux-headers-${KVER}-${KDEBVER}-untangle_${KVER}-${KUPVER}${OURVERSION}_i386.deb linux-headers-${KVER}-${KDEBVER}-virtual-untangle_${KVER}-${KUPVER}${OURVERSION}_i386.deb
+	sudo rm -f /usr/src/linux-headers-untangle;sudo ln -s /usr/src/linux-headers-${KVER}-${KDEBVER}-untangle /usr/src/linux-headers-untangle
+	sudo rm -f /usr/src/linux-headers-virtual-untangle;sudo ln -s /usr/src/linux-headers-${KVER}-${KDEBVER}-virtual-untangle /usr/src/linux-headers-virtual-untangle
+	cd ${UMWORKDIR}; ${DOPTIONS} fakeroot debian/rules clean binary-debs CC=gcc-3.4 arch=i386 flavours="untangle"
+	cd ${UMWORKDIR}; ${VDOPTIONS} fakeroot debian/rules clean binary-debs CC=gcc-3.4 arch=i386 flavours="virtual-untangle"
+
+# Need special handling since we don't have dpkg-dev > 1.13
+sargemetapkg:	${METAWORKDIR} force
+	cd ${METAWORKDIR}; sed -s -i -e "s/\$${binary:Version}/${KVER}.${METAUPVER}${OURVERSION}/g" debian/control.d/* debian/control.common; rm debian/control
+	cd ${METAWORKDIR}; ${DOPTIONS} fakeroot debian/rules debian/control clean binary arch=i386 flavours="untangle"
+	cd ${METAWORKDIR}; ${VDOPTIONS} fakeroot debian/rules debian/control clean binary arch=i386 flavours="virtual-untangle"
+
+# Get rid of packages we don't need.
+# Ugly alert. XXX
+legitify:
+	mkdir -p notlegit
+	for i in *deb; do dpkg-deb -I $$i | grep untangle | grep -v -q ${OURVERSION} || mv $$i notlegit; done
+	mv notlegit/linux-libc-dev*deb .
+	mv notlegit/linux-headers-*_all.deb .
+	mv notlegit/linux-source-*_all.deb .
+	mv linux-restricted-*deb notlegit

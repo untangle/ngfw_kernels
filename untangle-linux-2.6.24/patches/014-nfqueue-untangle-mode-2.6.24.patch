@@ -1,0 +1,149 @@
+Index: linux-source-2.6.24/net/netfilter/nfnetlink_queue.c
+===================================================================
+--- linux-source-2.6.24.orig/net/netfilter/nfnetlink_queue.c	2007-12-18 14:09:50.000000000 +0000
++++ linux-source-2.6.24/net/netfilter/nfnetlink_queue.c	2007-12-27 05:22:00.000000000 +0000
+@@ -28,6 +28,11 @@
+ #include <linux/list.h>
+ #include <net/sock.h>
+ 
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++#include <net/netfilter/nf_conntrack.h>
++#include <net/netfilter/nf_conntrack_core.h>
++#endif
++
+ #include <asm/atomic.h>
+ 
+ #ifdef CONFIG_BRIDGE_NETFILTER
+@@ -70,6 +75,10 @@
+ 	spinlock_t lock;
+ 
+ 	struct list_head queue_list;		/* packets in queue */
++
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++	int untangle_mode;			/* append conntrack info to queued packets*/
++#endif
+ };
+ 
+ typedef int (*nfqnl_cmpfn)(struct nfqnl_queue_entry *, unsigned long);
+@@ -139,7 +148,9 @@
+ 	inst = kzalloc(sizeof(*inst), GFP_ATOMIC);
+ 	if (!inst)
+ 		goto out_unlock;
+-
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++	inst->untangle_mode = 0;
++#endif
+ 	inst->queue_num = queue_num;
+ 	inst->peer_pid = pid;
+ 	inst->queue_maxlen = NFQNL_QMAX_DEFAULT;
+@@ -290,6 +301,13 @@
+ {
+ 	int status = 0;
+ 
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++	if (mode & NFQNL_COPY_UNTANGLE_MODE) {
++	  queue->untangle_mode = 1;
++	  mode = mode & ~NFQNL_COPY_UNTANGLE_MODE;
++	}
++#endif
++
+ 	switch (mode) {
+ 	case NFQNL_COPY_NONE:
+ 	case NFQNL_COPY_META:
+@@ -351,6 +369,11 @@
+ 	struct net_device *outdev;
+ 	__be32 tmp_uint;
+ 
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++	enum ip_conntrack_info ctinfo;
++	struct nf_conn *ct = NULL;
++#endif
++
+ 	QDEBUG("entered\n");
+ 
+ 	size =    NLMSG_ALIGN(sizeof(struct nfgenmsg))
+@@ -365,6 +388,16 @@
+ 		+ nla_total_size(sizeof(struct nfqnl_msg_packet_hw))
+ 		+ nla_total_size(sizeof(struct nfqnl_msg_packet_timestamp));
+ 
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++		if( queue->untangle_mode){
++			size +=
++			  NFA_SPACE(sizeof(enum ip_conntrack_info))
++			+ NFA_SPACE(sizeof(struct nf_conntrack_tuple))  /* dir original */
++			+ NFA_SPACE(sizeof(struct nf_conntrack_tuple));  /* dir reply */
++		}
++		
++#endif
++
+ 	outdev = entinf->outdev;
+ 
+ 	spin_lock_bh(&queue->lock);
+@@ -501,6 +534,16 @@
+ 
+ 		NLA_PUT(skb, NFQA_TIMESTAMP, sizeof(ts), &ts);
+ 	}
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++	if (queue->untangle_mode){
++		ct = nf_ct_get(entskb, &ctinfo);
++		if ( ct ) {
++			NLA_PUT(skb, NFQA_CTINFO, sizeof(ctinfo), &ctinfo);
++			NLA_PUT(skb, NFQA_CT_DIR_ORIGINAL, sizeof(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple),  &ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple);
++			NLA_PUT(skb, NFQA_CT_DIR_REPLY, sizeof(ct->tuplehash[IP_CT_DIR_REPLY].tuple), &ct->tuplehash[IP_CT_DIR_REPLY].tuple);
++	  	}
++	}
++#endif
+ 
+ 	if (data_len) {
+ 		struct nlattr *nla;
+Index: linux-source-2.6.24/include/linux/netfilter/nfnetlink_queue.h
+===================================================================
+--- linux-source-2.6.24.orig/include/linux/netfilter/nfnetlink_queue.h	2007-12-18 14:09:49.000000000 +0000
++++ linux-source-2.6.24/include/linux/netfilter/nfnetlink_queue.h	2007-12-27 05:22:00.000000000 +0000
+@@ -42,6 +42,12 @@
+ 	NFQA_HWADDR,			/* nfqnl_msg_packet_hw */
+ 	NFQA_PAYLOAD,			/* opaque data payload */
+ 
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++	NFQA_CTINFO,
++	NFQA_CT_DIR_ORIGINAL,
++	NFQA_CT_DIR_REPLY,
++#endif
++
+ 	__NFQA_MAX
+ };
+ #define NFQA_MAX (__NFQA_MAX - 1)
+@@ -72,6 +78,12 @@
+ 	NFQNL_COPY_PACKET,
+ };
+ 
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++/* ORed with  nfqnl_config_mode to indicate that */
++/* conntrack info should be added to each queued packet */
++#define NFQNL_COPY_UNTANGLE_MODE 0x10
++#endif
++
+ struct nfqnl_msg_config_params {
+ 	__be32		copy_range;
+ 	u_int8_t	copy_mode;	/* enum nfqnl_config_mode */
+Index: linux-source-2.6.24/net/netfilter/Kconfig
+===================================================================
+--- linux-source-2.6.24.orig/net/netfilter/Kconfig	2007-12-18 14:09:50.000000000 +0000
++++ linux-source-2.6.24/net/netfilter/Kconfig	2007-12-27 05:22:00.000000000 +0000
+@@ -13,7 +13,15 @@
+ 	help
+ 	  If this option is enabled, the kernel will include support
+ 	  for queueing packets via NFNETLINK.
+-	  
++
++config NFNETLINK_COPY_UNTANGLE_MODE
++	bool "NFNETLINK untangle copy mode"
++	depends on NETFILTER_NETLINK
++	help
++	  If this option is enabled, the kernel will include support
++	  for appending conntrack info to queueed packets. to use this
++	  requires the use of untnagle's libnetfilter_queue.
++
+ config NETFILTER_NETLINK_LOG
+ 	tristate "Netfilter LOG over NFNETLINK interface"
+ 	depends on NETFILTER_NETLINK
