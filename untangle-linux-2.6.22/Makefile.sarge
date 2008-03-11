@@ -1,0 +1,72 @@
+#FIXME: make this better !!!
+
+BUILDDEPS=sudo fakeroot debhelper module-assistant module-init-tools kernel-wedge xmlto docbook-utils gs transfig bzip2 sharutils cpio rpm sed gcc-3.4 g++ \
+libc6-dev libqt3-mt-dev libgtk2.0-dev libxtst-dev libstdc++5 lftp
+
+REPOSITORY=sarge
+
+EXTRAPATCHES:=100-bootsplash-3.1.6-2.6.22.patch
+
+SQFSUPVER=3.2r2
+SQFSWORKDIR=modules/squashfs
+SQFSTAR=squashfs.tar.bz2
+SQFSOURPATCH=squashfs_${SQFSUPVER}-2build1-untangle.diff.gz
+
+UDEVUPVER=0.105
+UDEVWORKDIR=udev-${UDEVUPVER}
+UDEVDSC=udev_${UDEVUPVER}-4~bpo.1.dsc
+UDEVOURPATCH=udev_${UDEVUPVER}-4~bpo.1-untangle.diff.gz
+
+include common.mk
+
+pkgs::	metapkg squashfspkg udevpkg
+
+umpkg:	${UMWORKDIR} force
+# Need something better than this.
+	sudo dpkg -i linux-headers-${KVER}-${KDEBVER}_${KVER}-${KUPVER}${OURVERSION}_all.deb linux-headers-${KVER}-${KDEBVER}-untangle_${KVER}-${KUPVER}${OURVERSION}_i386.deb linux-headers-${KVER}-${KDEBVER}-virtual-untangle_${KVER}-${KUPVER}${OURVERSION}_i386.deb
+	sudo rm -f /usr/src/linux-headers-untangle;sudo ln -s /usr/src/linux-headers-${KVER}-${KDEBVER}-untangle /usr/src/linux-headers-untangle
+	sudo rm -f /usr/src/linux-headers-virtual-untangle;sudo ln -s /usr/src/linux-headers-${KVER}-${KDEBVER}-virtual-untangle /usr/src/linux-headers-virtual-untangle
+	cd ${UMWORKDIR}; ${DOPTIONS} fakeroot debian/rules clean binary-debs CC=gcc-3.4 arch=i386 flavours="untangle"
+	cd ${UMWORKDIR}; ${VDOPTIONS} fakeroot debian/rules clean binary-debs CC=gcc-3.4 arch=i386 flavours="virtual-untangle"
+
+# Need special handling since we don't have dpkg-dev > 1.13
+metapkg:	${METAWORKDIR} force
+	cd ${METAWORKDIR}; sed -s -i -e "s/\$${binary:Version}/${KVER}.${METAUPVER}${OURVERSION}/g" debian/control.d/*; rm debian/control
+	cd ${METAWORKDIR}; ${DOPTIONS} fakeroot debian/rules debian/control clean binary arch=i386 flavours="untangle"
+	cd ${METAWORKDIR}; ${VDOPTIONS} fakeroot debian/rules debian/control clean binary arch=i386 flavours="virtual-untangle"
+
+squashfspkg: ${SQFSWORKDIR} force
+	cd ${SQFSWORKDIR}; ${DOPTIONS} KSRC=/usr/src/linux-headers-${KVER}-${KDEBVER}-untangle fakeroot debian/rules kdist_clean kdist_config binary-modules
+	cd ${SQFSWORKDIR}; ${VDOPTIONS} KSRC=/usr/src/linux-headers-${KVER}-${KDEBVER}-virtual-untangle fakeroot debian/rules kdist_clean kdist_config binary-modules
+
+${SQFSWORKDIR}:	${SQFSTAR}
+	rm -rf ${SQFSWORKDIR}
+	tar jxf ${SQFSTAR}
+	gunzip -c ${SQFSOURPATCH} | (cd ${SQFSWORKDIR}; patch -p1)
+	cd ${SQFSWORKDIR}; DEBEMAIL="jdi@untangle.com" dch ${EXTRADCHARGS} -p -v 1:${SQFSUPVER}-2build1${OURVERSION} -D thunderbird "kernel build"
+
+udevpkg: ${UDEVWORKDIR} force
+	cd ${UDEVWORKDIR}; ${DOPTIONS} KSRC=/usr/src/linux-headers-${KVER}-${KDEBVER}-untangle fakeroot debian/rules clean binary
+	cd ${UDEVWORKDIR}; ${VDOPTIONS} KSRC=/usr/src/linux-headers-${KVER}-${KDEBVER}-virtual-untangle fakeroot debian/rules clean binary
+
+${UDEVWORKDIR}:	${UDEVTAR}
+	rm -rf ${UDEVWORKDIR}
+	dpkg-source -x ${UDEVDSC}
+	gunzip -c ${UDEVOURPATCH} | (cd ${UDEVWORKDIR}; patch -p1)
+	cd ${UDEVWORKDIR}; DEBEMAIL="jdi@untangle.com" dch ${EXTRADCHARGS} -p -v ${UDEVUPVER}-4~bpo.1${OURVERSION} -D thunderbird "kernel build"
+
+# Get rid of packages we don't need.
+# Ugly alert. XXX
+legitify:
+	mkdir -p notlegit
+	for i in *deb; do dpkg-deb -I $$i | grep untangle | grep -v -q ${OURVERSION} || mv $$i notlegit; done
+	mv notlegit/linux-libc-dev*deb .
+	mv notlegit/linux-headers-*_all.deb .
+	mv notlegit/linux-source-*_all.deb .
+	mv notlegit/udev*.deb notlegit/libvolum*.deb . 
+	mv linux-restricted-*deb notlegit
+	mv modules/*.deb .
+
+clean::
+	rm -rf ${SQFSWORKDIR}
+	rm -rf ${UDEVWORKDIR}
