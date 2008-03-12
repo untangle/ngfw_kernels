@@ -1,0 +1,18 @@
+--- old/drivers/net/Makefile,0	Sun Mar 19 21:53:29 2006
++++ new/drivers/net/Makefile	Wed Dec  6 17:52:09 2006
+@@ -6,6 +6,7 @@
+   obj-$(CONFIG_ISDN) += slhc.o
+ endif
+ 
++obj-$(CONFIG_E100) += e100.o
+ obj-$(CONFIG_E1000) += e1000/
+ obj-$(CONFIG_IBM_EMAC) += ibm_emac/
+ obj-$(CONFIG_IXGB) += ixgb/
+@@ -44,7 +45,6 @@
+ obj-$(CONFIG_NE2K_PCI) += ne2k-pci.o 8390.o
+ obj-$(CONFIG_PCNET32) += pcnet32.o
+ obj-$(CONFIG_EEPRO100) += eepro100.o
+-obj-$(CONFIG_E100) += e100.o
+ obj-$(CONFIG_TLAN) += tlan.o
+ obj-$(CONFIG_EPIC100) += epic100.o
+ obj-$(CONFIG_SIS190) += sis190.o

@@ -1,0 +1,105 @@
+ include/linux/mmzone.h |    2 +-
+ mm/page_alloc.c        |    2 +-
+ mm/vmscan.c            |   40 ++++++++++++++++++++++++++++++++++++++--
+ 3 files changed, 40 insertions(+), 4 deletions(-)
+
+Index: linux-2.6.16-ck11/include/linux/mmzone.h
+===================================================================
+--- linux-2.6.16-ck11.orig/include/linux/mmzone.h	2006-05-21 12:20:11.000000000 +1000
++++ linux-2.6.16-ck11/include/linux/mmzone.h	2006-05-21 12:20:12.000000000 +1000
+@@ -333,7 +333,7 @@ void __get_zone_counts(unsigned long *ac
+ void get_zone_counts(unsigned long *active, unsigned long *inactive,
+ 			unsigned long *free);
+ void build_all_zonelists(void);
+-void wakeup_kswapd(struct zone *zone, int order);
++void wakeup_kswapd(struct zone *zone, int order, struct task_struct *p);
+ int zone_watermark_ok(struct zone *z, int order, unsigned long mark,
+ 		int classzone_idx, int alloc_flags);
+ 
+Index: linux-2.6.16-ck11/mm/page_alloc.c
+===================================================================
+--- linux-2.6.16-ck11.orig/mm/page_alloc.c	2006-05-21 12:20:11.000000000 +1000
++++ linux-2.6.16-ck11/mm/page_alloc.c	2006-05-21 12:20:12.000000000 +1000
+@@ -926,7 +926,7 @@ restart:
+ 		goto got_pg;
+ 
+ 	do {
+-		wakeup_kswapd(*z, order);
++		wakeup_kswapd(*z, order, p);
+ 	} while (*(++z));
+ 
+ 	/*
+Index: linux-2.6.16-ck11/mm/vmscan.c
+===================================================================
+--- linux-2.6.16-ck11.orig/mm/vmscan.c	2006-05-21 12:20:11.000000000 +1000
++++ linux-2.6.16-ck11/mm/vmscan.c	2006-05-21 12:20:12.000000000 +1000
+@@ -1383,6 +1383,38 @@ shrink_zone(struct zone *zone, struct sc
+ }
+ 
+ /*
++ * Helper functions to adjust nice level of kswapd, based on the priority of
++ * the task (p) that called it. If it is already higher priority we do not
++ * demote its nice level since it is still working on behalf of a higher
++ * priority task. With kernel threads we leave it at nice 0.
++ *
++ * We don't ever run kswapd real time, so if a real time task calls kswapd we
++ * set it to highest SCHED_NORMAL priority.
++ */
++static int effective_sc_prio(struct task_struct *p)
++{
++	if (likely(p->mm)) {
++		if (rt_task(p))
++			return -20;
++		return task_nice(p);
++	}
++	return 0;
++}
++
++static void set_kswapd_nice(task_t *kswapd, task_t *p, int active)
++{
++	long nice = effective_sc_prio(p);
++
++	if (task_nice(kswapd) > nice || !active)
++		set_user_nice(kswapd, nice);
++}
++
++static int sc_priority(struct task_struct *p)
++{
++	return (DEF_PRIORITY + (DEF_PRIORITY * effective_sc_prio(p) / 40));
++}
++
++/*
+  * This is the direct reclaim path, for page-allocating processes.  We only
+  * try to reclaim pages from zones which will satisfy the caller's allocation
+  * request.
+@@ -1769,6 +1801,7 @@ static int kswapd(void *p)
+ 			 */
+ 			order = new_order;
+ 		} else {
++			set_user_nice(tsk, 0);
+ 			schedule();
+ 			order = pgdat->kswapd_max_order;
+ 		}
+@@ -1782,9 +1815,10 @@ static int kswapd(void *p)
+ /*
+  * A zone is low on free memory, so wake its kswapd task to service it.
+  */
+-void wakeup_kswapd(struct zone *zone, int order)
++void wakeup_kswapd(struct zone *zone, int order, struct task_struct *p)
+ {
+ 	pg_data_t *pgdat;
++	int active;
+ 
+ 	if (!populated_zone(zone))
+ 		return;
+@@ -1796,7 +1830,9 @@ void wakeup_kswapd(struct zone *zone, in
+ 		pgdat->kswapd_max_order = order;
+ 	if (!cpuset_zone_allowed(zone, __GFP_HARDWALL))
+ 		return;
+-	if (!waitqueue_active(&pgdat->kswapd_wait))
++	active = waitqueue_active(&pgdat->kswapd_wait);
++	set_kswapd_nice(pgdat->kswapd, p, active);
++	if (!active)
+ 		return;
+ 	wake_up_interruptible(&pgdat->kswapd_wait);
+ }

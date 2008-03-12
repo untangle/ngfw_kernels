@@ -1,0 +1,19 @@
+---
+ kernel/sched.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
+
+Index: linux-2.6.16-ck11/kernel/sched.c
+===================================================================
+--- linux-2.6.16-ck11.orig/kernel/sched.c	2006-05-21 12:20:17.000000000 +1000
++++ linux-2.6.16-ck11/kernel/sched.c	2006-05-21 12:20:18.000000000 +1000
+@@ -849,9 +849,9 @@ static void activate_task(task_t *p, run
+ 	p->time_slice = p->slice % rr ? : rr;
+ 	if (!rt_task(p)) {
+ 		recalc_task_prio(p, now);
++		p->prio = effective_prio(p);
+ 		p->flags &= ~(PF_NONSLEEP | PF_FORKED);
+ 		p->systime = 0;
+-		p->prio = effective_prio(p);
+ 	}
+ 	p->timestamp = now;
+ 	__activate_task(p, rq);

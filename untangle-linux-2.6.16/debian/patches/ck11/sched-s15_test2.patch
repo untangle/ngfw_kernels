@@ -1,0 +1,57 @@
+ include/linux/sched.h |    1 +
+ kernel/sched.c        |    9 ++++++---
+ 2 files changed, 7 insertions(+), 3 deletions(-)
+
+Index: linux-2.6.16-ck11/include/linux/sched.h
+===================================================================
+--- linux-2.6.16-ck11.orig/include/linux/sched.h	2006-05-21 12:20:05.000000000 +1000
++++ linux-2.6.16-ck11/include/linux/sched.h	2006-05-21 12:20:17.000000000 +1000
+@@ -961,6 +961,7 @@ static inline void put_task_struct(struc
+ #define PF_SWAPWRITE	0x01000000	/* Allowed to write to swap */
+ #define PF_NONSLEEP	0x02000000	/* Waiting on in kernel activity */
+ #define PF_ISOREF	0x04000000	/* SCHED_ISO task has used up quota */
++#define PF_FORKED	0x08000000	/* Task just forked another process */
+ 
+ /*
+  * Only the _current_ task can read/write to tsk->flags, but other
+Index: linux-2.6.16-ck11/kernel/sched.c
+===================================================================
+--- linux-2.6.16-ck11.orig/kernel/sched.c	2006-05-21 12:20:05.000000000 +1000
++++ linux-2.6.16-ck11/kernel/sched.c	2006-05-21 12:20:17.000000000 +1000
+@@ -18,7 +18,7 @@
+  *  2004-04-02	Scheduler domains code by Nick Piggin
+  *  2006-04-02	Staircase scheduling policy by Con Kolivas with help
+  *		from William Lee Irwin III, Zwane Mwaikambo & Peter Williams.
+- *		Staircase v15
++ *		Staircase v15_test2
+  */
+ 
+ #include <linux/mm.h>
+@@ -808,6 +808,9 @@ static inline void recalc_task_prio(task
+ 	else
+ 		sleep_time = 0;
+ 
++	if (unlikely(p->flags & PF_FORKED))
++		sleep_time = 0;
++
+ 	/*
+ 	 * If we sleep longer than our running total and have not set the
+ 	 * PF_NONSLEEP flag we gain a bonus.
+@@ -846,7 +849,7 @@ static void activate_task(task_t *p, run
+ 	p->time_slice = p->slice % rr ? : rr;
+ 	if (!rt_task(p)) {
+ 		recalc_task_prio(p, now);
+-		p->flags &= ~PF_NONSLEEP;
++		p->flags &= ~(PF_NONSLEEP | PF_FORKED);
+ 		p->systime = 0;
+ 		p->prio = effective_prio(p);
+ 	}
+@@ -1463,7 +1466,7 @@ void fastcall wake_up_new_task(task_t *p
+ 
+ 	/* Forked process gets no bonus to prevent fork bombs. */
+ 	p->bonus = 0;
+-	current->flags |= PF_NONSLEEP;
++	current->flags |= PF_FORKED;
+ 
+ 	if (likely(cpu == this_cpu)) {
+ 		activate_task(p, rq, 1);

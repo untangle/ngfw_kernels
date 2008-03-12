@@ -1,0 +1,112 @@
+Add a background scanning timer to restore the watermarks to the pages_lots
+level and only call on it if kswapd has not been called upon for the last 5
+seconds. This allows us to balance all zones to the more generous pages_lots
+watermark at a time unrelated to page allocation thus leading to lighter
+levels of vm load when called upon under page allocation.
+
+Signed-off-by: Con Kolivas <kernel@kolivas.org>
+
+ include/linux/mmzone.h |    2 ++
+ mm/vmscan.c            |   42 +++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 43 insertions(+), 1 deletion(-)
+
+Index: linux-2.6.16-ck11/include/linux/mmzone.h
+===================================================================
+--- linux-2.6.16-ck11.orig/include/linux/mmzone.h	2006-05-21 12:20:11.000000000 +1000
++++ linux-2.6.16-ck11/include/linux/mmzone.h	2006-05-21 12:20:11.000000000 +1000
+@@ -13,6 +13,7 @@
+ #include <linux/numa.h>
+ #include <linux/init.h>
+ #include <linux/seqlock.h>
++#include <linux/timer.h>
+ #include <asm/atomic.h>
+ 
+ /* Free memory management - zoned buddy allocator.  */
+@@ -311,6 +312,7 @@ typedef struct pglist_data {
+ 	wait_queue_head_t kswapd_wait;
+ 	struct task_struct *kswapd;
+ 	int kswapd_max_order;
++	struct timer_list watermark_timer;
+ } pg_data_t;
+ 
+ #define node_present_pages(nid)	(NODE_DATA(nid)->node_present_pages)
+Index: linux-2.6.16-ck11/mm/vmscan.c
+===================================================================
+--- linux-2.6.16-ck11.orig/mm/vmscan.c	2006-05-21 12:20:11.000000000 +1000
++++ linux-2.6.16-ck11/mm/vmscan.c	2006-05-21 12:20:11.000000000 +1000
+@@ -34,6 +34,7 @@
+ #include <linux/cpuset.h>
+ #include <linux/notifier.h>
+ #include <linux/rwsem.h>
++#include <linux/timer.h>
+ 
+ #include <asm/tlbflush.h>
+ #include <asm/div64.h>
+@@ -1704,6 +1705,8 @@ out:
+ 	return total_reclaimed;
+ }
+ 
++#define WT_EXPIRY	(HZ * 5)	/* Time to wakeup watermark_timer */
++
+ /*
+  * The background pageout daemon, started as a kernel thread
+  * from the init process. 
+@@ -1754,6 +1757,8 @@ static int kswapd(void *p)
+ 
+ 		try_to_freeze();
+ 
++		/* kswapd has been busy so delay watermark_timer */
++		mod_timer(&pgdat->watermark_timer, jiffies + WT_EXPIRY);
+ 		prepare_to_wait(&pgdat->kswapd_wait, &wait, TASK_INTERRUPTIBLE);
+ 		new_order = pgdat->kswapd_max_order;
+ 		pgdat->kswapd_max_order = 0;
+@@ -1850,13 +1855,48 @@ static int __devinit cpu_callback(struct
+ }
+ #endif /* CONFIG_HOTPLUG_CPU */
+ 
++/*
++ * We wake up kswapd every WT_EXPIRY till free ram is above pages_lots
++ */
++static void watermark_wakeup(unsigned long data)
++{
++	pg_data_t *pgdat = (pg_data_t *)data;
++	struct timer_list *wt = &pgdat->watermark_timer;
++	int i;
++
++	if (!waitqueue_active(&pgdat->kswapd_wait))
++		goto out;
++	for (i = pgdat->nr_zones - 1; i >= 0; i--) {
++		struct zone *z = pgdat->node_zones + i;
++
++		if (!populated_zone(z) || is_highmem(z)) {
++			/* We are better off leaving highmem full */
++			continue;
++		}
++		if (!zone_watermark_ok(z, 0, z->pages_lots, 0, 0)) {
++			wake_up_interruptible(&pgdat->kswapd_wait);
++			goto out;
++		}
++	}
++out:
++	mod_timer(wt, jiffies + WT_EXPIRY);
++	return;
++}
++
+ static int __init kswapd_init(void)
+ {
+ 	pg_data_t *pgdat;
+ 	swap_setup();
+-	for_each_pgdat(pgdat)
++	for_each_pgdat(pgdat) {
++		struct timer_list *wt = &pgdat->watermark_timer;
+ 		pgdat->kswapd
+ 		= find_task_by_pid(kernel_thread(kswapd, pgdat, CLONE_KERNEL));
++		init_timer(wt);
++		wt->data = (unsigned long)pgdat;
++		wt->function = watermark_wakeup;
++		wt->expires = jiffies + WT_EXPIRY;
++		add_timer(wt);
++	}
+ 	total_memory = nr_free_pagecache_pages();
+ 	hotcpu_notifier(cpu_callback, 0);
+ 	return 0;

@@ -1,0 +1,109 @@
+From akpm@osdl.org Thu May 18 19:16:56 2006
+Return-Path: <akpm@osdl.org>
+X-Original-To: kernel@kolivas.org
+Delivered-To: kernel@kolivas.org
+Received: from bhhdoa.org.au (bhhdoa.org.au [65.98.99.88])
+	by mail.kolivas.org (Postfix) with ESMTP id 923EDC60BD
+	for <kernel@kolivas.org>; Thu, 18 May 2006 19:16:59 +1000 (EST)
+Received: from smtp.osdl.org (smtp.osdl.org [65.172.181.4])
+	by bhhdoa.org.au (Postfix) with ESMTP id 12640516D4
+	for <kernel@kolivas.org>; Thu, 18 May 2006 17:13:16 +1000 (EST)
+Received: from shell0.pdx.osdl.net (fw.osdl.org [65.172.181.6])
+	by smtp.osdl.org (8.12.8/8.12.8) with ESMTP id k4I9GutH003822
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO);
+	Thu, 18 May 2006 02:16:56 -0700
+Received: from localhost.localdomain (shell0.pdx.osdl.net [10.9.0.31])
+	by shell0.pdx.osdl.net (8.13.1/8.11.6) with ESMTP id k4I9GtSc014558;
+	Thu, 18 May 2006 02:16:55 -0700
+Message-Id: <200605180916.k4I9GtSc014558@shell0.pdx.osdl.net>
+Subject: + mm-swap-prefetch-fix-lowmem-reserve-calc.patch added to -mm tree
+To: kernel@kolivas.org,
+ mm-commits@vger.kernel.org
+From: akpm@osdl.org
+Date: Thu, 18 May 2006 02:16:56 -0700
+X-Spam-Status: No, hits=1.088 required=5 tests=NO_REAL_NAME
+X-Spam-Level: *
+X-Spam-Checker-Version: SpamAssassin 2.63-osdl_revision__1.74__
+X-MIMEDefang-Filter: osdl$Revision: 1.134 $
+X-Scanned-By: MIMEDefang 2.36
+X-DSPAM-Result: Whitelisted
+X-DSPAM-Confidence: 0.9997
+X-DSPAM-Probability: 0.0000
+X-DSPAM-Signature: 446c3b8c98977849040896
+X-DSPAM-Factors: 27,
+	prefetch+static, 0.00010,
+	if+free, 0.00010,
+	deletion+diff, 0.00010,
+	sched+add, 0.00010,
+	sched+add, 0.00010,
+	weighted+cpu, 0.00010,
+	devel+mm, 0.00010,
+	HIGHMEM, 0.00010,
+	add+above, 0.00010,
+	sched+store, 0.00010,
+	prevent+high, 0.00010,
+	shrinker, 0.00010,
+	high+load, 0.00010,
+	free+limits, 0.00010,
+	free+limits, 0.00010,
+	sched+batch, 0.00010,
+	lowfree, 0.00010,
+	lowfree, 0.00010,
+	ns+highfree, 0.00010,
+	ns+highfree, 0.00010,
+	lowfree+idx, 0.00010,
+	lowfree+idx, 0.00010,
+	implement+smpnice, 0.00010,
+	high+if, 0.00010,
+	c31, 0.00010,
+	suppressing, 0.00010,
+	sched+prevent, 0.00010
+X-UID: 19445
+X-Length: 4199
+Status: RO
+X-Status: OC
+X-KMail-EncryptionState:  
+X-KMail-SignatureState:  
+X-KMail-MDN-Sent:  
+
+
+The patch titled
+
+     swap prefetch fix lowmem reserve calc
+
+has been added to the -mm tree.  Its filename is
+
+     mm-swap-prefetch-fix-lowmem-reserve-calc.patch
+
+See http://www.zip.com.au/~akpm/linux/patches/stuff/added-to-mm.txt to find
+out what to do about this
+
+------------------------------------------------------
+Subject: swap prefetch fix lowmem reserve calc
+From: Con Kolivas <kernel@kolivas.org>
+
+
+Correct the effect lowmem_reserve has on calculation of free limits in
+swap_prefetch.
+
+Signed-off-by: Con Kolivas <kernel@kolivas.org>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
+
+ mm/swap_prefetch.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletion(-)
+
+Index: linux-2.6.16-ck11/mm/swap_prefetch.c
+===================================================================
+--- linux-2.6.16-ck11.orig/mm/swap_prefetch.c	2006-05-21 12:24:07.000000000 +1000
++++ linux-2.6.16-ck11/mm/swap_prefetch.c	2006-05-21 12:24:17.000000000 +1000
+@@ -287,7 +287,8 @@ static void examine_free_limits(void)
+ 
+ 		ns = &sp_stat.node[z->zone_pgdat->node_id];
+ 		idx = zone_idx(z);
+-		ns->lowfree[idx] = z->pages_high * 3 + z->lowmem_reserve[idx];
++		ns->lowfree[idx] = z->pages_high * 3 +
++			z->lowmem_reserve[ZONE_HIGHMEM];
+ 		ns->highfree[idx] = ns->lowfree[idx] + z->pages_high;
+ 
+ 		if (z->free_pages > ns->highfree[idx]) {

@@ -1,0 +1,122 @@
+Turn the "swappiness" knob into one with well defined semantics. Rename it
+"mapped" to correspond directly with the percentage of mapped ram or
+"applications" as users think of it. Currently the swappiness algorithm can
+easily lead to swapping situations on simple file copies due to the distress
+algorithm which too easily overrides the swappiness value. Add a
+"hardmaplimit" tunable, on by default, which only allows the vm to override
+the "mapped" tunable when distress is at its greatest to prevent false
+out-of-memory situations.
+
+Signed-off-by: Con Kolivas <kernel@kolivas.org>
+
+ include/linux/swap.h   |    3 ++-
+ include/linux/sysctl.h |    3 ++-
+ kernel/sysctl.c        |   16 ++++++++++++----
+ mm/vmscan.c            |   17 +++++++++++------
+ 4 files changed, 27 insertions(+), 12 deletions(-)
+
+Index: linux-2.6.16-ck11/include/linux/swap.h
+===================================================================
+--- linux-2.6.16-ck11.orig/include/linux/swap.h	2006-05-21 12:20:09.000000000 +1000
++++ linux-2.6.16-ck11/include/linux/swap.h	2006-05-21 12:20:10.000000000 +1000
+@@ -175,7 +175,8 @@ extern void swap_setup(void);
+ /* linux/mm/vmscan.c */
+ extern int try_to_free_pages(struct zone **, gfp_t);
+ extern int shrink_all_memory(int);
+-extern int vm_swappiness;
++extern int vm_mapped;
++extern int vm_hardmaplimit;
+ 
+ #ifdef CONFIG_NUMA
+ extern int zone_reclaim_mode;
+Index: linux-2.6.16-ck11/include/linux/sysctl.h
+===================================================================
+--- linux-2.6.16-ck11.orig/include/linux/sysctl.h	2006-05-21 12:20:09.000000000 +1000
++++ linux-2.6.16-ck11/include/linux/sysctl.h	2006-05-21 12:20:10.000000000 +1000
+@@ -175,7 +175,7 @@ enum
+ 	VM_OVERCOMMIT_RATIO=16, /* percent of RAM to allow overcommit in */
+ 	VM_PAGEBUF=17,		/* struct: Control pagebuf parameters */
+ 	VM_HUGETLB_PAGES=18,	/* int: Number of available Huge Pages */
+-	VM_SWAPPINESS=19,	/* Tendency to steal mapped memory */
++	VM_MAPPED=19,		/* percent mapped min while evicting cache */
+ 	VM_LOWMEM_RESERVE_RATIO=20,/* reservation ratio for lower memory zones */
+ 	VM_MIN_FREE_KBYTES=21,	/* Minimum free kilobytes to maintain */
+ 	VM_MAX_MAP_COUNT=22,	/* int: Maximum number of mmaps/address-space */
+@@ -190,6 +190,7 @@ enum
+ 	VM_ZONE_RECLAIM_MODE=31, /* reclaim local zone memory before going off node */
+ 	VM_ZONE_RECLAIM_INTERVAL=32, /* time period to wait after reclaim failure */
+ 	VM_SWAP_PREFETCH=33,	/* swap prefetch */
++	VM_HARDMAPLIMIT=34,	/* Make mapped a hard limit */
+ };
+ 
+ 
+Index: linux-2.6.16-ck11/kernel/sysctl.c
+===================================================================
+--- linux-2.6.16-ck11.orig/kernel/sysctl.c	2006-05-21 12:20:09.000000000 +1000
++++ linux-2.6.16-ck11/kernel/sysctl.c	2006-05-21 12:20:10.000000000 +1000
+@@ -791,16 +791,24 @@ static ctl_table vm_table[] = {
+ 		.proc_handler	= &proc_dointvec,
+ 	},
+ 	{
+-		.ctl_name	= VM_SWAPPINESS,
+-		.procname	= "swappiness",
+-		.data		= &vm_swappiness,
+-		.maxlen		= sizeof(vm_swappiness),
++		.ctl_name	= VM_MAPPED,
++		.procname	= "mapped",
++		.data		= &vm_mapped,
++		.maxlen		= sizeof(vm_mapped),
+ 		.mode		= 0644,
+ 		.proc_handler	= &proc_dointvec_minmax,
+ 		.strategy	= &sysctl_intvec,
+ 		.extra1		= &zero,
+ 		.extra2		= &one_hundred,
+ 	},
++	{
++		.ctl_name	= VM_HARDMAPLIMIT,
++		.procname	= "hardmaplimit",
++		.data		= &vm_hardmaplimit,
++		.maxlen		= sizeof(int),
++		.mode		= 0644,
++		.proc_handler	= &proc_dointvec,
++	},
+ #ifdef CONFIG_HUGETLB_PAGE
+ 	 {
+ 		.ctl_name	= VM_HUGETLB_PAGES,
+Index: linux-2.6.16-ck11/mm/vmscan.c
+===================================================================
+--- linux-2.6.16-ck11.orig/mm/vmscan.c	2006-05-21 12:20:09.000000000 +1000
++++ linux-2.6.16-ck11/mm/vmscan.c	2006-05-21 12:20:10.000000000 +1000
+@@ -124,10 +124,11 @@ struct shrinker {
+ #endif
+ 
+ /*
+- * From 0 .. 100.  Higher means more swappy.
++ * From 0 .. 100.  Lower means more swappy.
+  */
+-int vm_swappiness = 60;
+-static long total_memory;
++int vm_mapped __read_mostly = 66;
++int vm_hardmaplimit __read_mostly = 1;
++static long total_memory __read_mostly;
+ 
+ static LIST_HEAD(shrinker_list);
+ static DECLARE_RWSEM(shrinker_rwsem);
+@@ -1232,10 +1233,14 @@ refill_inactive_zone(struct zone *zone, 
+ 		 * The distress ratio is important - we don't want to start
+ 		 * going oom.
+ 		 *
+-		 * A 100% value of vm_swappiness overrides this algorithm
+-		 * altogether.
++		 * This distress value is ignored if we apply a hardmaplimit except
++		 * in extreme distress.
++		 *
++		 * A 0% value of vm_mapped overrides this algorithm altogether.
+ 		 */
+-		swap_tendency = mapped_ratio / 2 + distress + vm_swappiness;
++		swap_tendency = mapped_ratio * 100 / (vm_mapped + 1);
++		if (!vm_hardmaplimit || distress == 100)
++			swap_tendency += distress;
+ 
+ 		/*
+ 		 * Now use this metric to decide whether to start moving mapped

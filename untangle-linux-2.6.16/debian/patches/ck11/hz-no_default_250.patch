@@ -1,0 +1,38 @@
+ kernel/Kconfig.hz |   15 +++++++++------
+ 1 files changed, 9 insertions(+), 6 deletions(-)
+
+Index: linux-2.6.16-ck11/kernel/Kconfig.hz
+===================================================================
+--- linux-2.6.16-ck11.orig/kernel/Kconfig.hz	2006-05-21 12:20:08.000000000 +1000
++++ linux-2.6.16-ck11/kernel/Kconfig.hz	2006-05-21 12:20:08.000000000 +1000
+@@ -21,14 +21,17 @@ choice
+ 	help
+ 	  100 HZ is a typical choice for servers, SMP and NUMA systems
+ 	  with lots of processors that may show reduced performance if
+-	  too many timer interrupts are occurring.
++	  too many timer interrupts are occurring. Laptops may also show
++	  improved battery life.
+ 
+-	config HZ_250
++	config HZ_250_NODEFAULT
+ 		bool "250 HZ"
+ 	help
+-	 250 HZ is a good compromise choice allowing server performance
+-	 while also showing good interactive responsiveness even
+-	 on SMP and NUMA systems.
++	 250 HZ is a lousy compromise choice allowing server interactivity
++	 while also showing desktop throughput and no extra power saving on
++	 laptops. Good for when you can't make up your mind.
++
++	 Recommend 100 or 1000 instead.
+ 
+ 	config HZ_1000
+ 		bool "1000 HZ"
+@@ -41,6 +44,6 @@ endchoice
+ config HZ
+ 	int
+ 	default 100 if HZ_100
+-	default 250 if HZ_250
++	default 250 if HZ_250_NODEFAULT
+ 	default 1000 if HZ_1000
+ 

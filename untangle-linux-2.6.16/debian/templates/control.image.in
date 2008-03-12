@@ -1,0 +1,12 @@
+Package: untangle-linux-image-@upstreamversion@@abiname@@localversion@
+Section: base
+Priority: optional
+Provides: untangle-linux-image, untangle-linux-image-@major@
+Depends: module-init-tools (>= 0.9.13)
+Suggests: untangle-linux-doc-@version@ | untangle-linux-source-@version@
+Description: Untangle Linux kernel @upstreamversion@ image on @class@ machines
+ This package provides the binary image and pre-built loadable modules for
+ Linux kernel @upstreamversion@ on @longclass@ machines.
+ .
+ This packages is produced using an updated kernel packaging system
+ and replaces older untangle-kernel-image packages

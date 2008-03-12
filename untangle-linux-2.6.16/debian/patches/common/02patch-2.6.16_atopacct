@@ -1,0 +1,124 @@
+diff -u --recursive linux-2.6.16.1-orig/include/linux/acct.h linux/include/linux/acct.h
+--- linux-2.6.16.1-orig/include/linux/acct.h	2006-04-05 11:25:08.000000000 +0200
++++ linux/include/linux/acct.h	2006-04-06 12:35:25.000000000 +0200
+@@ -98,6 +98,54 @@
+ 	char		ac_comm[ACCT_COMM];	/* Command Name */
+ };
+ 
++struct acct_atop
++{
++	char		ac_flag;		/* Flags */
++	char		ac_version;		/* Always set to ACCT_VERSION */
++	__u32		ac_pid;			/* Process ID */
++	__u32		ac_ppid;		/* Parent Process ID */
++	__u16		ac_uid16;		/* LSB of Real User ID */
++	__u16		ac_gid16;		/* LSB of Real Group ID */
++	__u16		ac_tty;			/* Control Terminal */
++	__u32		ac_btime;		/* Process Creation Time */
++	comp_t		ac_utime;		/* User Time */
++	comp_t		ac_stime;		/* System Time */
++	comp_t		ac_etime;		/* Elapsed Time */
++	comp_t		ac_mem;			/* Virtual  Memory */
++	comp_t		ac_rss;			/* Resident Memory */
++	comp_t		ac_io;			/* Chars Transferred */
++	comp_t		ac_rw;			/* Blocks Read or Written */
++	comp_t		ac_bread;		/* Blocks Read */
++	comp_t		ac_bwrite;		/* Blocks Written */
++	comp2_t		ac_dskrsz;		/* Cum. blocks read */
++	comp2_t		ac_dskwsz;		/* Cum. blocks written */
++	comp_t		ac_tcpsnd;		/* TCP send requests */
++	comp_t		ac_tcprcv;		/* TCP recv requests */
++	comp2_t		ac_tcpssz;		/* TCP cum. length   */
++	comp2_t		ac_tcprsz;		/* TCP cum. length   */
++	comp_t		ac_udpsnd;		/* UDP send requests */
++	comp_t		ac_udprcv;		/* UDP recv requests */
++	comp2_t		ac_udpssz;		/* UDP cum. length   */
++	comp2_t		ac_udprsz;		/* UDP cum. length   */
++	comp_t		ac_rawsnd;		/* RAW send requests */
++	comp_t		ac_rawrcv;		/* RAW recv requests */
++	comp_t		ac_minflt;		/* Minor Pagefaults */
++	comp_t		ac_majflt;		/* Major Pagefaults */
++	comp_t		ac_swaps;		/* Number of Swaps */
++/* m68k had no padding here. */
++#if !defined(CONFIG_M68K) || !defined(__KERNEL__)
++	__u16		ac_ahz;			/* AHZ */
++#endif
++	__u32		ac_exitcode;		/* Exitcode */
++	char		ac_comm[ACCT_COMM + 1];	/* Command Name */
++	__u8		ac_etime_hi;		/* Elapsed Time MSB */
++	__u16		ac_etime_lo;		/* Elapsed Time LSB */
++	__u32		ac_uid;			/* Real User ID */
++	__u32		ac_gid;			/* Real Group ID */
++};
++
++
++
+ /*
+  *  accounting flags
+  */
+@@ -144,7 +192,13 @@
+  * 5: new binary incompatible format (128 bytes, second half)
+  *
+  */
+-
++#define CONFIG_PROCESS_ACCT_ATOP
++ 
++#ifdef CONFIG_PROCESS_ACCT_ATOP
++#define ACCT_VERSION	6
++#define AHZ		(USER_HZ)
++typedef struct acct_atop acct_t;
++#else
+ #ifdef CONFIG_BSD_PROCESS_ACCT_V3
+ #define ACCT_VERSION	3
+ #define AHZ		100
+@@ -158,6 +212,7 @@
+ #define AHZ		(USER_HZ)
+ typedef struct acct acct_t;
+ #endif
++#endif
+ 
+ #else
+ #define ACCT_VERSION	2
+diff -u --recursive linux-2.6.16.1-orig/kernel/acct.c linux/kernel/acct.c
+--- linux-2.6.16.1-orig/kernel/acct.c	2006-04-06 13:14:01.000000000 +0200
++++ linux/kernel/acct.c	2006-04-06 12:40:46.000000000 +0200
+@@ -344,7 +344,7 @@
+ 	return exp;
+ }
+ 
+-#if ACCT_VERSION==1 || ACCT_VERSION==2
++#if ACCT_VERSION==1 || ACCT_VERSION==2 || ACCT_VERSION==6
+ /*
+  * encode an u64 into a comp2_t (24 bits)
+  *
+@@ -490,6 +490,30 @@
+ 	ac.ac_pid = current->tgid;
+ 	ac.ac_ppid = current->parent->tgid;
+ #endif
++#if ACCT_VERSION==6		/* ATOP */
++	ac.ac_pid    = current->pid;
++	ac.ac_ppid   = current->parent->pid;
++	ac.ac_uid16  = current->uid;
++	ac.ac_gid16  = current->gid;
++	ac.ac_ahz    = AHZ;
++	ac.ac_bread  = encode_comp_t(current->stat.dsk_rio);
++	ac.ac_bwrite = encode_comp_t(current->stat.dsk_wio);
++	ac.ac_dskrsz = encode_comp2_t(current->stat.dsk_rsz);
++	ac.ac_dskwsz = encode_comp2_t(current->stat.dsk_wsz);
++	ac.ac_tcpsnd = encode_comp_t(current->stat.tcp_snd);
++	ac.ac_tcprcv = encode_comp_t(current->stat.tcp_rcv);
++	ac.ac_tcpssz = encode_comp2_t(current->stat.tcp_ssz);
++	ac.ac_tcprsz = encode_comp2_t(current->stat.tcp_rsz);
++	ac.ac_udpsnd = encode_comp_t(current->stat.udp_snd);
++	ac.ac_udprcv = encode_comp_t(current->stat.udp_rcv);
++	ac.ac_udpssz = encode_comp2_t(current->stat.udp_ssz);
++	ac.ac_udprsz = encode_comp2_t(current->stat.udp_rsz);
++	ac.ac_rawsnd = encode_comp_t(current->stat.raw_snd);
++	ac.ac_rawrcv = encode_comp_t(current->stat.raw_rcv);
++	ac.ac_rss    = current->mm ?
++	               encode_comp_t(get_mm_rss(current->mm)<<(PAGE_SHIFT-10)) :
++	               encode_comp_t(0);
++#endif
+ 
+ 	read_lock(&tasklist_lock);	/* pin current->signal */
+ 	ac.ac_tty = current->signal->tty ?

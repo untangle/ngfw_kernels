@@ -1,0 +1,24 @@
+Package: untangle-linux-tree-@version@
+Architecture: all
+Section: devel
+Priority: optional
+Description: Linux kernel source tree for building Debian kernel images
+ This meta package is used as a build dependency of Debian
+ untangle-linux-image packages to prevent a version discrepancy between
+ the untangle-linux-image and corresponding untangle-linux-sources packages in the
+ fast-moving unstable archive. The package's dependency relations
+ are structured so that a untangle-linux-image package's build
+ dependencies can always be satisfied, even if the untangle-linux-source
+ package that had been used to compile the image has been
+ superseeded by a newer Debian revision since the last build.
+ .
+ The package provides a list of virtual packages, corresponding to
+ Debian revisions of a untangle-linux-source package. The Debian
+ untangle-linux-patch contains the information needed to roll back the
+ current untangle-linux-source to any of the revisions identified by the
+ provided virtual packages. Therefore, the untangle-linux-tree package
+ ensures the availability of the Linux kernel source tree corresponding
+ to each of the virtual packages listed.
+ .
+ The package serves no purpose outside of the Debian build and
+ archive infrastructure.

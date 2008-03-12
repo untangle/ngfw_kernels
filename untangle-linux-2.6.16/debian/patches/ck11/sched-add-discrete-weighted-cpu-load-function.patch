@@ -1,0 +1,141 @@
+From akpm@osdl.org Tue Mar 14 12:58:09 2006
+Return-Path: <akpm@osdl.org>
+X-Original-To: kernel@kolivas.org
+Delivered-To: kernel@kolivas.org
+Received: from bhhdoa.org.au (bhhdoa.org.au [65.98.99.88])
+	by mail.kolivas.org (Postfix) with ESMTP id 51798C60BB
+	for <kernel@kolivas.org>; Tue, 14 Mar 2006 13:24:22 +1100 (EST)
+Received: from smtp.osdl.org (smtp.osdl.org [65.172.181.4])
+	by bhhdoa.org.au (Postfix) with ESMTP id ED72351721
+	for <kernel@kolivas.org>; Tue, 14 Mar 2006 11:49:21 +1100 (EST)
+Received: from shell0.pdx.osdl.net (fw.osdl.org [65.172.181.6])
+	by smtp.osdl.org (8.12.8/8.12.8) with ESMTP id k2E20XDZ010745
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO);
+	Mon, 13 Mar 2006 18:00:33 -0800
+Received: from localhost.localdomain (shell0.pdx.osdl.net [10.9.0.31])
+	by shell0.pdx.osdl.net (8.13.1/8.11.6) with ESMTP id k2E20Xmt004571;
+	Mon, 13 Mar 2006 18:00:33 -0800
+Message-Id: <200603140200.k2E20Xmt004571@shell0.pdx.osdl.net>
+Subject: + sched-add-discrete-weighted-cpu-load-function.patch added to -mm tree
+To: kernel@kolivas.org,
+ mingo@elte.hu,
+ mm-commits@vger.kernel.org
+From: akpm@osdl.org
+Date: Mon, 13 Mar 2006 17:58:09 -0800
+X-Spam-Status: No, hits=1.088 required=5 tests=NO_REAL_NAME
+X-Spam-Level: *
+X-Spam-Checker-Version: SpamAssassin 2.63-osdl_revision__1.68__
+X-MIMEDefang-Filter: osdl$Revision: 1.129 $
+X-Scanned-By: MIMEDefang 2.36
+X-DSPAM-Result: Whitelisted
+X-DSPAM-Confidence: 0.9997
+X-DSPAM-Probability: 0.0000
+X-DSPAM-Signature: 4416295b68281074099396
+X-DSPAM-Factors: 27,
+	detect+patch, 0.00010,
+	hu+Signed, 0.00010,
+	cpus+and, 0.00010,
+	group+cpumask, 0.00010,
+	group+cpumask, 0.00010,
+	int+task, 0.00010,
+	sched+add, 0.00010,
+	sched+add, 0.00010,
+	on+runqueue, 0.00010,
+	sched+extern, 0.00010,
+	idlest, 0.00010,
+	Subject*load, 0.00010,
+	load+max, 0.00010,
+	load+max, 0.00010,
+	is+sched, 0.00010,
+	runqueue+find, 0.00010,
+	sched+cleanup, 0.00010,
+	cpus+allowed, 0.00010,
+	sched+implement, 0.00010,
+	smpnice+patch, 0.00010,
+	To*org+mingo, 0.00010,
+	Subject*load+function, 0.00010,
+	noninteractive+use, 0.00010,
+	load+per, 0.00010,
+	nr+uninterruptible, 0.00010,
+	alter+uninterruptible, 0.00010,
+	puN+include, 0.00010
+X-Length: 5468
+X-KMail-EncryptionState: N
+X-KMail-SignatureState: N
+X-KMail-MDN-Sent:  
+Content-Type: 
+X-UID: 9778
+
+
+The patch titled
+
+     sched: add discrete weighted cpu load function
+
+has been added to the -mm tree.  Its filename is
+
+     sched-add-discrete-weighted-cpu-load-function.patch
+
+See http://www.zip.com.au/~akpm/linux/patches/stuff/added-to-mm.txt to find
+out what to do about this
+
+
+From: Con Kolivas <kernel@kolivas.org>
+
+When the type of weighting is known to be zero we can use a simpler version
+of source_load with a weighted_cpuload() function.  Export that function to
+allow relative weighted cpu load to be used by other subsystems if desired.
+
+Signed-off-by: Con Kolivas <kernel@kolivas.org>
+Acked-by: Ingo Molnar <mingo@elte.hu>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+ include/linux/sched.h |    1 +
+ kernel/sched.c        |   10 ++++++++--
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+Index: linux-2.6.16-ck11/include/linux/sched.h
+===================================================================
+--- linux-2.6.16-ck11.orig/include/linux/sched.h	2006-05-21 12:20:01.000000000 +1000
++++ linux-2.6.16-ck11/include/linux/sched.h	2006-05-21 12:20:01.000000000 +1000
+@@ -100,6 +100,7 @@ extern int nr_processes(void);
+ extern unsigned long nr_running(void);
+ extern unsigned long nr_uninterruptible(void);
+ extern unsigned long nr_iowait(void);
++extern unsigned long weighted_cpuload(const int cpu);
+ 
+ #include <linux/time.h>
+ #include <linux/param.h>
+Index: linux-2.6.16-ck11/kernel/sched.c
+===================================================================
+--- linux-2.6.16-ck11.orig/kernel/sched.c	2006-05-21 12:20:01.000000000 +1000
++++ linux-2.6.16-ck11/kernel/sched.c	2006-05-21 12:20:01.000000000 +1000
+@@ -919,6 +919,12 @@ inline int task_curr(const task_t *p)
+ 	return cpu_curr(task_cpu(p)) == p;
+ }
+ 
++/* Used instead of source_load when we know the type == 0 */
++unsigned long weighted_cpuload(const int cpu)
++{
++	return cpu_rq(cpu)->raw_weighted_load;
++}
++
+ #ifdef CONFIG_SMP
+ typedef struct {
+ 	struct list_head list;
+@@ -1119,7 +1125,7 @@ find_idlest_cpu(struct sched_group *grou
+ 	cpus_and(tmp, group->cpumask, p->cpus_allowed);
+ 
+ 	for_each_cpu_mask(i, tmp) {
+-		load = source_load(i, 0);
++		load = weighted_cpuload(i);
+ 
+ 		if (load < min_load || (load == min_load && i == this_cpu)) {
+ 			min_load = load;
+@@ -2184,7 +2190,7 @@ static runqueue_t *find_busiest_queue(st
+ 	int i;
+ 
+ 	for_each_cpu_mask(i, group->cpumask) {
+-		load = source_load(i, 0);
++		load = weighted_cpuload(i);
+ 
+ 		if (load > max_load) {
+ 			max_load = load;

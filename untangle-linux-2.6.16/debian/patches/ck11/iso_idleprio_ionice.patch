@@ -1,0 +1,22 @@
+ include/linux/ioprio.h |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletion(-)
+
+Index: linux-2.6.16-ck11/include/linux/ioprio.h
+===================================================================
+--- linux-2.6.16-ck11.orig/include/linux/ioprio.h	2005-08-29 13:31:26.000000000 +1000
++++ linux-2.6.16-ck11/include/linux/ioprio.h	2006-05-21 12:20:06.000000000 +1000
+@@ -53,7 +53,13 @@ static inline int task_ioprio(struct tas
+ 
+ static inline int task_nice_ioprio(struct task_struct *task)
+ {
+-	return (task_nice(task) + 20) / 5;
++	int effective_nice = task_nice(task);
++
++	if (idleprio_task(task))
++		effective_nice = 19;
++	else if (iso_task(task))
++		effective_nice = -20;
++	return (effective_nice + 20) / 5;
+ }
+ 
+ /*

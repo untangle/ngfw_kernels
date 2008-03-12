@@ -1,0 +1,9 @@
+Package: untangle-linux-headers-@major@@localversion@
+Section: devel
+Priority: optional
+Depends: untangle-linux-headers-@upstreamversion@@abiname@@localversion@ (= ${Source-Version})
+Provides: untangle-linux-headers, untangle-linux-headers-@major@
+Description: Header files for Linux kernel @major@ on @class@ machines
+ This package depends on the architecture-specific header files for the latest
+ Linux kernel @major@ on @longclass@ machines.
+

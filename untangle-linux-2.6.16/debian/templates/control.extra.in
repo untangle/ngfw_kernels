@@ -1,0 +1,8 @@
+Package: untangle-kernel-image-2.6-386
+X-Version-Overwrite-Epoch: 1
+Architecture: i386
+Section: base
+Priority: extra
+Depends: untangle-linux-image-2.6-486
+Description: Linux kernel 2.6 image on 486-class machines - transition package
+ This package is for transition only.

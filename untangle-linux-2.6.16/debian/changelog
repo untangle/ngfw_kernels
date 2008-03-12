@@ -1,0 +1,5 @@
+linux-image (2.6.16-ck11-untangle-failsafe) thunderbird; urgency=low
+  
+  * backport untangle-5.1 changes.
+  * changed name from untangle-linux-2.6 (2.6.16-ck11-3)
+ -- Arthur Ulfeldt <arthur@untangle.com>  Mon, 10 Mar 2008 11:01:31 -0700

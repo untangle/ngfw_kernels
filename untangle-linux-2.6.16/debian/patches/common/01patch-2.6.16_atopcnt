@@ -1,0 +1,169 @@
+diff -u --recursive linux-2.6.16.1-orig/block/ll_rw_blk.c linux/block/ll_rw_blk.c
+--- linux-2.6.16.1-orig/block/ll_rw_blk.c	2006-04-05 11:24:16.000000000 +0200
++++ linux/block/ll_rw_blk.c	2006-04-06 11:20:51.000000000 +0200
+@@ -2527,6 +2527,17 @@
+ 		disk_round_stats(rq->rq_disk);
+ 		rq->rq_disk->in_flight++;
+ 	}
++
++	switch (rw) {					           /* ATOP */
++	   case READ:                                              /* ATOP */
++		current->group_leader->stat.dsk_rio += new_io;     /* ATOP */
++		current->group_leader->stat.dsk_rsz += nr_sectors; /* ATOP */
++		break;                                             /* ATOP */
++	   case WRITE:                                             /* ATOP */
++		current->group_leader->stat.dsk_wio += new_io;     /* ATOP */
++		current->group_leader->stat.dsk_wsz += nr_sectors; /* ATOP */
++		break;                                             /* ATOP */
++	}                                   		           /* ATOP */
+ }
+ 
+ /*
+diff -u --recursive linux-2.6.16.1-orig/fs/proc/array.c linux/fs/proc/array.c
+--- linux-2.6.16.1-orig/fs/proc/array.c	2006-04-05 11:24:35.000000000 +0200
++++ linux/fs/proc/array.c	2006-04-06 12:04:07.000000000 +0200
+@@ -460,6 +460,25 @@
+ 		task_cpu(task),
+ 		task->rt_priority,
+ 		task->policy);
++
++	res += sprintf(buffer+res,                           /* ATOP */
++			"%lu %llu %lu %llu %lu %llu %lu "    /* ATOP */
++			"%llu %lu %llu %lu %llu %lu %lu\n",  /* ATOP */
++				task->stat.dsk_rio,          /* ATOP */
++				task->stat.dsk_rsz,          /* ATOP */
++				task->stat.dsk_wio,          /* ATOP */
++				task->stat.dsk_wsz,          /* ATOP */
++				task->stat.tcp_snd,          /* ATOP */
++				task->stat.tcp_ssz,          /* ATOP */
++				task->stat.tcp_rcv,          /* ATOP */
++				task->stat.tcp_rsz,          /* ATOP */
++				task->stat.udp_snd,          /* ATOP */
++				task->stat.udp_ssz,          /* ATOP */
++				task->stat.udp_rcv,          /* ATOP */
++				task->stat.udp_rsz,          /* ATOP */
++				task->stat.raw_snd,          /* ATOP */
++				task->stat.raw_rcv);         /* ATOP */
++
+ 	if(mm)
+ 		mmput(mm);
+ 	return res;
+diff -u --recursive linux-2.6.16.1-orig/include/linux/sched.h linux/include/linux/sched.h
+--- linux-2.6.16.1-orig/include/linux/sched.h	2006-04-05 11:25:16.000000000 +0200
++++ linux/include/linux/sched.h	2006-04-05 00:00:00.000000000 +0200
+@@ -871,6 +871,16 @@
+ #endif
+ 	atomic_t fs_excl;	/* holding fs exclusive resources */
+ 	struct rcu_head rcu;
++
++	struct {                                       /* ATOP */
++		unsigned long      dsk_rio, dsk_wio;   /* ATOP */
++		unsigned long long dsk_rsz, dsk_wsz;   /* ATOP */
++		unsigned long      tcp_snd, tcp_rcv;   /* ATOP */
++		unsigned long long tcp_ssz, tcp_rsz;   /* ATOP */
++		unsigned long      udp_snd, udp_rcv;   /* ATOP */
++		unsigned long long udp_ssz, udp_rsz;   /* ATOP */
++		unsigned long      raw_snd, raw_rcv;   /* ATOP */
++	} stat;                                        /* ATOP */
+ };
+ 
+ static inline pid_t process_group(struct task_struct *tsk)
+diff -u --recursive linux-2.6.16.1-orig/kernel/acct.c linux/kernel/acct.c
+--- linux-2.6.16.1-orig/kernel/acct.c	2006-04-05 11:25:41.000000000 +0200
++++ linux/kernel/acct.c	2006-04-06 11:24:00.000000000 +0200
+@@ -520,7 +520,8 @@
+ 	vsize = vsize / 1024;
+ 	ac.ac_mem = encode_comp_t(vsize);
+ 	ac.ac_io = encode_comp_t(0 /* current->io_usage */);	/* %% */
+-	ac.ac_rw = encode_comp_t(ac.ac_io / 1024);
++	ac.ac_rw = encode_comp_t(current->stat.dsk_rio + current->stat.dsk_wio); /* ATOP */
++
+ 	ac.ac_minflt = encode_comp_t(current->signal->min_flt +
+ 				     current->group_leader->min_flt);
+ 	ac.ac_majflt = encode_comp_t(current->signal->maj_flt +
+diff -u --recursive linux-2.6.16.1-orig/kernel/fork.c linux/kernel/fork.c
+--- linux-2.6.16.1-orig/kernel/fork.c	2006-04-05 11:26:04.000000000 +0200
++++ linux/kernel/fork.c	2006-04-06 12:03:20.000000000 +0200
+@@ -505,6 +505,14 @@
+ 	tsk->min_flt = tsk->maj_flt = 0;
+ 	tsk->nvcsw = tsk->nivcsw = 0;
+ 
++	tsk->stat.dsk_rio = tsk->stat.dsk_wio = 0;    /* ATOP */
++	tsk->stat.dsk_rsz = tsk->stat.dsk_wsz = 0;    /* ATOP */
++	tsk->stat.tcp_snd = tsk->stat.tcp_rcv = 0;    /* ATOP */
++	tsk->stat.tcp_ssz = tsk->stat.tcp_rsz = 0;    /* ATOP */
++	tsk->stat.udp_snd = tsk->stat.udp_rcv = 0;    /* ATOP */
++	tsk->stat.udp_ssz = tsk->stat.udp_rsz = 0;    /* ATOP */
++	tsk->stat.raw_snd = tsk->stat.raw_rcv = 0;    /* ATOP */
++
+ 	tsk->mm = NULL;
+ 	tsk->active_mm = NULL;
+ 
+diff -u --recursive linux-2.6.16.1-orig/net/socket.c linux/net/socket.c
+--- linux-2.6.16.1-orig/net/socket.c	2006-04-05 11:26:22.000000000 +0200
++++ linux/net/socket.c	2006-04-06 12:13:17.000000000 +0200
+@@ -544,10 +544,28 @@
+ 	si->size = size;
+ 
+ 	err = security_socket_sendmsg(sock, msg, size);
+-	if (err)
+-		return err;
++	if (!err)
++		err = sock->ops->sendmsg(iocb, sock, msg, size);
+ 
+-	return sock->ops->sendmsg(iocb, sock, msg, size);
++	if (err >= 0 && sock->sk) {                                   /* ATOP */
++		switch (sock->sk->sk_family) {                        /* ATOP */
++		   case PF_INET:                                      /* ATOP */
++		   case PF_INET6:                                     /* ATOP */
++			switch (sock->sk->sk_type) {                  /* ATOP */
++			   case SOCK_STREAM:                          /* ATOP */
++			    current->group_leader->stat.tcp_snd++;    /* ATOP */
++			    current->group_leader->stat.tcp_ssz+=size;/* ATOP */
++			    break;                                    /* ATOP */
++			   case SOCK_DGRAM:                           /* ATOP */
++			    current->group_leader->stat.udp_snd++;    /* ATOP */
++			    current->group_leader->stat.udp_ssz+=size;/* ATOP */
++			    break;                                    /* ATOP */
++			   case SOCK_RAW:                             /* ATOP */
++			    current->group_leader->stat.raw_snd++;    /* ATOP */
++			}                                             /* ATOP */
++		}                                                     /* ATOP */
++       }                                                              /* ATOP */
++       return err;
+ }
+ 
+ int sock_sendmsg(struct socket *sock, struct msghdr *msg, size_t size)
+@@ -595,10 +613,29 @@
+ 	si->flags = flags;
+ 
+ 	err = security_socket_recvmsg(sock, msg, size, flags);
+-	if (err)
+-		return err;
++	if (!err)
++		err = sock->ops->recvmsg(iocb, sock, msg, size, flags);
+ 
+-	return sock->ops->recvmsg(iocb, sock, msg, size, flags);
++	if (err >= 0 && sock->sk) {				      /* ATOP */
++		switch (sock->sk->sk_family) {			      /* ATOP */
++		   case PF_INET:				      /* ATOP */
++		   case PF_INET6: 				      /* ATOP */
++			switch (sock->sk->sk_type) {                  /* ATOP */
++			   case SOCK_STREAM:                          /* ATOP */
++			    current->group_leader->stat.tcp_rcv++;    /* ATOP */
++			    current->group_leader->stat.tcp_rsz+=size;/* ATOP */
++			    break;				      /* ATOP */
++			   case SOCK_DGRAM: 			      /* ATOP */
++			    current->group_leader->stat.udp_rcv++;    /* ATOP */
++			    current->group_leader->stat.udp_rsz+=size;/* ATOP */
++			    break;				      /* ATOP */
++			   case SOCK_RAW:                             /* ATOP */
++			    current->group_leader->stat.raw_rcv++;    /* ATOP */
++			    break;				      /* ATOP */
++			}					      /* ATOP */
++		}						      /* ATOP */
++	}              	                                 	      /* ATOP */
++	return err;
+ }
+ 
+ int sock_recvmsg(struct socket *sock, struct msghdr *msg, 

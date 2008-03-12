@@ -1,0 +1,24 @@
+ kernel/power/disk.c |    3 +++
+ 1 files changed, 3 insertions(+)
+
+Index: linux-2.6.16-ck11/kernel/power/disk.c
+===================================================================
+--- linux-2.6.16-ck11.orig/kernel/power/disk.c	2006-03-20 20:11:46.000000000 +1100
++++ linux-2.6.16-ck11/kernel/power/disk.c	2006-05-21 12:20:14.000000000 +1000
+@@ -18,6 +18,7 @@
+ #include <linux/fs.h>
+ #include <linux/mount.h>
+ #include <linux/pm.h>
++#include <linux/swap-prefetch.h>
+ 
+ #include "power.h"
+ 
+@@ -160,6 +161,8 @@ int pm_suspend_disk(void)
+  Done:
+ 	device_resume();
+ 	unprepare_processes();
++	if (!error && !in_suspend)
++		aggressive_swap_prefetch();
+ 	return error;
+ }
+ 

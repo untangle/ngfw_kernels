@@ -1,0 +1,55 @@
+ kernel/sched.c      |    4 ++--
+ mm/page-writeback.c |    2 +-
+ mm/vmscan.c         |    4 ++--
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+Index: linux-2.6.16-ck9/kernel/sched.c
+===================================================================
+--- linux-2.6.16-ck9.orig/kernel/sched.c	2006-05-02 10:39:51.000000000 +1000
++++ linux-2.6.16-ck9/kernel/sched.c	2006-05-02 10:40:03.000000000 +1000
+@@ -93,7 +93,7 @@ int sched_compute __read_mostly = 0;
+ #define RR_INTERVAL()		(_RR_INTERVAL * (1 + 9 * sched_compute))
+ #define DEF_TIMESLICE		(RR_INTERVAL() * 19)
+ 
+-int sched_iso_cpu __read_mostly = 80;
++int sched_iso_cpu __read_mostly;
+ #define ISO_PERIOD		(5 * HZ)
+ 
+ #define task_hot(p, now, sd) ((long long) ((now) - (p)->timestamp)	\
+@@ -708,7 +708,7 @@ static inline void dec_bonus(task_t *p)
+  * sched_interactive - sysctl which allows interactive tasks to have bonus
+  * raise its priority.
+  */
+-int sched_interactive __read_mostly = 1;
++int sched_interactive __read_mostly = 0;
+ 
+ /*
+  * effective_prio - dynamic priority dependent on bonus.
+Index: linux-2.6.16-ck9/mm/vmscan.c
+===================================================================
+--- linux-2.6.16-ck9.orig/mm/vmscan.c	2006-05-02 10:40:01.000000000 +1000
++++ linux-2.6.16-ck9/mm/vmscan.c	2006-05-02 10:40:03.000000000 +1000
+@@ -127,8 +127,8 @@ struct shrinker {
+ /*
+  * From 0 .. 100.  Lower means more swappy.
+  */
+-int vm_mapped __read_mostly = 66;
+-int vm_hardmaplimit __read_mostly = 1;
++int vm_mapped __read_mostly;
++int vm_hardmaplimit __read_mostly;
+ static long total_memory __read_mostly;
+ 
+ static LIST_HEAD(shrinker_list);
+Index: linux-2.6.16-ck9/mm/page-writeback.c
+===================================================================
+--- linux-2.6.16-ck9.orig/mm/page-writeback.c	2006-05-02 10:40:01.000000000 +1000
++++ linux-2.6.16-ck9/mm/page-writeback.c	2006-05-02 10:40:03.000000000 +1000
+@@ -69,7 +69,7 @@ int dirty_background_ratio = 10;
+ /*
+  * The generator of dirty data starts writeback at this percentage
+  */
+-int vm_dirty_ratio = 40;
++int vm_dirty_ratio = 66;
+ 
+ /*
+  * The interval between `kupdate'-style writebacks, in centiseconds

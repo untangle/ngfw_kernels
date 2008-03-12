@@ -1,0 +1,191 @@
+Index: untangle-linux-2.6_2.6.16/net/netfilter/nfnetlink_queue.c
+===================================================================
+--- untangle-linux-2.6_2.6.16.orig/net/netfilter/nfnetlink_queue.c	2008-02-26 16:06:52.000000000 -0800
++++ untangle-linux-2.6_2.6.16/net/netfilter/nfnetlink_queue.c	2008-02-26 16:33:04.000000000 -0800
+@@ -27,6 +27,17 @@
+ #include <linux/netfilter/nfnetlink_queue.h>
+ #include <linux/list.h>
+ #include <net/sock.h>
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++#include <net/netfilter/nf_conntrack.h>
++#include <net/netfilter/nf_conntrack_core.h>
++#endif
++
++#if defined(CONFIG_IP_NF_CONNTRACK) || defined(CONFIG_IP_NF_CONNTRACK_MODULE)
++#include <linux/netfilter_ipv4/ip_conntrack.h>
++#include <linux/netfilter_ipv4/ip_conntrack_tuple.h>
++#else
++#include <net/netfilter/nf_conntrack.h>
++#endif
+ 
+ #include <asm/atomic.h>
+ 
+@@ -70,6 +81,10 @@
+ 	spinlock_t lock;
+ 
+ 	struct list_head queue_list;		/* packets in queue */
++
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++	int untangle_mode;			/* append conntrack info to queued packets*/
++#endif
+ };
+ 
+ typedef int (*nfqnl_cmpfn)(struct nfqnl_queue_entry *, unsigned long);
+@@ -140,6 +155,9 @@
+ 	if (!inst)
+ 		goto out_unlock;
+ 
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++	inst->untangle_mode = 0;
++#endif
+ 	inst->queue_num = queue_num;
+ 	inst->peer_pid = pid;
+ 	inst->queue_maxlen = NFQNL_QMAX_DEFAULT;
+@@ -289,7 +307,14 @@
+ 		 unsigned char mode, unsigned int range)
+ {
+ 	int status = 0;
+-	
++
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++	if (mode & NFQNL_COPY_UNTANGLE_MODE) {
++	  queue->untangle_mode = 1;
++	  mode = mode & ~NFQNL_COPY_UNTANGLE_MODE;
++	}
++#endif
++
+ 	switch (mode) {
+ 	case NFQNL_COPY_NONE:
+ 	case NFQNL_COPY_META:
+@@ -365,6 +390,16 @@
+ 		+ NLMSG_SPACE(sizeof(struct nfqnl_msg_packet_hw))
+ 		+ NLMSG_SPACE(sizeof(struct nfqnl_msg_packet_timestamp));
+ 
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++		if( queue->untangle_mode){
++			size +=
++			  NLMSG_SPACE(sizeof(enum ip_conntrack_info))
++			+ NLMSG_SPACE(sizeof(struct nf_conntrack_tuple))  /* dir original */
++			+ NLMSG_SPACE(sizeof(struct nf_conntrack_tuple));  /* dir reply */
++		}
++		
++#endif
++
+ 	outdev = entinf->outdev;
+ 
+ 	spin_lock_bh(&queue->lock);
+@@ -504,6 +539,65 @@
+ 		NFA_PUT(skb, NFQA_TIMESTAMP, sizeof(ts), &ts);
+ 	}
+ 
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++	enum ip_conntrack_info ctinfo;
++	struct ip_conntrack *tmp = ip_conntrack_get(entskb, &ctinfo); // order sensative
++	struct nf_conn *ct = nf_ct_get(entskb, &ctinfo);              // dont reverse these
++	struct nf_conntrack_tuple orig;
++	struct nf_conntrack_tuple repl;
++
++	orig.src.u3.ip      = tmp->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.ip;
++	orig.src.u.tcp.port = tmp->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.tcp.port;
++	orig.src.l3num      = tmp->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.protonum; //dont 'fix' this
++	orig.dst.u3.ip      = tmp->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.ip;
++	orig.dst.u.tcp.port = tmp->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.tcp.port;
++	orig.dst.protonum   = tmp->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.protonum;
++	orig.dst.dir        = tmp->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.dir;
++	repl.src.u3.ip      = tmp->tuplehash[IP_CT_DIR_REPLY].tuple.src.ip;
++	repl.src.u.tcp.port = tmp->tuplehash[IP_CT_DIR_REPLY].tuple.src.u.tcp.port;
++	repl.src.l3num      = tmp->tuplehash[IP_CT_DIR_REPLY].tuple.dst.protonum; //dont 'fix' this
++	repl.dst.u3.ip      = tmp->tuplehash[IP_CT_DIR_REPLY].tuple.dst.ip;
++	repl.dst.u.tcp.port = tmp->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u.tcp.port;
++	repl.dst.protonum   = tmp->tuplehash[IP_CT_DIR_REPLY].tuple.dst.protonum;
++	repl.dst.dir        = tmp->tuplehash[IP_CT_DIR_REPLY].tuple.dst.dir;
++	/*
++	printk("FLAG: ip_conntrack: %p:%d -> %d:%p:%d\n                    %p:%d ->%d:%p:%d\n",
++	       tmp->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.ip,
++	       ntohs(tmp->tuplehash[IP_CT_DIR_ORIGINAL].tuple.src.u.tcp.port),
++	       tmp->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.protonum,
++	       tmp->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.ip,
++	       ntohs(tmp->tuplehash[IP_CT_DIR_ORIGINAL].tuple.dst.u.tcp.port),
++	       tmp->tuplehash[IP_CT_DIR_REPLY].tuple.src.ip,
++	       ntohs(tmp->tuplehash[IP_CT_DIR_REPLY].tuple.src.u.tcp.port),
++	       tmp->tuplehash[IP_CT_DIR_REPLY].tuple.dst.protonum,
++	       tmp->tuplehash[IP_CT_DIR_REPLY].tuple.dst.ip,
++	       ntohs(tmp->tuplehash[IP_CT_DIR_REPLY].tuple.dst.u.tcp.port)
++	       );
++	printk("FLAG: nf_conntrack: %d:%p:%d -> %d:%p:%d\n                    %d:%p:%d ->%d:%p:%d\n",
++	       orig.src.l3num      ,
++	       orig.src.u3.ip      ,
++	       orig.src.u.tcp.port ,
++	       orig.dst.protonum   ,
++	       orig.dst.u3.ip      ,
++	       orig.dst.u.tcp.port ,
++	       repl.src.l3num      ,
++	       repl.src.u3.ip      ,
++	       repl.src.u.tcp.port ,
++	       repl.dst.protonum   ,
++	       repl.dst.u3.ip      ,
++	       repl.dst.u.tcp.port 
++	       );
++        */
++	if (queue->untangle_mode){
++
++		if ( ct ) {
++			NFA_PUT(skb, NFQA_CTINFO, sizeof(ctinfo), &ctinfo);
++			NFA_PUT(skb, NFQA_CT_DIR_ORIGINAL, sizeof(orig),  &orig);
++			NFA_PUT(skb, NFQA_CT_DIR_REPLY, sizeof(repl), &repl);
++	  	}
++	}
++#endif
++
+ 	if (data_len) {
+ 		struct nfattr *nfa;
+ 		int size = NFA_LENGTH(data_len);
+Index: untangle-linux-2.6_2.6.16/include/linux/netfilter/nfnetlink_queue.h
+===================================================================
+--- untangle-linux-2.6_2.6.16.orig/include/linux/netfilter/nfnetlink_queue.h	2008-02-19 13:35:08.000000000 -0800
++++ untangle-linux-2.6_2.6.16/include/linux/netfilter/nfnetlink_queue.h	2008-02-26 16:08:38.000000000 -0800
+@@ -42,6 +42,12 @@
+ 	NFQA_HWADDR,			/* nfqnl_msg_packet_hw */
+ 	NFQA_PAYLOAD,			/* opaque data payload */
+ 
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++	NFQA_CTINFO,
++	NFQA_CT_DIR_ORIGINAL,
++	NFQA_CT_DIR_REPLY,
++#endif
++
+ 	__NFQA_MAX
+ };
+ #define NFQA_MAX (__NFQA_MAX - 1)
+@@ -72,6 +78,12 @@
+ 	NFQNL_COPY_PACKET,
+ };
+ 
++#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
++/* ORed with  nfqnl_config_mode to indicate that */
++/* conntrack info should be added to each queued packet */
++#define NFQNL_COPY_UNTANGLE_MODE 0x10
++#endif
++
+ struct nfqnl_msg_config_params {
+ 	u_int32_t	copy_range;
+ 	u_int8_t	copy_mode;	/* enum nfqnl_config_mode */
+Index: untangle-linux-2.6_2.6.16/net/netfilter/Kconfig
+===================================================================
+--- untangle-linux-2.6_2.6.16.orig/net/netfilter/Kconfig	2008-02-19 13:35:11.000000000 -0800
++++ untangle-linux-2.6_2.6.16/net/netfilter/Kconfig	2008-02-26 16:08:38.000000000 -0800
+@@ -13,6 +13,14 @@
+ 	help
+ 	  If this option isenabled, the kernel will include support
+ 	  for queueing packets via NFNETLINK.
++
++config NFNETLINK_COPY_UNTANGLE_MODE
++	bool "NFNETLINK untangle copy mode"
++	depends on NETFILTER_NETLINK
++	help
++	  If this option is enabled, the kernel will include support
++	  for appending conntrack info to queueed packets. to use this
++	  requires the use of untnagle's libnetfilter_queue.
+ 	  
+ config NETFILTER_NETLINK_LOG
+ 	tristate "Netfilter LOG over NFNETLINK interface"

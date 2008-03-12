@@ -1,0 +1,168 @@
+ fs/buffer.c          |    2 +-
+ include/linux/swap.h |    2 +-
+ mm/page_alloc.c      |    2 +-
+ mm/vmscan.c          |   34 ++++++++++++++++++++--------------
+ 4 files changed, 23 insertions(+), 17 deletions(-)
+
+Index: linux-2.6.16-ck11/fs/buffer.c
+===================================================================
+--- linux-2.6.16-ck11.orig/fs/buffer.c	2006-03-20 20:11:33.000000000 +1100
++++ linux-2.6.16-ck11/fs/buffer.c	2006-05-21 12:20:12.000000000 +1000
+@@ -499,7 +499,7 @@ static void free_more_memory(void)
+ 	for_each_pgdat(pgdat) {
+ 		zones = pgdat->node_zonelists[gfp_zone(GFP_NOFS)].zones;
+ 		if (*zones)
+-			try_to_free_pages(zones, GFP_NOFS);
++			try_to_free_pages(zones, GFP_NOFS, NULL);
+ 	}
+ }
+ 
+Index: linux-2.6.16-ck11/include/linux/swap.h
+===================================================================
+--- linux-2.6.16-ck11.orig/include/linux/swap.h	2006-05-21 12:20:10.000000000 +1000
++++ linux-2.6.16-ck11/include/linux/swap.h	2006-05-21 12:20:12.000000000 +1000
+@@ -173,7 +173,7 @@ extern int rotate_reclaimable_page(struc
+ extern void swap_setup(void);
+ 
+ /* linux/mm/vmscan.c */
+-extern int try_to_free_pages(struct zone **, gfp_t);
++extern int try_to_free_pages(struct zone **, gfp_t, struct task_struct *p);
+ extern int shrink_all_memory(int);
+ extern int vm_mapped;
+ extern int vm_hardmaplimit;
+Index: linux-2.6.16-ck11/mm/page_alloc.c
+===================================================================
+--- linux-2.6.16-ck11.orig/mm/page_alloc.c	2006-05-21 12:20:12.000000000 +1000
++++ linux-2.6.16-ck11/mm/page_alloc.c	2006-05-21 12:20:12.000000000 +1000
+@@ -990,7 +990,7 @@ rebalance:
+ 	reclaim_state.reclaimed_slab = 0;
+ 	p->reclaim_state = &reclaim_state;
+ 
+-	did_some_progress = try_to_free_pages(zonelist->zones, gfp_mask);
++	did_some_progress = try_to_free_pages(zonelist->zones, gfp_mask, p);
+ 
+ 	p->reclaim_state = NULL;
+ 	p->flags &= ~PF_MEMALLOC;
+Index: linux-2.6.16-ck11/mm/vmscan.c
+===================================================================
+--- linux-2.6.16-ck11.orig/mm/vmscan.c	2006-05-21 12:20:12.000000000 +1000
++++ linux-2.6.16-ck11/mm/vmscan.c	2006-05-21 12:20:12.000000000 +1000
+@@ -1468,7 +1468,8 @@ shrink_caches(struct zone **zones, struc
+  * holds filesystem locks which prevent writeout this might not work, and the
+  * allocation attempt will fail.
+  */
+-int try_to_free_pages(struct zone **zones, gfp_t gfp_mask)
++int try_to_free_pages(struct zone **zones, gfp_t gfp_mask,
++		      struct task_struct *p )
+ {
+ 	int priority;
+ 	int ret = 0;
+@@ -1476,7 +1477,10 @@ int try_to_free_pages(struct zone **zone
+ 	struct reclaim_state *reclaim_state = current->reclaim_state;
+ 	struct scan_control sc;
+ 	unsigned long lru_pages = 0;
+-	int i;
++	int i, scan_priority = DEF_PRIORITY;
++
++	if (p)
++		scan_priority = sc_priority(p);
+ 
+ 	sc.gfp_mask = gfp_mask;
+ 	sc.may_writepage = !laptop_mode;
+@@ -1492,11 +1496,11 @@ int try_to_free_pages(struct zone **zone
+ 		if (!cpuset_zone_allowed(zone, __GFP_HARDWALL))
+ 			continue;
+ 
+-		zone->temp_priority = DEF_PRIORITY;
++		zone->temp_priority = scan_priority;
+ 		lru_pages += zone->nr_active + zone->nr_inactive;
+ 	}
+ 
+-	for (priority = DEF_PRIORITY; priority >= 0; priority--) {
++	for (priority = scan_priority; priority >= 0; priority--) {
+ 		sc.nr_mapped = read_page_state(nr_mapped);
+ 		sc.nr_scanned = 0;
+ 		sc.nr_reclaimed = 0;
+@@ -1530,7 +1534,7 @@ int try_to_free_pages(struct zone **zone
+ 		}
+ 
+ 		/* Take a nap, wait for some writeback to complete */
+-		if (sc.nr_scanned && priority < DEF_PRIORITY - 2)
++		if (sc.nr_scanned && priority < scan_priority - 2)
+ 			blk_congestion_wait(WRITE, HZ/10);
+ 	}
+ out:
+@@ -1573,13 +1577,15 @@ out:
+ static int balance_pgdat(pg_data_t *pgdat, int nr_pages, int order)
+ {
+ 	int to_free = nr_pages;
+-	int all_zones_ok;
++	int all_zones_ok = 0;
+ 	int priority;
+-	int i;
++	int i, scan_priority;
+ 	int total_scanned, total_reclaimed;
+ 	struct reclaim_state *reclaim_state = current->reclaim_state;
+ 	struct scan_control sc;
+ 
++	scan_priority = sc_priority(pgdat->kswapd);
++
+ loop_again:
+ 	total_scanned = 0;
+ 	total_reclaimed = 0;
+@@ -1593,10 +1599,10 @@ loop_again:
+ 	for (i = 0; i < pgdat->nr_zones; i++) {
+ 		struct zone *zone = pgdat->node_zones + i;
+ 
+-		zone->temp_priority = DEF_PRIORITY;
++		zone->temp_priority = scan_priority;
+ 	}
+ 
+-	for (priority = DEF_PRIORITY; priority >= 0; priority--) {
++	for (priority = scan_priority; priority >= 0; priority--) {
+ 		int end_zone = 0;	/* Inclusive.  0 = ZONE_DMA */
+ 		unsigned long lru_pages = 0;
+ 
+@@ -1619,7 +1625,7 @@ loop_again:
+ 					continue;
+ 
+ 				if (zone->all_unreclaimable &&
+-						priority != DEF_PRIORITY)
++						priority != scan_priority)
+ 					continue;
+ 
+ 				/*
+@@ -1629,7 +1635,7 @@ loop_again:
+ 				 */
+ 				watermark = zone->pages_high +
+ 					(zone->pages_high * priority /
+-					DEF_PRIORITY);
++					scan_priority);
+ 
+ 				if (!zone_watermark_ok(zone, order,
+ 						watermark, 0, 0)) {
+@@ -1664,13 +1670,13 @@ scan:
+ 			if (!populated_zone(zone))
+ 				continue;
+ 
+-			if (zone->all_unreclaimable && priority != DEF_PRIORITY)
++			if (zone->all_unreclaimable && priority != scan_priority)
+ 				continue;
+ 
+ 			if (nr_pages == 0) {	/* Not software suspend */
+ 				unsigned long watermark = zone->pages_high +
+ 					(zone->pages_high * priority /
+-					DEF_PRIORITY);
++					scan_priority);
+ 				if (!zone_watermark_ok(zone, order,
+ 						watermark, end_zone, 0))
+ 					all_zones_ok = 0;
+@@ -1711,7 +1717,7 @@ scan:
+ 		 * OK, kswapd is getting into trouble.  Take a nap, then take
+ 		 * another pass across the zones.
+ 		 */
+-		if (total_scanned && priority < DEF_PRIORITY - 2)
++		if (total_scanned && priority < scan_priority - 2)
+ 			blk_congestion_wait(WRITE, HZ/10);
+ 
+ 		/*

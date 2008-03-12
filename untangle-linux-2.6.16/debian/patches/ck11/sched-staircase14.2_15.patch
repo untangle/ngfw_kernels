@@ -1,0 +1,361 @@
+ include/linux/sched.h |    2 
+ kernel/sched.c        |  141 +++++++++++++++++++++++++-------------------------
+ 2 files changed, 72 insertions(+), 71 deletions(-)
+
+Index: linux-2.6.16-ck11/kernel/sched.c
+===================================================================
+--- linux-2.6.16-ck11.orig/kernel/sched.c	2006-05-21 12:20:05.000000000 +1000
++++ linux-2.6.16-ck11/kernel/sched.c	2006-05-21 12:20:05.000000000 +1000
+@@ -16,9 +16,9 @@
+  *		by Davide Libenzi, preemptible kernel bits by Robert Love.
+  *  2003-09-03	Interactivity tuning by Con Kolivas.
+  *  2004-04-02	Scheduler domains code by Nick Piggin
+- *  2006-03-16	New staircase scheduling policy by Con Kolivas with help
++ *  2006-04-02	Staircase scheduling policy by Con Kolivas with help
+  *		from William Lee Irwin III, Zwane Mwaikambo & Peter Williams.
+- *		Staircase v14.2
++ *		Staircase v15
+  */
+ 
+ #include <linux/mm.h>
+@@ -64,6 +64,7 @@
+ #define NICE_TO_PRIO(nice)	(MAX_RT_PRIO + (nice) + 20)
+ #define PRIO_TO_NICE(prio)	((prio) - MAX_RT_PRIO - 20)
+ #define TASK_NICE(p)		PRIO_TO_NICE((p)->static_prio)
++#define MIN_USER_PRIO		(MAX_PRIO - 2)
+ 
+ /*
+  * 'User priority' is the nice value converted to something we
+@@ -77,9 +78,9 @@
+ /*
+  * Some helpers for converting nanosecond timing to jiffy resolution
+  */
+-#define NS_TO_JIFFIES(TIME)	((TIME) / (1000000000 / HZ))
+-#define JIFFIES_TO_NS(TIME)	((TIME) * (1000000000 / HZ))
+ #define NSJIFFY			(1000000000 / HZ)	/* One jiffy in ns */
++#define NS_TO_JIFFIES(TIME)	((TIME) / NSJIFFY)
++#define JIFFIES_TO_NS(TIME)	((TIME) * NSJIFFY)
+ #define TASK_PREEMPTS_CURR(p, rq)	((p)->prio < (rq)->curr->prio)
+ 
+ int sched_compute __read_mostly = 0;
+@@ -89,7 +90,7 @@ int sched_compute __read_mostly = 0;
+  *and has twenty times larger intervals. Set to a minimum of 6ms.
+  */
+ #define _RR_INTERVAL		((6 * HZ / 1001) + 1)
+-#define RR_INTERVAL()		(_RR_INTERVAL * (1 + 16 * sched_compute))
++#define RR_INTERVAL()		(_RR_INTERVAL * (1 + 9 * sched_compute))
+ #define DEF_TIMESLICE		(RR_INTERVAL() * 19)
+ 
+ int sched_iso_cpu __read_mostly = 80;
+@@ -133,10 +134,10 @@ struct runqueue {
+ 	unsigned long nr_uninterruptible;
+ 
+ 	unsigned long iso_ticks;
+-	unsigned int iso_refractory;
++	unsigned short iso_refractory;
+ 
+ 	unsigned long long timestamp_last_tick;
+-	unsigned int cache_ticks, preempted;
++	unsigned short cache_ticks, preempted;
+ 	task_t *curr, *idle;
+ 	struct mm_struct *prev_mm;
+ 	unsigned long bitmap[BITS_TO_LONGS(MAX_PRIO + 1)];
+@@ -507,7 +508,7 @@ static unsigned long ns_diff(const unsig
+ 	const unsigned long long v2)
+ {
+ 	unsigned long long vdiff;
+-	if (likely(v1 > v2)) {
++	if (likely(v1 >= v2)) {
+ 		vdiff = v1 - v2;
+ #if BITS_PER_LONG < 64
+ 		if (vdiff > (1 << 31))
+@@ -549,9 +550,16 @@ static void fastcall enqueue_task(task_t
+  * Put task to the end of the run list without the overhead of dequeue
+  * followed by enqueue.
+  */
+-static inline void requeue_task(task_t *p, runqueue_t *rq)
++static void fastcall requeue_task(task_t *p, runqueue_t *rq, const int prio)
+ {
+-	list_move_tail(&p->run_list, rq->queue + p->prio);
++	list_move_tail(&p->run_list, rq->queue + prio);
++	if (p->prio != prio) {
++		if (list_empty(rq->queue + p->prio))
++			__clear_bit(p->prio, rq->bitmap);
++		p->prio = prio;
++		__set_bit(prio, rq->bitmap);
++	}
++	p->ns_debit = 0;
+ }
+ 
+ static inline void enqueue_task_head(task_t *p, runqueue_t *rq)
+@@ -626,7 +634,7 @@ static inline void dec_nr_running(const 
+ /*
+  * __activate_task - move a task to the runqueue.
+  */
+-static void fastcall __activate_task(task_t *p, runqueue_t *rq)
++static inline void __activate_task(task_t *p, runqueue_t *rq)
+ {
+ 	enqueue_task(p, rq);
+ 	inc_nr_running(p, rq);
+@@ -680,20 +688,18 @@ static unsigned int fastcall slice(const
+ static void fastcall inc_bonus(task_t *p, const unsigned long totalrun,
+ 	const unsigned long sleep)
+ {
+-	unsigned int best_bonus;
++	unsigned int best_bonus = sleep / (totalrun + 1);
+ 
+-	best_bonus = sleep / (totalrun + 1);
+ 	if (p->bonus >= best_bonus)
+ 		return;
+-
+-	p->bonus++;
+ 	best_bonus = bonus(p);
+-	if (p->bonus > best_bonus)
+-		p->bonus = best_bonus;
++	if (p->bonus < best_bonus)
++		p->bonus++;
+ }
+ 
+-static void dec_bonus(task_t *p)
++static inline void dec_bonus(task_t *p)
+ {
++	p->totalrun = 0;
+ 	if (p->bonus)
+ 		p->bonus--;
+ }
+@@ -739,7 +745,7 @@ static int effective_prio(task_t *p)
+ 			 */
+ 			p->time_slice = p->slice % RR_INTERVAL() ? :
+ 				RR_INTERVAL();
+-			return MAX_PRIO - 2;
++			return MIN_USER_PRIO;
+ 		}
+ 		return MAX_PRIO - 1;
+ 	}
+@@ -755,8 +761,8 @@ static int effective_prio(task_t *p)
+ 
+ 	rr = rr_interval(p);
+ 	prio += used_slice / rr;
+-	if (prio > MAX_PRIO - 2)
+-		prio = MAX_PRIO - 2;
++	if (prio > MIN_USER_PRIO)
++		prio = MIN_USER_PRIO;
+ 	return prio;
+ }
+ 
+@@ -764,13 +770,14 @@ static inline void continue_slice(task_t
+ {
+ 	unsigned long total_run = NS_TO_JIFFIES(p->totalrun);
+ 
+-	if (total_run >= p->slice) {
+-		p->totalrun -= JIFFIES_TO_NS(p->slice);
++	if (total_run >= p->slice || p->prio == MIN_USER_PRIO)
+ 		dec_bonus(p);
+-	} else {
+-		unsigned int remainder;
++	else {
++		unsigned long remainder;
+ 
+ 		p->slice -= total_run;
++		if (p->slice <= p->time_slice)
++			dec_bonus(p);
+ 		remainder = p->slice % rr_interval(p);
+ 		if (remainder)
+ 			p->time_slice = remainder;
+@@ -784,34 +791,35 @@ static inline void continue_slice(task_t
+  */
+ static inline void recalc_task_prio(task_t *p, const unsigned long long now)
+ {
++	/* Double the systime to account for missed sub-jiffy time */
++	unsigned long ns_systime = JIFFIES_TO_NS(p->systime) * 2;
+ 	unsigned long sleep_time = ns_diff(now, p->timestamp);
+ 
+ 	/*
+-	 * Add the total for this last scheduled run (p->runtime) to the
+-	 * running total so far used (p->totalrun).
+-	 */
+-	p->totalrun += p->runtime;
++	 * Add the total for this last scheduled run (p->runtime) and system
++	 * time (p->systime) done on behalf of p to the running total so far
++	 * used (p->totalrun).
++	 */
++	p->totalrun += p->runtime + ns_systime;
++
++	/* systime is unintentionally seen as sleep, subtract it */
++	if (likely(ns_systime < sleep_time))
++		sleep_time -= ns_systime;
++	else
++		sleep_time = 0;
+ 
+ 	/*
+ 	 * If we sleep longer than our running total and have not set the
+ 	 * PF_NONSLEEP flag we gain a bonus.
+ 	 */
+-	if (sleep_time >= p->totalrun && !(p->flags & PF_NONSLEEP) &&
+-		!sched_compute) {
+-			inc_bonus(p, p->totalrun, sleep_time);
+-			p->totalrun = 0;
+-			return;
++	if (sleep_time >= p->totalrun && !(p->flags & PF_NONSLEEP)) {
++		inc_bonus(p, p->totalrun, sleep_time);
++		p->totalrun = 0;
++		return;
+ 	}
+ 
+-	/*
+-	 * If we have not set the PF_NONSLEEP flag we elevate priority by the
+-	 * amount of time we slept.
+-	 */
+-	if (p->flags & PF_NONSLEEP)
+-		p->flags &= ~PF_NONSLEEP;
+-	else
+-		p->totalrun -= sleep_time;
+-
++	/* We elevate priority by the amount of time we slept. */
++	p->totalrun -= sleep_time;
+ 	continue_slice(p);
+ }
+ 
+@@ -839,6 +847,7 @@ static void activate_task(task_t *p, run
+ 	if (!rt_task(p)) {
+ 		recalc_task_prio(p, now);
+ 		p->flags &= ~PF_NONSLEEP;
++		p->systime = 0;
+ 		p->prio = effective_prio(p);
+ 	}
+ 	p->timestamp = now;
+@@ -1220,11 +1229,15 @@ static inline int wake_idle(const int cp
+  */
+ static void fastcall preempt(const task_t *p, runqueue_t *rq)
+ {
+-	if (p->prio >= rq->curr->prio)
++	task_t *curr = rq->curr;
++
++	if (p->prio >= curr->prio)
+ 		return;
+-	if (!sched_compute || rq->cache_ticks >= CACHE_DELAY ||
+-		!p->mm || rt_task(p))
+-			resched_task(rq->curr);
++	if (!sched_compute || rq->cache_ticks >= CACHE_DELAY || !p->mm ||
++	    rt_task(p) || curr == rq->idle) {
++		resched_task(curr);
++		return;
++	}
+ 	rq->preempted = 1;
+ }
+ 
+@@ -1448,21 +1461,20 @@ void fastcall wake_up_new_task(task_t *p
+ 	this_cpu = smp_processor_id();
+ 	cpu = task_cpu(p);
+ 
+-	/*
+-	 * Forked process gets no bonus to prevent fork bombs.
+-	 */
++	/* Forked process gets no bonus to prevent fork bombs. */
+ 	p->bonus = 0;
++	current->flags |= PF_NONSLEEP;
+ 
+ 	if (likely(cpu == this_cpu)) {
+-		current->flags |= PF_NONSLEEP;
+ 		activate_task(p, rq, 1);
+-		if (!(clone_flags & CLONE_VM))
++		if (!(clone_flags & CLONE_VM)) {
+ 			/*
+ 			 * The VM isn't cloned, so we're in a good position to
+ 			 * do child-runs-first in anticipation of an exec. This
+ 			 * usually avoids a lot of COW overhead.
+ 			 */
+ 			set_need_resched();
++		}
+ 		/*
+ 		 * We skip the following code due to cpu == this_cpu
+ 	 	 *
+@@ -1488,7 +1500,6 @@ void fastcall wake_up_new_task(task_t *p
+ 		 */
+ 		task_rq_unlock(rq, &flags);
+ 		this_rq = task_rq_lock(current, &flags);
+-		current->flags |= PF_NONSLEEP;
+ 	}
+ 	task_rq_unlock(this_rq, &flags);
+ }
+@@ -2518,6 +2529,7 @@ void account_system_time(struct task_str
+ 	else
+ 		cpustat->idle = cputime64_add(cpustat->idle, tmp);
+ 
++	p->systime++;
+ 	/* Account for system time used */
+ 	acct_update_integrals(p);
+ }
+@@ -2546,10 +2558,8 @@ void account_steal_time(struct task_stru
+ static void time_slice_expired(task_t *p, runqueue_t *rq)
+ {
+ 	set_tsk_need_resched(p);
+-	dequeue_task(p, rq);
+-	p->prio = effective_prio(p);
+ 	p->time_slice = rr_interval(p);
+-	enqueue_task(p, rq);
++	requeue_task(p, rq, effective_prio(p));
+ }
+ 
+ /*
+@@ -2635,7 +2645,6 @@ void scheduler_tick(void)
+ 		dec_bonus(p);
+ 		p->slice = slice(p);
+ 		time_slice_expired(p, rq);
+-		p->totalrun = 0;
+ 		goto out_unlock;
+ 	}
+ 	/*
+@@ -2994,8 +3003,7 @@ switch_tasks:
+ 
+ 	sched_info_switch(prev, next);
+ 	if (likely(prev != next)) {
+-		rq->preempted = 0;
+-		rq->cache_ticks = 0;
++		rq->preempted = rq->cache_ticks = 0;
+ 		next->timestamp = now;
+ 		rq->nr_switches++;
+ 		rq->curr = next;
+@@ -3969,14 +3977,9 @@ asmlinkage long sys_sched_yield(void)
+ 	current->slice = slice(current);
+ 	current->time_slice = rr_interval(current);
+ 	if (likely(!rt_task(current) && !idleprio_task(current)))
+-		newprio = MAX_PRIO - 2;
++		newprio = MIN_USER_PRIO;
+ 
+-	if (newprio != current->prio) {
+-		dequeue_task(current, rq);
+-		current->prio = newprio;
+-		enqueue_task(current, rq);
+-	} else
+-		requeue_task(current, rq);
++	requeue_task(current, rq, newprio);
+ 
+ 	/*
+ 	 * Since we are going to call schedule() anyway, there's
+@@ -6002,10 +6005,8 @@ void __init sched_init(void)
+ 
+ 		rq = cpu_rq(i);
+ 		spin_lock_init(&rq->lock);
+-		rq->nr_running = 0;
+-		rq->cache_ticks = 0;
+-		rq->preempted = 0;
+-		rq->iso_ticks = 0;
++		rq->nr_running = rq->cache_ticks = rq->preempted =
++				 rq->iso_ticks = 0;
+ 
+ #ifdef CONFIG_SMP
+ 		rq->sd = NULL;
+Index: linux-2.6.16-ck11/include/linux/sched.h
+===================================================================
+--- linux-2.6.16-ck11.orig/include/linux/sched.h	2006-05-21 12:20:05.000000000 +1000
++++ linux-2.6.16-ck11/include/linux/sched.h	2006-05-21 12:20:05.000000000 +1000
+@@ -739,7 +739,7 @@ struct task_struct {
+ 	unsigned short ioprio;
+ 
+ 	unsigned long long timestamp;
+-	unsigned long runtime, totalrun, ns_debit;
++	unsigned long runtime, totalrun, ns_debit, systime;
+ 	unsigned int bonus;
+ 	unsigned int slice, time_slice;
+ 	unsigned long long sched_time; /* sched_clock time spent running */

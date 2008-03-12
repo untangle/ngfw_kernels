@@ -1,0 +1,14 @@
+diff -Nru ../linux-2.6.15.1-dev/drivers/net/e1000/e1000_hw.h ./drivers/net/e1000/e1000_hw.h
+--- ../linux-2.6.15.1-dev/drivers/net/e1000/e1000_hw.h	2006-01-14 22:16:02.000000000 -0800
++++ ./drivers/net/e1000/e1000_hw.h	2006-02-26 12:15:28.000000000 -0800
+@@ -2719,7 +2719,9 @@
+ #define ADVERTISE_100_FULL  0x0008
+ #define ADVERTISE_1000_HALF 0x0010
+ #define ADVERTISE_1000_FULL 0x0020
+-#define AUTONEG_ADVERTISE_SPEED_DEFAULT 0x002F  /* Everything but 1000-Half */
++/* XXX metavize limit to 100 Mbit */
++/* #define AUTONEG_ADVERTISE_SPEED_DEFAULT 0x002F  /* Everything but 1000-Half */
++#define AUTONEG_ADVERTISE_SPEED_DEFAULT 0x000F /* All 10/100 speeds*/
+ #define AUTONEG_ADVERTISE_10_100_ALL    0x000F /* All 10/100 speeds*/
+ #define AUTONEG_ADVERTISE_10_ALL        0x0003 /* 10Mbps Full & Half speeds*/
+ 

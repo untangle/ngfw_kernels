@@ -1,0 +1,16 @@
+ block/Kconfig.iosched |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
+
+Index: linux-2.6.16-ck11/block/Kconfig.iosched
+===================================================================
+--- linux-2.6.16-ck11.orig/block/Kconfig.iosched	2006-01-03 17:36:16.000000000 +1100
++++ linux-2.6.16-ck11/block/Kconfig.iosched	2006-05-21 12:20:06.000000000 +1000
+@@ -40,7 +40,7 @@ config IOSCHED_CFQ
+ 
+ choice
+ 	prompt "Default I/O scheduler"
+-	default DEFAULT_AS
++	default DEFAULT_CFQ
+ 	help
+ 	  Select the I/O scheduler which will be used by default for all
+ 	  block devices.

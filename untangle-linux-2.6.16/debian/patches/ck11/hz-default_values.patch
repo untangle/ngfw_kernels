@@ -1,0 +1,90 @@
+ arch/ia64/configs/tiger_defconfig |    6 +++---
+ arch/ia64/configs/zx1_defconfig   |    6 +++---
+ arch/ppc/configs/common_defconfig |    6 +++---
+ arch/ppc/configs/pmac_defconfig   |    6 +++---
+ kernel/Kconfig.hz                 |    2 +-
+ 5 files changed, 13 insertions(+), 13 deletions(-)
+
+Index: linux-2.6.16-ck11/arch/ia64/configs/tiger_defconfig
+===================================================================
+--- linux-2.6.16-ck11.orig/arch/ia64/configs/tiger_defconfig	2006-03-20 20:11:01.000000000 +1100
++++ linux-2.6.16-ck11/arch/ia64/configs/tiger_defconfig	2006-05-21 12:20:08.000000000 +1000
+@@ -105,10 +105,10 @@ CONFIG_IA64_PAGE_SIZE_16KB=y
+ # CONFIG_IA64_PAGE_SIZE_64KB is not set
+ CONFIG_PGTABLE_3=y
+ # CONFIG_PGTABLE_4 is not set
+-# CONFIG_HZ_100 is not set
+-CONFIG_HZ_250=y
++CONFIG_HZ_100=y
++# CONFIG_HZ_250 is not set
+ # CONFIG_HZ_1000 is not set
+-CONFIG_HZ=250
++CONFIG_HZ=100
+ CONFIG_IA64_L1_CACHE_SHIFT=7
+ CONFIG_IA64_CYCLONE=y
+ CONFIG_IOSAPIC=y
+Index: linux-2.6.16-ck11/arch/ia64/configs/zx1_defconfig
+===================================================================
+--- linux-2.6.16-ck11.orig/arch/ia64/configs/zx1_defconfig	2006-03-20 20:11:01.000000000 +1100
++++ linux-2.6.16-ck11/arch/ia64/configs/zx1_defconfig	2006-05-21 12:20:08.000000000 +1000
+@@ -103,10 +103,10 @@ CONFIG_IA64_PAGE_SIZE_16KB=y
+ # CONFIG_IA64_PAGE_SIZE_64KB is not set
+ CONFIG_PGTABLE_3=y
+ # CONFIG_PGTABLE_4 is not set
+-# CONFIG_HZ_100 is not set
+-CONFIG_HZ_250=y
++CONFIG_HZ_100=y
++# CONFIG_HZ_250 is not set
+ # CONFIG_HZ_1000 is not set
+-CONFIG_HZ=250
++CONFIG_HZ=100
+ CONFIG_IA64_L1_CACHE_SHIFT=7
+ # CONFIG_IA64_CYCLONE is not set
+ CONFIG_IOSAPIC=y
+Index: linux-2.6.16-ck11/arch/ppc/configs/common_defconfig
+===================================================================
+--- linux-2.6.16-ck11.orig/arch/ppc/configs/common_defconfig	2005-08-29 13:31:19.000000000 +1000
++++ linux-2.6.16-ck11/arch/ppc/configs/common_defconfig	2006-05-21 12:20:08.000000000 +1000
+@@ -140,9 +140,9 @@ CONFIG_PPCBUG_NVRAM=y
+ # CONFIG_SMP is not set
+ # CONFIG_HIGHMEM is not set
+ # CONFIG_HZ_100 is not set
+-CONFIG_HZ_250=y
+-# CONFIG_HZ_1000 is not set
+-CONFIG_HZ=250
++# CONFIG_HZ_250 is not set
++CONFIG_HZ_1000=y
++CONFIG_HZ=1000
+ CONFIG_PREEMPT_NONE=y
+ # CONFIG_PREEMPT_VOLUNTARY is not set
+ # CONFIG_PREEMPT is not set
+Index: linux-2.6.16-ck11/arch/ppc/configs/pmac_defconfig
+===================================================================
+--- linux-2.6.16-ck11.orig/arch/ppc/configs/pmac_defconfig	2005-08-29 13:31:19.000000000 +1000
++++ linux-2.6.16-ck11/arch/ppc/configs/pmac_defconfig	2006-05-21 12:20:08.000000000 +1000
+@@ -140,9 +140,9 @@ CONFIG_PPCBUG_NVRAM=y
+ # CONFIG_SMP is not set
+ # CONFIG_HIGHMEM is not set
+ # CONFIG_HZ_100 is not set
+-CONFIG_HZ_250=y
+-# CONFIG_HZ_1000 is not set
+-CONFIG_HZ=250
++# CONFIG_HZ_250 is not set
++# CONFIG_HZ_1000=y
++CONFIG_HZ=1000
+ CONFIG_PREEMPT_NONE=y
+ # CONFIG_PREEMPT_VOLUNTARY is not set
+ # CONFIG_PREEMPT is not set
+Index: linux-2.6.16-ck11/kernel/Kconfig.hz
+===================================================================
+--- linux-2.6.16-ck11.orig/kernel/Kconfig.hz	2005-08-29 13:31:26.000000000 +1000
++++ linux-2.6.16-ck11/kernel/Kconfig.hz	2006-05-21 12:20:08.000000000 +1000
+@@ -4,7 +4,7 @@
+ 
+ choice
+ 	prompt "Timer frequency"
+-	default HZ_250
++	default HZ_1000
+ 	help
+ 	 Allows the configuration of the timer frequency. It is customary
+ 	 to have the timer interrupt run at 1000 HZ but 100 HZ may be more

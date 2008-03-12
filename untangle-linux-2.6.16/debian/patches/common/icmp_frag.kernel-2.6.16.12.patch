@@ -1,0 +1,182 @@
+diff -rNu linux-2.6.16.12/include/linux/sysctl.h bar/include/linux/sysctl.h
+--- linux-2.6.16.12/include/linux/sysctl.h	2006-05-01 12:14:26.000000000 -0700
++++ bar/include/linux/sysctl.h	2006-05-01 17:18:23.476132196 -0700
+@@ -397,6 +397,7 @@
+ 	NET_TCP_CONG_CONTROL=110,
+ 	NET_TCP_ABC=111,
+ 	NET_IPV4_IPFRAG_MAX_DIST=112,
++	NET_IPV4_ICMP_FRAG_ACCEPT,
+ };
+ 
+ enum {
+diff -rNu linux-2.6.16.12/net/ipv4/netfilter/Kconfig bar/net/ipv4/netfilter/Kconfig
+--- linux-2.6.16.12/net/ipv4/netfilter/Kconfig	2006-05-01 16:12:46.619821848 -0700
++++ bar/net/ipv4/netfilter/Kconfig	2006-05-01 17:18:23.477132205 -0700
+@@ -19,6 +19,14 @@
+ 
+ 	  To compile it as a module, choose M here.  If unsure, say N.
+ 
++config IP_NF_FRAG_ACCEPT
++	tristate "ICMP UDP Fragmentation Accept"
++	---help---
++	  Accept all ICMP UDP Fragmentation requests dependent upon
++	  /proc/sys/net/ipv4/icmp_frag_accept
++
++	  To compile it as a module, choose M here.  If unsure, say N.
++
+ # connection tracking, helpers and protocols
+ config IP_NF_CONNTRACK
+ 	tristate "Connection tracking (required for masq/NAT)"
+diff -rNu linux-2.6.16.12/net/ipv4/netfilter/Makefile bar/net/ipv4/netfilter/Makefile
+--- linux-2.6.16.12/net/ipv4/netfilter/Makefile	2006-05-01 16:12:46.620821788 -0700
++++ bar/net/ipv4/netfilter/Makefile	2006-05-01 17:18:23.477132205 -0700
+@@ -10,6 +10,9 @@
+ ip_conntrack_pptp-objs	:= ip_conntrack_helper_pptp.o ip_conntrack_proto_gre.o
+ ip_nat_pptp-objs	:= ip_nat_helper_pptp.o ip_nat_proto_gre.o
+ 
++# icmp udp fragmentation accept
++obj-$(CONFIG_IP_NF_FRAG_ACCEPT) += ip_frag_accept.o
++
+ # connection tracking
+ obj-$(CONFIG_IP_NF_CONNTRACK) += ip_conntrack.o
+ obj-$(CONFIG_IP_NF_NAT) += ip_nat.o
+diff -rNu linux-2.6.16.12/net/ipv4/netfilter/ip_frag_accept.c bar/net/ipv4/netfilter/ip_frag_accept.c
+--- linux-2.6.16.12/net/ipv4/netfilter/ip_frag_accept.c	1969-12-31 16:00:00.000000000 -0800
++++ bar/net/ipv4/netfilter/ip_frag_accept.c	2006-05-01 17:18:23.478132213 -0700
+@@ -0,0 +1,108 @@
++#include <linux/config.h>
++#include <linux/types.h>
++#include <linux/ip.h>
++#include <linux/in.h>
++#include <linux/netfilter.h>
++#include <linux/netfilter_ipv4.h>
++#include <linux/module.h>
++#include <linux/skbuff.h>
++#include <linux/proc_fs.h>
++#include <linux/version.h>
++#include <net/checksum.h>
++#include <net/icmp.h>
++
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Original Author Unknown");
++MODULE_DESCRIPTION("ICMP UDP fragmentation needed accept");
++
++extern int sysctl_icmp_frag_accept;
++unsigned short ip_rt_frag_needed(struct iphdr *iph, unsigned short new_mtu);
++
++static unsigned int icmp_frag_in(unsigned int hooknum,
++                                    struct sk_buff **pskb,
++                                    const struct net_device *in,
++                                    const struct net_device *out,
++                                    int (*okfn)(struct sk_buff *))
++{
++    struct sk_buff* skb = *pskb;
++    int ihl;
++    ihl = skb->nh.iph->ihl*4;
++    if (sysctl_icmp_frag_accept && skb->nh.iph->protocol == IPPROTO_ICMP) {
++#define ICMP_HDR_SIZE 8 /* 4 plus 4 unused */
++        /*size of icmp payload */
++	__u32 len = ntohs(skb->nh.iph->tot_len) - ihl - ICMP_HDR_SIZE; 
++        struct icmphdr *icmph = (struct icmphdr*)(skb->nh.raw + ihl);
++
++        if (!pskb_may_pull(skb, ihl+8))
++            return NF_ACCEPT;
++
++        if ((icmph->type == 3 && icmph->code == 4 )) /* fragmentation needed */
++        {
++        
++            if (len >= sizeof(struct iphdr)) {
++                struct iphdr* innerh = (struct iphdr*)(skb->nh.raw + ihl + ICMP_HDR_SIZE);
++                int innerhl = innerh->ihl*4;
++
++                /* is udp/tcp and has source/dest ports */
++		/* fix for bug 920 -- the router giving us the ICMP message
++		 * may only give us the first 8 bytes of the tcp header,
++		 * which since it has the source/dest ports, is all we need. */
++
++                if ((innerh->protocol == IPPROTO_UDP) && len >= (innerhl + 8)) {
++
++		    if (innerh->protocol == IPPROTO_UDP) {
++                                struct iphdr *iph = innerh;
++				u32 info;
++				info = ip_rt_frag_needed(iph,
++						     ntohs(icmph->un.frag.mtu));
++                                return NF_DROP;
++		    }
++                }
++            }
++        }
++    }
++
++    return NF_ACCEPT;
++}
++
++static struct nf_hook_ops icmp_frag_ops = {
++	.hook		= icmp_frag_in,
++	.pf  		= PF_INET,
++	.hooknum	= NF_IP_PRE_ROUTING,
++	.priority	= NF_IP_PRI_FIRST+2,
++};
++
++static int init_or_cleanup(int init)
++{
++	int ret = 0;
++
++	if (!init) 
++        goto cleanup;
++
++	ret = nf_register_hook(&icmp_frag_ops);
++	if (ret < 0) {
++		printk("icmp_frag: can't register pre-routing hook.\n");
++		goto cleanup;
++	}
++
++	return ret;
++
++ cleanup:
++	nf_unregister_hook(&icmp_frag_ops);
++	return ret;
++}
++
++static int __init init(void)
++{
++	return init_or_cleanup(1);
++}
++
++static void __exit fini(void)
++{
++	init_or_cleanup(0);
++}
++
++module_init(init);
++module_exit(fini);
++
+diff -rNu linux-2.6.16.12/net/ipv4/sysctl_net_ipv4.c bar/net/ipv4/sysctl_net_ipv4.c
+--- linux-2.6.16.12/net/ipv4/sysctl_net_ipv4.c	2006-05-01 12:14:26.000000000 -0700
++++ bar/net/ipv4/sysctl_net_ipv4.c	2006-05-01 17:18:23.479132222 -0700
+@@ -19,8 +19,7 @@
+ #include <net/route.h>
+ #include <net/tcp.h>
+ 
+-/* From af_inet.c */
+-extern int sysctl_ip_nonlocal_bind;
++int sysctl_icmp_frag_accept;
+ 
+ #ifdef CONFIG_SYSCTL
+ static int zero;
+@@ -664,6 +663,14 @@
+ 		.mode		= 0644,
+ 		.proc_handler	= &proc_dointvec,
+ 	},
++	{
++		.ctl_name	= NET_IPV4_ICMP_FRAG_ACCEPT,
++		.procname	= "icmp_frag_accept",
++		.data		= &sysctl_icmp_frag_accept,
++		.maxlen		= sizeof(int),
++		.mode		= 0644,
++		.proc_handler	= &proc_dointvec,
++	},
+ 
+ 	{ .ctl_name = 0 }
+ };

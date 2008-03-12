@@ -1,0 +1,81 @@
+ Documentation/sysctl/vm.txt   |   14 ++++++++++----
+ include/linux/swap-prefetch.h |    5 +++++
+ mm/swap_prefetch.c            |   11 +++++++++++
+ 3 files changed, 26 insertions(+), 4 deletions(-)
+
+Index: linux-2.6.16-ck11/include/linux/swap-prefetch.h
+===================================================================
+--- linux-2.6.16-ck11.orig/include/linux/swap-prefetch.h	2006-05-21 12:20:09.000000000 +1000
++++ linux-2.6.16-ck11/include/linux/swap-prefetch.h	2006-05-21 12:20:14.000000000 +1000
+@@ -33,6 +33,7 @@ extern void add_to_swapped_list(struct p
+ extern void remove_from_swapped_list(const unsigned long index);
+ extern void delay_swap_prefetch(void);
+ extern void prepare_swap_prefetch(void);
++extern void aggressive_swap_prefetch(void);
+ 
+ #else	/* CONFIG_SWAP_PREFETCH */
+ static inline void add_to_swapped_list(struct page *__unused)
+@@ -50,6 +51,10 @@ static inline void remove_from_swapped_l
+ static inline void delay_swap_prefetch(void)
+ {
+ }
++
++static inline void aggressive_swap_prefetch(void)
++{
++}
+ #endif	/* CONFIG_SWAP_PREFETCH */
+ 
+ #endif		/* SWAP_PREFETCH_H_INCLUDED */
+Index: linux-2.6.16-ck11/mm/swap_prefetch.c
+===================================================================
+--- linux-2.6.16-ck11.orig/mm/swap_prefetch.c	2006-05-21 12:20:13.000000000 +1000
++++ linux-2.6.16-ck11/mm/swap_prefetch.c	2006-05-21 12:20:14.000000000 +1000
+@@ -29,6 +29,7 @@
+ 
+ #define PREFETCH_NORMAL		(1 << 0)
+ #define PREFETCH_AGGRESSIVE 	(1 << 1)
++
+ /*
+  * sysctl - enable/disable swap prefetching bits
+  * This is composed of the bitflags PREFETCH_NORMAL and PREFETCH_AGGRESSIVE.
+@@ -601,6 +602,16 @@ void __init prepare_swap_prefetch(void)
+ 	}
+ }
+ 
++/*
++ * This exported function sets the PREFETCH_AGGRESSIVE flag but only if there
++ * are entries to prefetch.
++ */
++void aggressive_swap_prefetch(void)
++{
++	if (swapped.count)
++		swap_prefetch |= PREFETCH_AGGRESSIVE;
++}
++
+ static int __init kprefetchd_init(void)
+ {
+ 	kprefetchd_task = kthread_run(kprefetchd, NULL, "kprefetchd");
+Index: linux-2.6.16-ck11/Documentation/sysctl/vm.txt
+===================================================================
+--- linux-2.6.16-ck11.orig/Documentation/sysctl/vm.txt	2006-05-21 12:20:13.000000000 +1000
++++ linux-2.6.16-ck11/Documentation/sysctl/vm.txt	2006-05-21 12:20:14.000000000 +1000
+@@ -192,9 +192,15 @@ This is value ORed together of
+ 1	= Normal background swap prefetching when load is light
+ 2	= Aggressively swap prefetch as much as possible
+ 
+-When 2 is set, after the maximum amount possible has been prefetched, this bit
+-is unset. ie Setting the value to 3 will prefetch aggressively then drop to 1.
+-This is useful for doing aggressive prefetching for short periods in scripts
+-such as after resuming from software suspend.
++ie Setting the value to 3 will prefetch aggressively then drop to 1. This
++is useful for doing aggressive prefetching for short periods in scripts
++such as after resuming from software suspend. Setting the value to 2 will
++prefetch aggressively as much as it can and then disable any further swap
++prefetching.
++
++Note that setting this to 0 disables even storing a list of swapped pages (to
++minimise overhead) which means that if significant swapping has occurred with
++swap_prefetch unset and then it is enabled, there is nothing that can be
++prefetched.
+ 
+ The default value is 1.
