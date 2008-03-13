@@ -6,7 +6,7 @@ diff -rNu linux-2.6.16.12/include/linux/in.h bar/include/linux/in.h
  #define IP_FREEBIND	15
  #define IP_IPSEC_POLICY	16
  #define IP_XFRM_POLICY	17
-+#define IP_NONLOCAL	18
++#define IP_NONLOCAL	19
  
  /* BSD compatibility */
  #define IP_RECVRETOPTS	IP_RETOPTS
