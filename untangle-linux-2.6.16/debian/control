@@ -1,4 +1,4 @@
-Source: untangle-linux-2.6
+Source: untangle-linux-2.6.16
 Section: devel
 Priority: optional
 Maintainer: Sebastien Delafond <seb@untangle.com>
