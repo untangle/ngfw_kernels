@@ -1,0 +1,5 @@
+#!/bin/bash
+update-initramfs -u -k 2.6.16-ck11-untangle-cd-486
+update-initramfs -c -k 2.6.16-ck11-untangle-cd-486
+/usr/sbin/update-grub
+exit 0
