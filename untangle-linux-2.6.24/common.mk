@@ -3,28 +3,28 @@ OURVERSION=untangle4
 
 # Upstream version numbers
 KVER=2.6.24
-KDEBVER=10
+KDEBVER=12
 
-KUPVER=${KDEBVER}.16
+KUPVER=${KDEBVER}.22
 PACKPFX=linux_${KVER}
 WORKDIR=linux-${KVER}
 KDSC=${PACKPFX}-${KUPVER}.dsc
 KOURPATCH=untangle-linux.diff.gz
 
-UMUPVER=${KDEBVER}.14
+UMUPVER=${KDEBVER}.17
 UMPFX=linux-ubuntu-modules-${KVER}_${KVER}
 UMWORKDIR=linux-ubuntu-modules-${KVER}-${KVER}
 UMDSC=${UMPFX}-${UMUPVER}.dsc
 UMOURPATCH=untangle-linux-ubuntu-modules.diff.gz
 
-RMUPVER=${KDEBVER}.27
-RMVER=9
+RMVER=11
+RMUPVER=${KDEBVER}.31
 RMPFX=linux-restricted-modules-${KVER}_${KVER}.${RMVER}
 RMWORKDIR=linux-restricted-modules-${KVER}-${KVER}.${RMVER}
 RMDSC=${RMPFX}-${RMUPVER}.dsc
 RMOURPATCH=untangle-linux-restricted-modules.diff.gz
 
-METAUPVER=${KDEBVER}.8
+METAUPVER=${KDEBVER}.13
 METAPFX=linux-meta_${KVER}
 METAWORKDIR=linux-meta-${KVER}.${METAUPVER}
 METADSC=${METAPFX}.${METAUPVER}.dsc
@@ -118,10 +118,6 @@ ${METAWORKDIR}:	${METADSC} ${METAOURPATCH}
 	dpkg-source -x ${METADSC}
 	cd ${METAWORKDIR};gunzip -c ../${METAOURPATCH} | patch -p1
 	cd ${METAWORKDIR}; DEBEMAIL="jdi@untangle.com" dch ${EXTRADCHARGS} -p -v ${KVER}.${METAUPVER}${OURVERSION} -D thunderbird "kernel build"
-
-release: force
-	echo "make -f HADESHOME/pkgtools/Makefile release-deb REPOSITORY=${REPOSITORY} DISTRIBUTION=thunderbird"
-
 
 clean::
 	rm -f ${KOURPATCH}
