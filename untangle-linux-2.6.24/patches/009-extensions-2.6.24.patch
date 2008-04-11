@@ -90,11 +90,11 @@ Index: linux-source-2.6.24/include/net/sock.h
  	unsigned long	        sk_lingertime;
 +
 +    /* Extensions */
-+ 	unsigned long	        sk_nfmarkopts;
-+ 	unsigned long	        sk_nfmark;
-+ 	unsigned long	        sk_sendnfmark;
-+ 	unsigned long	        sk_snd_first;
-+ 	unsigned long	        sk_rcv_first;
++ 	u_int32_t	        sk_nfmarkopts;
++ 	u_int32_t	        sk_nfmark;
++ 	u_int32_t	        sk_sendnfmark;
++ 	u_int32_t	        sk_snd_first;
++ 	u_int32_t	        sk_rcv_first;
 +
  	struct sk_buff_head	sk_error_queue;
  	struct proto		*sk_prot_creator;
@@ -247,9 +247,9 @@ Index: linux-source-2.6.24/net/ipv4/ip_sockglue.c
 +        }
 +       case IP_SENDNFMARK:
 +       {
-+           if (cmsg->cmsg_len != CMSG_LEN(sizeof(unsigned long))) 
++           if (cmsg->cmsg_len != CMSG_LEN(sizeof(u_int32_t))) 
 +               return -EINVAL;
-+           ipc->nfmark = *(unsigned long *)CMSG_DATA(cmsg);
++           ipc->nfmark = *(u_int32_t *)CMSG_DATA(cmsg);
 +           break;
 +       }
  		default:
