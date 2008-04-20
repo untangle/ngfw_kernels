@@ -1,30 +1,31 @@
-# Our version number.  Currently must be manually updated.  You've been warned.
-OURVERSION=untangle4
+# Our version number.  Reset to untangle1 when going upstream.
+# Currently must be manually updated.  You've been warned.
+OURVERSION=untangle1
 
 # Upstream version numbers
 KVER=2.6.24
-KDEBVER=12
+KDEBVER=15
 
-KUPVER=${KDEBVER}.22
+KUPVER=${KDEBVER}.27
 PACKPFX=linux_${KVER}
 WORKDIR=linux-${KVER}
 KDSC=${PACKPFX}-${KUPVER}.dsc
 KOURPATCH=untangle-linux.diff.gz
 
-UMUPVER=${KDEBVER}.17
+UMUPVER=${KDEBVER}.20
 UMPFX=linux-ubuntu-modules-${KVER}_${KVER}
 UMWORKDIR=linux-ubuntu-modules-${KVER}-${KVER}
 UMDSC=${UMPFX}-${UMUPVER}.dsc
 UMOURPATCH=untangle-linux-ubuntu-modules.diff.gz
 
-RMVER=11
-RMUPVER=${KDEBVER}.31
+RMVER=12
+RMUPVER=${KDEBVER}.33
 RMPFX=linux-restricted-modules-${KVER}_${KVER}.${RMVER}
 RMWORKDIR=linux-restricted-modules-${KVER}-${KVER}.${RMVER}
 RMDSC=${RMPFX}-${RMUPVER}.dsc
 RMOURPATCH=untangle-linux-restricted-modules.diff.gz
 
-METAUPVER=${KDEBVER}.13
+METAUPVER=${KDEBVER}.17
 METAPFX=linux-meta_${KVER}
 METAWORKDIR=linux-meta-${KVER}.${METAUPVER}
 METADSC=${METAPFX}.${METAUPVER}.dsc
@@ -36,8 +37,8 @@ EXTRADCHARGS ?=
 DOPTIONS=DEB_BUILD_OPTIONS="parallel=${NPROCEXP}" AUTOBUILD=1 KVERS=${KVER}-${KDEBVER}-untangle
 VDOPTIONS=DEB_BUILD_OPTIONS="parallel=${NPROCEXP}" AUTOBUILD=1 KVERS=${KVER}-${KDEBVER}-virtual-untangle
 
-
-NPROCEXP:=$(shell grep processor /proc/cpuinfo|wc -l)
+MACHINE:=$(shell if [ `uname -m` = "x86_64" ]; then echo "amd64"; else echo "i386"; fi)
+NPROCEXP:=$(shell echo "$$((1+`grep processor /proc/cpuinfo|wc -l`))")
 TEMPDIR:=$(shell mktemp)
 
 
@@ -50,27 +51,34 @@ deps:	force
 
 kpkg:	${WORKDIR} force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot debian/rules clean custom-binary-untangle
+ifneq ($(MACHINE),amd64)
 	cd ${WORKDIR}; ${VDOPTIONS} fakeroot debian/rules custom-binary-virtual-untangle
+endif
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot debian/rules binary-indep binary-arch-headers
 
 umpkg:	${UMWORKDIR} force
-# Need something better than this.
-	sudo dpkg -i linux-headers-${KVER}-${KDEBVER}_${KVER}-${KUPVER}${OURVERSION}_all.deb linux-headers-${KVER}-${KDEBVER}-untangle_${KVER}-${KUPVER}${OURVERSION}_i386.deb linux-headers-${KVER}-${KDEBVER}-virtual-untangle_${KVER}-${KUPVER}${OURVERSION}_i386.deb
+# A blunt instrument:
+	sudo dpkg -i linux-headers-${KVER}-${KDEBVER}_${KVER}-${KUPVER}${OURVERSION}_all.deb linux-headers-${KVER}-${KDEBVER}-untangle_${KVER}-${KUPVER}${OURVERSION}_${MACHINE}.deb
 	sudo rm -f /usr/src/linux-headers-untangle;sudo ln -s /usr/src/linux-headers-${KVER}-${KDEBVER}-untangle /usr/src/linux-headers-untangle
+	cd ${UMWORKDIR}; ${DOPTIONS} fakeroot debian/rules clean binary-debs arch=${MACHINE} flavours="untangle"
+ifneq ($(MACHINE),amd64)
+	sudo dpkg -i linux-headers-${KVER}-${KDEBVER}-virtual-untangle_${KVER}-${KUPVER}${OURVERSION}_${MACHINE}.deb
 	sudo rm -f /usr/src/linux-headers-virtual-untangle;sudo ln -s /usr/src/linux-headers-${KVER}-${KDEBVER}-virtual-untangle /usr/src/linux-headers-virtual-untangle
-	cd ${UMWORKDIR}; ${DOPTIONS} fakeroot debian/rules clean binary-debs arch=i386 flavours="untangle"
-	cd ${UMWORKDIR}; ${VDOPTIONS} fakeroot debian/rules clean binary-debs arch=i386 flavours="virtual-untangle"
+	cd ${UMWORKDIR}; ${VDOPTIONS} fakeroot debian/rules clean binary-debs arch=${MACHINE} flavours="virtual-untangle"
+endif
 
 rmpkg:	${RMWORKDIR} force
 # Need something better than this.
-	sudo dpkg -i linux-headers-${KVER}-${KDEBVER}_${KVER}-${KUPVER}${OURVERSION}_all.deb linux-headers-${KVER}-${KDEBVER}-untangle_${KVER}-${KUPVER}${OURVERSION}_i386.deb
+	sudo dpkg -i linux-headers-${KVER}-${KDEBVER}_${KVER}-${KUPVER}${OURVERSION}_all.deb linux-headers-${KVER}-${KDEBVER}-untangle_${KVER}-${KUPVER}${OURVERSION}_${MACHINE}.deb
 	sudo rm -f /usr/src/linux-headers-untangle;sudo ln -s /usr/src/linux-headers-${KVER}-${KDEBVER}-untangle /usr/src/linux-headers-untangle
-	cd ${RMWORKDIR}; ${DOPTIONS} fakeroot debian/rules clean binary-debs arch=i386 flavours="${KVER}-${KDEBVER}-untangle" ati_flavours="${KVER}-${KDEBVER}-untangle" nv_flavours="${KVER}-${KDEBVER}-untangle"
-	cd ${RMWORKDIR}; ${DOPTIONS} fakeroot debian/rules binary-indep arch=i386 flavours="${KVER}-${KDEBVER}-untangle" ati_flavours="${KVER}-${KDEBVER}-untangle" nv_flavours="${KVER}-${KDEBVER}-untangle"
+	cd ${RMWORKDIR}; ${DOPTIONS} fakeroot debian/rules clean binary-debs arch=${MACHINE} flavours="${KVER}-${KDEBVER}-untangle" ati_flavours="${KVER}-${KDEBVER}-untangle" nv_flavours="${KVER}-${KDEBVER}-untangle"
+	cd ${RMWORKDIR}; ${DOPTIONS} fakeroot debian/rules binary-indep arch=${MACHINE} flavours="${KVER}-${KDEBVER}-untangle" ati_flavours="${KVER}-${KDEBVER}-untangle" nv_flavours="${KVER}-${KDEBVER}-untangle"
 
 metapkg:	${METAWORKDIR} force
-	cd ${METAWORKDIR}; ${DOPTIONS} fakeroot debian/rules clean binary arch=i386 flavours="untangle"
-	cd ${METAWORKDIR}; ${VDOPTIONS} fakeroot debian/rules clean binary arch=i386 flavours="virtual-untangle"
+	cd ${METAWORKDIR}; ${DOPTIONS} fakeroot debian/rules clean binary arch=${MACHINE} flavours="untangle"
+ifneq ($(MACHINE),amd64)
+	cd ${METAWORKDIR}; ${VDOPTIONS} fakeroot debian/rules clean binary arch=${MACHINE} flavours="virtual-untangle"
+endif
 
 
 # This combines our generic kernel patches with the specific Ubuntu kernel
@@ -99,25 +107,25 @@ ${WORKDIR}:	${KDSC} ${KOURPATCH}
 	cd ${WORKDIR};gunzip -c ../${KOURPATCH} | patch -p1
 # Clean out control.stub so that it always gets generated.
 	rm ${WORKDIR}/debian/control.stub
-	cd ${WORKDIR}; DEBEMAIL="jdi@untangle.com" dch ${EXTRADCHARGS} -p -v ${KVER}-${KUPVER}${OURVERSION} -D thunderbird "kernel build"
+	cd ${WORKDIR}; DEBEMAIL="jdi@untangle.com" dch ${EXTRADCHARGS} -p -v ${KVER}-${KUPVER}${OURVERSION} "kernel build"
 
 ${UMWORKDIR}:	${UMDSC} ${UMOURPATCH}
 	rm -rf ${UMWORKDIR}
 	dpkg-source -x ${UMDSC}
 	cd ${UMWORKDIR};gunzip -c ../${UMOURPATCH} | patch -p1
-	cd ${UMWORKDIR}; DEBEMAIL="jdi@untangle.com" dch ${EXTRADCHARGS} -p -v ${KVER}-${UMUPVER}${OURVERSION} -D thunderbird "kernel build"
+	cd ${UMWORKDIR}; DEBEMAIL="jdi@untangle.com" dch ${EXTRADCHARGS} -p -v ${KVER}-${UMUPVER}${OURVERSION} "kernel build"
 
 ${RMWORKDIR}:	${RMDSC} ${RMOURPATCH}
 	rm -rf ${RMWORKDIR}
 	dpkg-source -x ${RMDSC}
 	cd ${RMWORKDIR};gunzip -c ../${RMOURPATCH} | patch -p1
-	cd ${RMWORKDIR}; DEBEMAIL="jdi@untangle.com" dch ${EXTRADCHARGS} -p -v ${KVER}.${RMVER}-${RMUPVER}${OURVERSION} -D thunderbird "kernel build"
+	cd ${RMWORKDIR}; DEBEMAIL="jdi@untangle.com" dch ${EXTRADCHARGS} -p -v ${KVER}.${RMVER}-${RMUPVER}${OURVERSION} "kernel build"
 
 ${METAWORKDIR}:	${METADSC} ${METAOURPATCH}
 	rm -rf ${METAWORKDIR}
 	dpkg-source -x ${METADSC}
 	cd ${METAWORKDIR};gunzip -c ../${METAOURPATCH} | patch -p1
-	cd ${METAWORKDIR}; DEBEMAIL="jdi@untangle.com" dch ${EXTRADCHARGS} -p -v ${KVER}.${METAUPVER}${OURVERSION} -D thunderbird "kernel build"
+	cd ${METAWORKDIR}; DEBEMAIL="jdi@untangle.com" dch ${EXTRADCHARGS} -p -v ${KVER}.${METAUPVER}${OURVERSION} "kernel build"
 
 clean::
 	rm -f ${KOURPATCH}

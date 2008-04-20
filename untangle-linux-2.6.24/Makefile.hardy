@@ -29,6 +29,6 @@ legitify:
 getsrc:
 	sudo apt-get update
 	apt-get --download-only source linux-image
-	apt-get --download-only source linux-image-2.6.24-12-generic
-	apt-get --download-only source linux-restricted-modules-2.6.24-12-generic
-	apt-get --download-only source linux-ubuntu-modules-2.6.24-12-generic
+	apt-get --download-only source linux-image-2.6.24-15-generic
+	apt-get --download-only source linux-restricted-modules-2.6.24-15-generic
+	apt-get --download-only source linux-ubuntu-modules-2.6.24-15-generic
