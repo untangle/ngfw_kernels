@@ -2345,7 +2345,6 @@ diff -Ncr /tmp/orig-linux-2.6.24/debian/binary-custom.d/untangle/config.i386 lin
 + CONFIG_HW_RANDOM_AMD=m
 + CONFIG_HW_RANDOM_GEODE=m
 + CONFIG_HW_RANDOM_VIA=m
-+ CONFIG_HW_RANDOM_VIRTIO=m
 + CONFIG_NVRAM=m
 + CONFIG_RTC=y
 + CONFIG_DTLK=m
@@ -3872,8 +3871,9 @@ diff -Ncr /tmp/orig-linux-2.6.24/debian/binary-custom.d/untangle/config.i386 lin
 + CONFIG_KVM_INTEL=m
 + CONFIG_KVM_AMD=m
 + # CONFIG_LGUEST is not set
-+ CONFIG_VIRTIO=y
-+ CONFIG_VIRTIO_RING=y
++ CONFIG_VIRTIO=m
++ CONFIG_VIRTIO_BALLOON=m
++ CONFIG_VIRTIO_RING=m
 + CONFIG_VIRTIO_PCI=m
 + 
 + #
@@ -6028,7 +6028,6 @@ diff -Ncr /tmp/orig-linux-2.6.24/debian/binary-custom.d/untangle/config.amd64 li
 + CONFIG_HW_RANDOM=y
 + CONFIG_HW_RANDOM_INTEL=m
 + CONFIG_HW_RANDOM_AMD=m
-+ CONFIG_HW_RANDOM_VIRTIO=m
 + CONFIG_NVRAM=m
 + CONFIG_RTC=y
 + CONFIG_R3964=m
@@ -7495,8 +7494,9 @@ diff -Ncr /tmp/orig-linux-2.6.24/debian/binary-custom.d/untangle/config.amd64 li
 + CONFIG_KVM=m
 + CONFIG_KVM_INTEL=m
 + CONFIG_KVM_AMD=m
-+ CONFIG_VIRTIO=y
-+ CONFIG_VIRTIO_RING=y
++ CONFIG_VIRTIO=m
++ CONFIG_VIRTIO_BALLOON=m
++ CONFIG_VIRTIO_RING=m
 + CONFIG_VIRTIO_PCI=m
 + 
 + #
@@ -7530,7 +7530,7 @@ diff -Ncr /tmp/orig-linux-2.6.24/debian/binary-custom.d/virtual-untangle/config.
 --- linux-2.6.24/debian/binary-custom.d/virtual-untangle/config.i386	2007-12-17 10:12:10.000000000 -0800
 ***************
 *** 0 ****
---- 1,2154 ----
+--- 1,2153 ----
 + #
 + # Automatically generated make config: don't edit
 + # Linux kernel version: 2.6.24.3
@@ -7687,7 +7687,7 @@ diff -Ncr /tmp/orig-linux-2.6.24/debian/binary-custom.d/virtual-untangle/config.
 + CONFIG_PARAVIRT=y
 + CONFIG_PARAVIRT_GUEST=y
 + CONFIG_VMI=y
-+ CONFIG_LGUEST_GUEST=y
++ # CONFIG_LGUEST_GUEST is not set
 + # CONFIG_M386 is not set
 + # CONFIG_M486 is not set
 + CONFIG_M586=y
@@ -8844,7 +8844,6 @@ diff -Ncr /tmp/orig-linux-2.6.24/debian/binary-custom.d/virtual-untangle/config.
 + # CONFIG_LP_CONSOLE is not set
 + CONFIG_PPDEV=m
 + CONFIG_HVC_DRIVER=y
-+ CONFIG_VIRTIO_CONSOLE=y
 + CONFIG_IPMI_HANDLER=m
 + # CONFIG_IPMI_PANIC_EVENT is not set
 + CONFIG_IPMI_DEVICE_INTERFACE=m
@@ -8856,7 +8855,6 @@ diff -Ncr /tmp/orig-linux-2.6.24/debian/binary-custom.d/virtual-untangle/config.
 + # CONFIG_HW_RANDOM_AMD is not set
 + # CONFIG_HW_RANDOM_GEODE is not set
 + # CONFIG_HW_RANDOM_VIA is not set
-+ CONFIG_HW_RANDOM_VIRTIO=m
 + CONFIG_NVRAM=m
 + CONFIG_RTC=y
 + # CONFIG_R3964 is not set
@@ -9660,8 +9658,9 @@ diff -Ncr /tmp/orig-linux-2.6.24/debian/binary-custom.d/virtual-untangle/config.
 + CONFIG_VIRTUALIZATION=y
 + # CONFIG_KVM is not set
 + CONFIG_LGUEST=m
-+ CONFIG_VIRTIO=y
-+ CONFIG_VIRTIO_RING=y
++ CONFIG_VIRTIO=m
++ CONFIG_VIRTIO_BALLOON=m
++ CONFIG_VIRTIO_RING=m
 + CONFIG_VIRTIO_PCI=m
 + 
 + #
