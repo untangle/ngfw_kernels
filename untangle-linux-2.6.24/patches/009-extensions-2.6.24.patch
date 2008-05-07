@@ -1,7 +1,7 @@
-Index: linux-source-2.6.24/include/linux/in.h
+Index: linux-2.6.24/include/linux/in.h
 ===================================================================
---- linux-source-2.6.24.orig/include/linux/in.h	2007-12-18 14:09:49.000000000 +0000
-+++ linux-source-2.6.24/include/linux/in.h	2007-12-27 05:15:20.000000000 +0000
+--- linux-2.6.24.orig/include/linux/in.h	2008-02-10 21:51:11.000000000 -0800
++++ linux-2.6.24/include/linux/in.h	2008-05-05 16:10:03.000000000 -0700
 @@ -79,6 +79,13 @@
  /* BSD compatibility */
  #define IP_RECVRETOPTS	IP_RETOPTS
@@ -32,10 +32,10 @@ Index: linux-source-2.6.24/include/linux/in.h
  
  /*
   * Definitions of the bits in an Internet address integer.
-Index: linux-source-2.6.24/include/linux/udp.h
+Index: linux-2.6.24/include/linux/udp.h
 ===================================================================
---- linux-source-2.6.24.orig/include/linux/udp.h	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/include/linux/udp.h	2007-12-27 05:15:20.000000000 +0000
+--- linux-2.6.24.orig/include/linux/udp.h	2008-02-10 21:51:11.000000000 -0800
++++ linux-2.6.24/include/linux/udp.h	2008-05-05 16:10:03.000000000 -0700
 @@ -39,6 +39,15 @@
  #define UDP_CORK	1	/* Never send partially complete segments */
  #define UDP_ENCAP	100	/* Set the socket to accept encapsulated packets */
@@ -52,10 +52,10 @@ Index: linux-source-2.6.24/include/linux/udp.h
  /* UDP encapsulation types */
  #define UDP_ENCAP_ESPINUDP_NON_IKE	1 /* draft-ietf-ipsec-nat-t-ike-00/01 */
  #define UDP_ENCAP_ESPINUDP	2 /* draft-ietf-ipsec-udp-encaps-06 */
-Index: linux-source-2.6.24/include/net/ip.h
+Index: linux-2.6.24/include/net/ip.h
 ===================================================================
---- linux-source-2.6.24.orig/include/net/ip.h	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/include/net/ip.h	2007-12-27 05:15:20.000000000 +0000
+--- linux-2.6.24.orig/include/net/ip.h	2008-02-10 21:51:11.000000000 -0800
++++ linux-2.6.24/include/net/ip.h	2008-05-05 16:10:03.000000000 -0700
 @@ -37,6 +37,10 @@
  	struct ip_options	opt;		/* Compiled IP options		*/
  	unsigned char		flags;
@@ -80,10 +80,10 @@ Index: linux-source-2.6.24/include/net/ip.h
  };
  
  #define IPCB(skb) ((struct inet_skb_parm*)((skb)->cb))
-Index: linux-source-2.6.24/include/net/sock.h
+Index: linux-2.6.24/include/net/sock.h
 ===================================================================
---- linux-source-2.6.24.orig/include/net/sock.h	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/include/net/sock.h	2007-12-27 05:15:20.000000000 +0000
+--- linux-2.6.24.orig/include/net/sock.h	2008-02-10 21:51:11.000000000 -0800
++++ linux-2.6.24/include/net/sock.h	2008-05-05 16:10:03.000000000 -0700
 @@ -234,6 +234,14 @@
  	int			sk_rcvlowat;
  	unsigned long 		sk_flags;
@@ -99,10 +99,10 @@ Index: linux-source-2.6.24/include/net/sock.h
  	struct sk_buff_head	sk_error_queue;
  	struct proto		*sk_prot_creator;
  	rwlock_t		sk_callback_lock;
-Index: linux-source-2.6.24/net/ipv4/icmp.c
+Index: linux-2.6.24/net/ipv4/icmp.c
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/icmp.c	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/icmp.c	2007-12-27 05:15:20.000000000 +0000
+--- linux-2.6.24.orig/net/ipv4/icmp.c	2008-02-10 21:51:11.000000000 -0800
++++ linux-2.6.24/net/ipv4/icmp.c	2008-05-05 16:10:03.000000000 -0700
 @@ -386,6 +386,8 @@
  	if (icmp_xmit_lock())
  		return;
@@ -112,18 +112,18 @@ Index: linux-source-2.6.24/net/ipv4/icmp.c
  	icmp_param->data.icmph.checksum = 0;
  
  	inet->tos = ip_hdr(skb)->tos;
-@@ -542,6 +544,7 @@
+@@ -541,6 +543,7 @@
+ 	icmp_param.skb	  = skb_in;
  	icmp_param.offset = skb_network_offset(skb_in);
- 	icmp_out_count(icmp_param.data.icmph.type);
  	inet_sk(icmp_socket->sk)->tos = tos;
 +	memset(&ipc, 0, sizeof(ipc));
  	ipc.addr = iph->saddr;
  	ipc.opt = &icmp_param.replyopts;
  
-Index: linux-source-2.6.24/net/ipv4/ip_output.c
+Index: linux-2.6.24/net/ipv4/ip_output.c
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/ip_output.c	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/ip_output.c	2007-12-27 05:15:20.000000000 +0000
+--- linux-2.6.24.orig/net/ipv4/ip_output.c	2008-05-05 16:06:00.000000000 -0700
++++ linux-2.6.24/net/ipv4/ip_output.c	2008-05-05 16:10:03.000000000 -0700
 @@ -149,6 +149,9 @@
  
  	skb->priority = sk->sk_priority;
@@ -134,7 +134,7 @@ Index: linux-source-2.6.24/net/ipv4/ip_output.c
  	/* Send it out. */
  	return NF_HOOK(PF_INET, NF_IP_LOCAL_OUT, skb, NULL, rt->u.dst.dev,
  		       dst_output);
-@@ -941,6 +944,17 @@
+@@ -943,6 +946,17 @@
  						 fragheaderlen);
  			data += fragheaderlen;
  
@@ -152,7 +152,7 @@ Index: linux-source-2.6.24/net/ipv4/ip_output.c
  			if (fraggap) {
  				skb->csum = skb_copy_and_csum_bits(
  					skb_prev, maxfraglen,
-@@ -1260,10 +1274,18 @@
+@@ -1264,10 +1278,18 @@
  		ip_options_build(skb, opt, inet->cork.addr, rt, 0);
  	}
  	iph->tos = inet->tos;
@@ -171,7 +171,7 @@ Index: linux-source-2.6.24/net/ipv4/ip_output.c
  	iph->protocol = sk->sk_protocol;
  	iph->saddr = rt->rt_src;
  	iph->daddr = rt->rt_dst;
-@@ -1347,6 +1369,7 @@
+@@ -1351,6 +1373,7 @@
  		return;
  
  	daddr = ipc.addr = rt->rt_src;
@@ -179,10 +179,10 @@ Index: linux-source-2.6.24/net/ipv4/ip_output.c
  	ipc.opt = NULL;
  
  	if (replyopts.opt.optlen) {
-Index: linux-source-2.6.24/net/ipv4/ip_sockglue.c
+Index: linux-2.6.24/net/ipv4/ip_sockglue.c
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/ip_sockglue.c	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/ip_sockglue.c	2007-12-27 05:15:20.000000000 +0000
+--- linux-2.6.24.orig/net/ipv4/ip_sockglue.c	2008-02-10 21:51:11.000000000 -0800
++++ linux-2.6.24/net/ipv4/ip_sockglue.c	2008-05-05 16:10:03.000000000 -0700
 @@ -49,6 +49,7 @@
  #define IP_CMSG_RECVOPTS	8
  #define IP_CMSG_RETOPTS		16
@@ -344,11 +344,11 @@ Index: linux-source-2.6.24/net/ipv4/ip_sockglue.c
  	case IP_TOS:
  		val = inet->tos;
  		break;
-Index: linux-source-2.6.24/net/ipv4/raw.c
+Index: linux-2.6.24/net/ipv4/raw.c
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/raw.c	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/raw.c	2007-12-27 05:15:20.000000000 +0000
-@@ -437,6 +437,8 @@
+--- linux-2.6.24.orig/net/ipv4/raw.c	2008-02-10 21:51:11.000000000 -0800
++++ linux-2.6.24/net/ipv4/raw.c	2008-05-05 16:10:03.000000000 -0700
+@@ -439,6 +439,8 @@
  		daddr = inet->daddr;
  	}
  
@@ -357,11 +357,11 @@ Index: linux-source-2.6.24/net/ipv4/raw.c
  	ipc.addr = inet->saddr;
  	ipc.opt = NULL;
  	ipc.oif = sk->sk_bound_dev_if;
-Index: linux-source-2.6.24/net/ipv4/tcp_input.c
+Index: linux-2.6.24/net/ipv4/tcp_input.c
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/tcp_input.c	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/tcp_input.c	2007-12-27 05:15:20.000000000 +0000
-@@ -4765,6 +4765,8 @@
+--- linux-2.6.24.orig/net/ipv4/tcp_input.c	2008-02-10 21:51:11.000000000 -0800
++++ linux-2.6.24/net/ipv4/tcp_input.c	2008-05-05 16:10:03.000000000 -0700
+@@ -4768,6 +4768,8 @@
  		 */
  		tp->rcv_nxt = TCP_SKB_CB(skb)->seq + 1;
  		tp->rcv_wup = TCP_SKB_CB(skb)->seq + 1;
@@ -370,10 +370,10 @@ Index: linux-source-2.6.24/net/ipv4/tcp_input.c
  
  		/* RFC1323: The window in SYN & SYN/ACK segments is
  		 * never scaled.
-Index: linux-source-2.6.24/net/ipv4/tcp_ipv4.c
+Index: linux-2.6.24/net/ipv4/tcp_ipv4.c
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/tcp_ipv4.c	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/tcp_ipv4.c	2007-12-27 05:15:20.000000000 +0000
+--- linux-2.6.24.orig/net/ipv4/tcp_ipv4.c	2008-02-10 21:51:11.000000000 -0800
++++ linux-2.6.24/net/ipv4/tcp_ipv4.c	2008-05-05 16:10:03.000000000 -0700
 @@ -1439,6 +1439,8 @@
  	if (!newsk)
  		goto exit;
@@ -383,10 +383,10 @@ Index: linux-source-2.6.24/net/ipv4/tcp_ipv4.c
  	newsk->sk_gso_type = SKB_GSO_TCPV4;
  	sk_setup_caps(newsk, dst);
  
-Index: linux-source-2.6.24/net/ipv4/tcp_minisocks.c
+Index: linux-2.6.24/net/ipv4/tcp_minisocks.c
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/tcp_minisocks.c	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/tcp_minisocks.c	2007-12-27 05:15:20.000000000 +0000
+--- linux-2.6.24.orig/net/ipv4/tcp_minisocks.c	2008-02-10 21:51:11.000000000 -0800
++++ linux-2.6.24/net/ipv4/tcp_minisocks.c	2008-05-05 16:10:03.000000000 -0700
 @@ -395,6 +395,8 @@
  		newtp->pred_flags = 0;
  		newtp->rcv_wup = newtp->copied_seq = newtp->rcv_nxt = treq->rcv_isn + 1;
@@ -396,10 +396,10 @@ Index: linux-source-2.6.24/net/ipv4/tcp_minisocks.c
  
  		tcp_prequeue_init(newtp);
  
-Index: linux-source-2.6.24/net/ipv4/tcp_output.c
+Index: linux-2.6.24/net/ipv4/tcp_output.c
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/tcp_output.c	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/tcp_output.c	2007-12-27 05:15:20.000000000 +0000
+--- linux-2.6.24.orig/net/ipv4/tcp_output.c	2008-02-10 21:51:11.000000000 -0800
++++ linux-2.6.24/net/ipv4/tcp_output.c	2008-05-05 16:10:03.000000000 -0700
 @@ -603,6 +603,9 @@
  	if (skb->len != tcp_header_size)
  		tcp_event_data_sent(tp, skb, sk);
@@ -410,10 +410,10 @@ Index: linux-source-2.6.24/net/ipv4/tcp_output.c
  	if (after(tcb->end_seq, tp->snd_nxt) || tcb->seq == tcb->end_seq)
  		TCP_INC_STATS(TCP_MIB_OUTSEGS);
  
-Index: linux-source-2.6.24/net/ipv4/udp.c
+Index: linux-2.6.24/net/ipv4/udp.c
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/udp.c	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/udp.c	2007-12-27 05:15:20.000000000 +0000
+--- linux-2.6.24.orig/net/ipv4/udp.c	2008-02-10 21:51:11.000000000 -0800
++++ linux-2.6.24/net/ipv4/udp.c	2008-05-05 16:10:03.000000000 -0700
 @@ -105,6 +105,26 @@
  #include <net/xfrm.h>
  #include "udp_impl.h"

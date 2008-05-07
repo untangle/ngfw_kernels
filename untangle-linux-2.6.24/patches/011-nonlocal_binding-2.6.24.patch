@@ -1,7 +1,7 @@
-Index: linux-source-2.6.24/include/linux/in.h
+Index: linux-2.6.24/include/linux/in.h
 ===================================================================
---- linux-source-2.6.24.orig/include/linux/in.h	2007-12-27 05:15:20.000000000 +0000
-+++ linux-source-2.6.24/include/linux/in.h	2007-12-27 05:20:16.000000000 +0000
+--- linux-2.6.24.orig/include/linux/in.h	2008-05-05 16:10:03.000000000 -0700
++++ linux-2.6.24/include/linux/in.h	2008-05-05 16:28:33.000000000 -0700
 @@ -75,6 +75,7 @@
  #define IP_IPSEC_POLICY	16
  #define IP_XFRM_POLICY	17
@@ -10,10 +10,10 @@ Index: linux-source-2.6.24/include/linux/in.h
  
  /* BSD compatibility */
  #define IP_RECVRETOPTS	IP_RETOPTS
-Index: linux-source-2.6.24/include/net/ip.h
+Index: linux-2.6.24/include/net/ip.h
 ===================================================================
---- linux-source-2.6.24.orig/include/net/ip.h	2007-12-27 05:15:20.000000000 +0000
-+++ linux-source-2.6.24/include/net/ip.h	2007-12-27 05:20:16.000000000 +0000
+--- linux-2.6.24.orig/include/net/ip.h	2008-05-05 16:10:03.000000000 -0700
++++ linux-2.6.24/include/net/ip.h	2008-05-05 16:28:33.000000000 -0700
 @@ -336,6 +336,7 @@
  	IP_DEFRAG_CALL_RA_CHAIN,
  	IP_DEFRAG_CONNTRACK_IN,
@@ -22,10 +22,10 @@ Index: linux-source-2.6.24/include/net/ip.h
  	IP_DEFRAG_VS_IN,
  	IP_DEFRAG_VS_OUT,
  	IP_DEFRAG_VS_FWD
-Index: linux-source-2.6.24/include/net/route.h
+Index: linux-2.6.24/include/net/route.h
 ===================================================================
---- linux-source-2.6.24.orig/include/net/route.h	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/include/net/route.h	2007-12-27 05:20:16.000000000 +0000
+--- linux-2.6.24.orig/include/net/route.h	2008-02-10 21:51:11.000000000 -0800
++++ linux-2.6.24/include/net/route.h	2008-05-05 16:28:33.000000000 -0700
 @@ -39,12 +39,19 @@
  #endif
  
@@ -47,10 +47,10 @@ Index: linux-source-2.6.24/include/net/route.h
  
  struct fib_nh;
  struct inet_peer;
-Index: linux-source-2.6.24/include/net/tcp.h
+Index: linux-2.6.24/include/net/tcp.h
 ===================================================================
---- linux-source-2.6.24.orig/include/net/tcp.h	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/include/net/tcp.h	2007-12-27 05:20:16.000000000 +0000
+--- linux-2.6.24.orig/include/net/tcp.h	2008-02-10 21:51:11.000000000 -0800
++++ linux-2.6.24/include/net/tcp.h	2008-05-05 16:28:33.000000000 -0700
 @@ -278,6 +278,8 @@
  
  extern int			tcp_v4_rcv(struct sk_buff *skb);
@@ -60,10 +60,10 @@ Index: linux-source-2.6.24/include/net/tcp.h
  extern int			tcp_v4_remember_stamp(struct sock *sk);
  
  extern int		    	tcp_v4_tw_remember_stamp(struct inet_timewait_sock *tw);
-Index: linux-source-2.6.24/net/ipv4/ip_sockglue.c
+Index: linux-2.6.24/net/ipv4/ip_sockglue.c
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/ip_sockglue.c	2007-12-27 05:15:20.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/ip_sockglue.c	2007-12-27 05:20:16.000000000 +0000
+--- linux-2.6.24.orig/net/ipv4/ip_sockglue.c	2008-05-05 16:10:03.000000000 -0700
++++ linux-2.6.24/net/ipv4/ip_sockglue.c	2008-05-05 16:28:33.000000000 -0700
 @@ -465,7 +465,7 @@
  			     (1<<IP_TTL) | (1<<IP_HDRINCL) |
  			     (1<<IP_MTU_DISCOVER) | (1<<IP_RECVERR) |
@@ -90,10 +90,10 @@ Index: linux-source-2.6.24/net/ipv4/ip_sockglue.c
  	case IP_MULTICAST_TTL:
  		if (sk->sk_type == SOCK_STREAM)
  			goto e_inval;
-Index: linux-source-2.6.24/net/ipv4/netfilter/Kconfig
+Index: linux-2.6.24/net/ipv4/netfilter/Kconfig
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/netfilter/Kconfig	2007-12-27 05:20:09.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/netfilter/Kconfig	2007-12-27 05:20:16.000000000 +0000
+--- linux-2.6.24.orig/net/ipv4/netfilter/Kconfig	2008-05-05 16:10:16.000000000 -0700
++++ linux-2.6.24/net/ipv4/netfilter/Kconfig	2008-05-05 16:28:33.000000000 -0700
 @@ -30,6 +30,13 @@
  
  	  If unsure, say Y.
@@ -108,10 +108,10 @@ Index: linux-source-2.6.24/net/ipv4/netfilter/Kconfig
  config IP_NF_FRAG_ACCEPT
  	tristate "ICMP UDP Fragmentation Accept"
  	help
-Index: linux-source-2.6.24/net/ipv4/netfilter/Makefile
+Index: linux-2.6.24/net/ipv4/netfilter/Makefile
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/netfilter/Makefile	2007-12-27 05:20:09.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/netfilter/Makefile	2007-12-27 05:20:16.000000000 +0000
+--- linux-2.6.24.orig/net/ipv4/netfilter/Makefile	2008-05-05 16:10:16.000000000 -0700
++++ linux-2.6.24/net/ipv4/netfilter/Makefile	2008-05-05 16:28:33.000000000 -0700
 @@ -16,6 +16,9 @@
  # icmp udp fragmentation accept
  obj-$(CONFIG_IP_NF_FRAG_ACCEPT) += ip_frag_accept.o
@@ -122,10 +122,10 @@ Index: linux-source-2.6.24/net/ipv4/netfilter/Makefile
  # connection tracking
  obj-$(CONFIG_NF_CONNTRACK_IPV4) += nf_conntrack_ipv4.o
  
-Index: linux-source-2.6.24/net/ipv4/netfilter/ip_nonlocal.c
+Index: linux-2.6.24/net/ipv4/netfilter/ip_nonlocal.c
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/netfilter/ip_nonlocal.c	2007-12-27 05:20:16.000000000 +0000
++++ linux-2.6.24/net/ipv4/netfilter/ip_nonlocal.c	2008-05-05 16:28:33.000000000 -0700
 @@ -0,0 +1,71 @@
 +#include <linux/types.h>
 +#include <linux/ip.h>
@@ -198,11 +198,11 @@ Index: linux-source-2.6.24/net/ipv4/netfilter/ip_nonlocal.c
 +module_exit(fini);
 +
 +
-Index: linux-source-2.6.24/net/ipv4/raw.c
+Index: linux-2.6.24/net/ipv4/raw.c
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/raw.c	2007-12-27 05:15:20.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/raw.c	2007-12-27 05:20:16.000000000 +0000
-@@ -473,6 +473,9 @@
+--- linux-2.6.24.orig/net/ipv4/raw.c	2008-05-05 16:10:03.000000000 -0700
++++ linux-2.6.24/net/ipv4/raw.c	2008-05-05 16:28:33.000000000 -0700
+@@ -475,6 +475,9 @@
  	tos = RT_CONN_FLAGS(sk);
  	if (msg->msg_flags & MSG_DONTROUTE)
  		tos |= RTO_ONLINK;
@@ -212,10 +212,10 @@ Index: linux-source-2.6.24/net/ipv4/raw.c
  
  	if (MULTICAST(daddr)) {
  		if (!ipc.oif)
-Index: linux-source-2.6.24/net/ipv4/route.c
+Index: linux-2.6.24/net/ipv4/route.c
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/route.c	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/route.c	2007-12-27 05:20:16.000000000 +0000
+--- linux-2.6.24.orig/net/ipv4/route.c	2008-02-10 21:51:11.000000000 -0800
++++ linux-2.6.24/net/ipv4/route.c	2008-05-05 16:28:33.000000000 -0700
 @@ -1809,8 +1809,10 @@
  		goto local_input;
  	}
@@ -257,10 +257,10 @@ Index: linux-source-2.6.24/net/ipv4/route.c
  		    && (MULTICAST(oldflp->fl4_dst) || oldflp->fl4_dst == htonl(0xFFFFFFFF))) {
  			/* Special hack: user can direct multicasts
  			   and limited broadcast via necessary interface
-Index: linux-source-2.6.24/net/ipv4/tcp_ipv4.c
+Index: linux-2.6.24/net/ipv4/tcp_ipv4.c
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/tcp_ipv4.c	2007-12-27 05:15:20.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/tcp_ipv4.c	2007-12-27 05:20:16.000000000 +0000
+--- linux-2.6.24.orig/net/ipv4/tcp_ipv4.c	2008-05-05 16:10:03.000000000 -0700
++++ linux-2.6.24/net/ipv4/tcp_ipv4.c	2008-05-05 16:28:33.000000000 -0700
 @@ -1758,6 +1758,81 @@
  	goto discard_it;
  }

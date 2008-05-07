@@ -1,7 +1,7 @@
-Index: linux-source-2.6.24/include/linux/sysctl.h
+Index: linux-2.6.24/include/linux/sysctl.h
 ===================================================================
---- linux-source-2.6.24.orig/include/linux/sysctl.h	2007-12-18 14:09:49.000000000 +0000
-+++ linux-source-2.6.24/include/linux/sysctl.h	2007-12-27 05:20:09.000000000 +0000
+--- linux-2.6.24.orig/include/linux/sysctl.h	2008-05-05 16:06:00.000000000 -0700
++++ linux-2.6.24/include/linux/sysctl.h	2008-05-05 16:10:16.000000000 -0700
 @@ -436,6 +436,7 @@
  	NET_TCP_ALLOWED_CONG_CONTROL=123,
  	NET_TCP_MAX_SSTHRESH=124,
@@ -10,10 +10,10 @@ Index: linux-source-2.6.24/include/linux/sysctl.h
  };
  
  enum {
-Index: linux-source-2.6.24/net/ipv4/netfilter/Kconfig
+Index: linux-2.6.24/net/ipv4/netfilter/Kconfig
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/netfilter/Kconfig	2007-12-27 05:14:29.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/netfilter/Kconfig	2007-12-27 05:20:09.000000000 +0000
+--- linux-2.6.24.orig/net/ipv4/netfilter/Kconfig	2008-05-05 16:09:53.000000000 -0700
++++ linux-2.6.24/net/ipv4/netfilter/Kconfig	2008-05-05 16:31:26.000000000 -0700
 @@ -30,6 +30,14 @@
  
  	  If unsure, say Y.
@@ -29,10 +29,10 @@ Index: linux-source-2.6.24/net/ipv4/netfilter/Kconfig
  config IP_NF_QUEUE
  	tristate "IP Userspace queueing via NETLINK (OBSOLETE)"
  	help
-Index: linux-source-2.6.24/net/ipv4/netfilter/Makefile
+Index: linux-2.6.24/net/ipv4/netfilter/Makefile
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/netfilter/Makefile	2007-12-27 05:14:51.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/netfilter/Makefile	2007-12-27 05:20:09.000000000 +0000
+--- linux-2.6.24.orig/net/ipv4/netfilter/Makefile	2008-05-05 16:09:53.000000000 -0700
++++ linux-2.6.24/net/ipv4/netfilter/Makefile	2008-05-05 16:31:26.000000000 -0700
 @@ -13,6 +13,9 @@
  nf_nat-objs		:= nf_nat_core.o nf_nat_helper.o nf_nat_proto_unknown.o nf_nat_proto_tcp.o nf_nat_proto_udp.o nf_nat_proto_icmp.o
  iptable_nat-objs	:= nf_nat_rule.o nf_nat_standalone.o
@@ -43,10 +43,10 @@ Index: linux-source-2.6.24/net/ipv4/netfilter/Makefile
  # connection tracking
  obj-$(CONFIG_NF_CONNTRACK_IPV4) += nf_conntrack_ipv4.o
  
-Index: linux-source-2.6.24/net/ipv4/netfilter/ip_frag_accept.c
+Index: linux-2.6.24/net/ipv4/netfilter/ip_frag_accept.c
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/netfilter/ip_frag_accept.c	2007-12-27 05:20:09.000000000 +0000
++++ linux-2.6.24/net/ipv4/netfilter/ip_frag_accept.c	2008-05-05 16:26:51.000000000 -0700
 @@ -0,0 +1,107 @@
 +#include <linux/types.h>
 +#include <linux/ip.h>
@@ -65,7 +65,7 @@ Index: linux-source-2.6.24/net/ipv4/netfilter/ip_frag_accept.c
 +MODULE_AUTHOR("Original Author Unknown");
 +MODULE_DESCRIPTION("ICMP UDP fragmentation needed accept");
 +
-+extern int sysctl_icmp_frag_accept;
++int sysctl_icmp_frag_accept;
 +unsigned short ip_rt_frag_needed(struct iphdr *iph, unsigned short new_mtu);
 +
 +static unsigned int icmp_frag_in(unsigned int hooknum,
@@ -155,25 +155,24 @@ Index: linux-source-2.6.24/net/ipv4/netfilter/ip_frag_accept.c
 +module_init(init);
 +module_exit(fini);
 +
-Index: linux-source-2.6.24/net/ipv4/sysctl_net_ipv4.c
+Index: linux-2.6.24/net/ipv4/sysctl_net_ipv4.c
 ===================================================================
---- linux-source-2.6.24.orig/net/ipv4/sysctl_net_ipv4.c	2007-12-18 14:09:50.000000000 +0000
-+++ linux-source-2.6.24/net/ipv4/sysctl_net_ipv4.c	2007-12-27 05:20:09.000000000 +0000
+--- linux-2.6.24.orig/net/ipv4/sysctl_net_ipv4.c	2008-05-05 16:06:00.000000000 -0700
++++ linux-2.6.24/net/ipv4/sysctl_net_ipv4.c	2008-05-05 16:26:32.000000000 -0700
 @@ -21,8 +21,7 @@
  #include <net/cipso_ipv4.h>
  #include <net/inet_frag.h>
  
 -/* From af_inet.c */
 -extern int sysctl_ip_nonlocal_bind;
-+int sysctl_icmp_frag_accept;
++extern int sysctl_icmp_frag_accept;
  
  #ifdef CONFIG_SYSCTL
  static int zero;
-@@ -548,6 +547,14 @@
- 		.mode		= 0644,
- 		.proc_handler	= &proc_dointvec
- 	},
-+	{
+@@ -551,6 +550,14 @@
+ 
+ #endif
+ 	{
 +		.ctl_name	= NET_IPV4_ICMP_FRAG_ACCEPT,
 +		.procname	= "icmp_frag_accept",
 +		.data		= &sysctl_icmp_frag_accept,
@@ -181,6 +180,19 @@ Index: linux-source-2.6.24/net/ipv4/sysctl_net_ipv4.c
 +		.mode		= 0644,
 +		.proc_handler	= &proc_dointvec,
 +	},
- 
- #endif
- 	{
++	{
+ 		.ctl_name	= NET_IPV4_IGMP_MAX_MSF,
+ 		.procname	= "igmp_max_msf",
+ 		.data		= &sysctl_igmp_max_msf,
+Index: linux-2.6.24/kernel/sysctl_check.c
+===================================================================
+--- linux-2.6.24.orig/kernel/sysctl_check.c	2008-05-05 16:33:45.000000000 -0700
++++ linux-2.6.24/kernel/sysctl_check.c	2008-05-05 16:11:37.000000000 -0700
+@@ -394,6 +394,7 @@
+ 	{ NET_TCP_ALLOWED_CONG_CONTROL,		"tcp_allowed_congestion_control" },
+ 	{ NET_TCP_MAX_SSTHRESH,			"tcp_max_ssthresh" },
+ 	{ NET_TCP_FRTO_RESPONSE,		"tcp_frto_response" },
++	{ NET_IPV4_ICMP_FRAG_ACCEPT,		"icmp_frag_accept" },
+ 	{ 2088 /* NET_IPQ_QMAX */,		"ip_queue_maxlen" },
+ 	{}
+ };
