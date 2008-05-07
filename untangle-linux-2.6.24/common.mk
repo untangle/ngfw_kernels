@@ -1,6 +1,6 @@
 # Our version number.  Reset to untangle1 when going upstream.
 # Currently must be manually updated.  You've been warned.
-OURVERSION=untangle1
+OURVERSION=untangle2
 
 # Upstream version numbers
 KVER=2.6.24
@@ -12,7 +12,7 @@ WORKDIR=linux-${KVER}
 KDSC=${PACKPFX}-${KUPVER}.dsc
 KOURPATCH=untangle-linux.diff.gz
 
-UMUPVER=${KDEBVER}.22
+UMUPVER=${KDEBVER}.23
 UMPFX=linux-ubuntu-modules-${KVER}_${KVER}
 UMWORKDIR=linux-ubuntu-modules-${KVER}-${KVER}
 UMDSC=${UMPFX}-${UMUPVER}.dsc
