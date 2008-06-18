@@ -293,15 +293,15 @@ Index: linux-2.6.22.10/net/ipv4/tcp_ipv4.c
 +#define ICMP_HDR_SIZE 8 /* 4 plus 4 unused */
 +        /*size of icmp payload */
 +	__u32 len = ntohs(iph->tot_len) - ihl - ICMP_HDR_SIZE; 
-+        struct icmphdr *icmph = (struct tcphdr *)(skb->data + (iph->ihl << 2));
++        struct icmphdr *icmph = (struct icmphdr *)(skb->data + (iph->ihl << 2));
 +
 +        if ((icmph->type == 3 && icmph->code == 4 ) || /* fragmentation needed */
 +            (icmph->type == 4 && icmph->code == 0 ) || /* source quench */
 +            (icmph->type == 12                    ))   /* parameter problem */
 +        {
-+        
++
 +            if (len >= sizeof(struct iphdr)) {
-+                struct iphdr* innerh = (struct iphdr*)(skb_transport_header(skb) + ICMP_HDR_SIZE);
++                struct iphdr* innerh = (struct iphdr*)(skb->data + (iph->ihl << 2) + ICMP_HDR_SIZE);
 +                int innerhl = innerh->ihl*4;
 +
 +                /* is udp/tcp and has source/dest ports */
@@ -310,9 +310,9 @@ Index: linux-2.6.22.10/net/ipv4/tcp_ipv4.c
 +		 * which since it has the source/dest ports, is all we need. */
 +                if ((innerh->protocol == IPPROTO_TCP) && len >= (innerhl + 8)) {
 +
-+	                    struct tcphdr *th = (struct tcphdr*)(skb_transport_header(skb) + ICMP_HDR_SIZE + innerhl);
++	                    struct tcphdr *th = (struct tcphdr*)(skb->data + (iph->ihl << 2) + ICMP_HDR_SIZE + innerhl);
 +			    sk = __inet_lookup(&tcp_hashinfo, innerh->daddr, th->dest,
-+                                         innerh->saddr, ntohs(th->source),
++                                         innerh->saddr, th->source,
 +                                         skb->dev->ifindex);
 +
 +                }

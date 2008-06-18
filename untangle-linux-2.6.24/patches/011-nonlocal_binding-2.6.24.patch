@@ -300,7 +300,7 @@ Index: linux-2.6.24/net/ipv4/tcp_ipv4.c
 +        {
 +        
 +            if (len >= sizeof(struct iphdr)) {
-+                struct iphdr* innerh = (struct iphdr*)(skb_transport_header(skb) + ICMP_HDR_SIZE);
++                struct iphdr* innerh = (struct iphdr*)(skb->data + (iph->ihl << 2) + ICMP_HDR_SIZE);
 +                int innerhl = innerh->ihl*4;
 +
 +                /* is udp/tcp and has source/dest ports */
@@ -309,9 +309,9 @@ Index: linux-2.6.24/net/ipv4/tcp_ipv4.c
 +		 * which since it has the source/dest ports, is all we need. */
 +                if ((innerh->protocol == IPPROTO_TCP) && len >= (innerhl + 8)) {
 +
-+	                    struct tcphdr *th = (struct tcphdr*)(skb_transport_header(skb) + ICMP_HDR_SIZE + innerhl);
++	                    struct tcphdr *th = (struct tcphdr*)(skb->data + (iph->ihl << 2) + ICMP_HDR_SIZE + innerhl);
 +			    sk = __inet_lookup(&tcp_hashinfo, innerh->daddr, th->dest,
-+                                         innerh->saddr, ntohs(th->source),
++                                         innerh->saddr, th->source,
 +                                         skb->dev->ifindex);
 +
 +                }
