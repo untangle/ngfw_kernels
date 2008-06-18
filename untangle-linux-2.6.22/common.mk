@@ -1,5 +1,5 @@
 # Our version number.  Currently must be manually updated.  You've been warned.
-OURVERSION=untangle7
+OURVERSION=untangle8
 
 # Upstream version numbers
 KVER=2.6.22
