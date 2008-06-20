@@ -64,7 +64,6 @@ legitify:
 	mv notlegit/linux-headers-*_all.deb .
 	mv notlegit/linux-source-*_all.deb .
 	mv notlegit/udev*.deb notlegit/libvolum*.deb . 
-	mv linux-restricted-*deb notlegit
 	mv modules/*.deb .
 
 clean::

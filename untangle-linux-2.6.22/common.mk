@@ -3,27 +3,27 @@ OURVERSION=untangle8
 
 # Upstream version numbers
 KVER=2.6.22
-KDEBVER=14
+KDEBVER=15
 
-KUPVER=${KDEBVER}.46
+KUPVER=${KDEBVER}.54
 PACKPFX=linux-source-${KVER}_${KVER}
 WORKDIR=linux-source-${KVER}-${KVER}
 KDSC=${PACKPFX}-${KUPVER}.dsc
 KOURPATCH=${PACKPFX}-${KUPVER}-untangle.diff.gz
 
-UMUPVER=${KDEBVER}.37
+UMUPVER=${KDEBVER}.39
 UMPFX=linux-ubuntu-modules-${KVER}_${KVER}
 UMWORKDIR=linux-ubuntu-modules-${KVER}-${KVER}
 UMDSC=${UMPFX}-${UMUPVER}.dsc
 UMOURPATCH=${UMPFX}-${UMUPVER}-untangle.diff.gz
 
-RMUPVER=${KDEBVER}.9
+RMUPVER=${KDEBVER}.11
 RMPFX=linux-restricted-modules-${KVER}_${KVER}.4
 RMWORKDIR=linux-restricted-modules-${KVER}-${KVER}.4
 RMDSC=${RMPFX}-${RMUPVER}.dsc
 RMOURPATCH=${RMPFX}-${RMUPVER}-untangle.diff.gz
 
-METAUPVER=${KDEBVER}.21
+METAUPVER=${KDEBVER}.22
 METAPFX=linux-meta_${KVER}
 METAWORKDIR=linux-meta-${KVER}.${METAUPVER}
 METADSC=${METAPFX}.${METAUPVER}.dsc
