@@ -1,0 +1,153 @@
+Index: source_i386_untangle/include/linux/if_bridge.h
+===================================================================
+--- source_i386_untangle.orig/include/linux/if_bridge.h	2008-07-13 14:51:29.000000000 -0700
++++ source_i386_untangle/include/linux/if_bridge.h	2008-10-03 10:48:23.000000000 -0700
+@@ -44,6 +44,7 @@
+ #define BRCTL_SET_PORT_PRIORITY 16
+ #define BRCTL_SET_PATH_COST 17
+ #define BRCTL_GET_FDB_ENTRIES 18
++#define BRCTL_GET_DEVNAME 19
+ 
+ #define BR_STATE_DISABLED 0
+ #define BR_STATE_LISTENING 1
+Index: source_i386_untangle/include/linux/sockios.h
+===================================================================
+--- source_i386_untangle.orig/include/linux/sockios.h	2008-07-13 14:51:29.000000000 -0700
++++ source_i386_untangle/include/linux/sockios.h	2008-10-03 10:48:23.000000000 -0700
+@@ -28,6 +28,7 @@
+ #define SIOCADDRT	0x890B		/* add routing table entry	*/
+ #define SIOCDELRT	0x890C		/* delete routing table entry	*/
+ #define SIOCRTMSG	0x890D		/* call to routing system	*/
++#define SIOCFINDEV	0x890E		/* call to find output dev	*/
+ 
+ /* Socket configuration controls. */
+ #define SIOCGIFNAME	0x8910		/* get iface name		*/
+Index: source_i386_untangle/net/bridge/br_ioctl.c
+===================================================================
+--- source_i386_untangle.orig/net/bridge/br_ioctl.c	2008-07-13 14:51:29.000000000 -0700
++++ source_i386_untangle/net/bridge/br_ioctl.c	2008-10-03 15:29:08.000000000 -0700
+@@ -251,6 +251,36 @@
+ 		return 0;
+ 	}
+ 
++ 	case BRCTL_GET_DEVNAME:
++ 	{
++ 		struct net_device *dev;
++ 		struct net_bridge *br;
++ 		unsigned char dest[ETH_HLEN];
++ 		char brname[IFNAMSIZ];
++ 		struct net_bridge_fdb_entry *dst;
++
++		if (copy_from_user(dest, (void __user *)args[2], ETH_HLEN))
++			return -EFAULT;
++ 		if (copy_from_user(brname, (void __user *)args[1], IFNAMSIZ))
++			return -EFAULT;
++ 		dev = __dev_get_by_name(&init_net, brname);
++ 		br = netdev_priv(dev);
++ 
++ 		rcu_read_lock();
++                 dst = __br_fdb_get(br, dest);
++                 
++ 		if (dst != NULL) {
++                         memcpy(brname, dst->dst->dev->name, IFNAMSIZ);
++                         rcu_read_unlock();
++			 if (copy_to_user((void __user *)args[1], brname, IFNAMSIZ))
++			         return -EFAULT;
++                         return dst->dst->dev->ifindex;
++ 		} else {
++                         rcu_read_unlock();
++ 			return -EINVAL;
++ 		}
++ 	}
++ 
+ 	case BRCTL_SET_BRIDGE_STP_STATE:
+ 		if (!capable(CAP_NET_ADMIN))
+ 			return -EPERM;
+Index: source_i386_untangle/net/ipv4/af_inet.c
+===================================================================
+--- source_i386_untangle.orig/net/ipv4/af_inet.c	2008-07-13 14:51:29.000000000 -0700
++++ source_i386_untangle/net/ipv4/af_inet.c	2008-10-03 10:48:23.000000000 -0700
+@@ -811,6 +811,7 @@
+ 		case SIOCGSTAMPNS:
+ 			err = sock_get_timestampns(sk, (struct timespec __user *)arg);
+ 			break;
++		case SIOCFINDEV:
+ 		case SIOCADDRT:
+ 		case SIOCDELRT:
+ 		case SIOCRTMSG:
+Index: source_i386_untangle/net/ipv4/fib_frontend.c
+===================================================================
+--- source_i386_untangle.orig/net/ipv4/fib_frontend.c	2008-07-13 14:51:29.000000000 -0700
++++ source_i386_untangle/net/ipv4/fib_frontend.c	2008-10-03 15:47:50.000000000 -0700
+@@ -449,6 +449,46 @@
+ 	return 0;
+ }
+ 
++static int findev(struct net *net, unsigned int remote, char *p, u32 *nh_gw)
++{
++	struct flowi fl = { .nl_u = { .ip4_u =
++				      { .daddr = remote,
++					.saddr = 0,
++					.tos = 0,
++//					.scope = ((tos & RTO_ONLINK) ?
++					.scope = ((0 & RTO_ONLINK) ?
++						  RT_SCOPE_LINK :
++						  RT_SCOPE_UNIVERSE),
++#ifdef CONFIG_IP_ROUTE_FWMARK
++					.fwmark = 0
++#endif
++				      } },
++			    .iif = init_net.loopback_dev->ifindex,
++			    .oif = 0 };
++	struct fib_result res;
++	struct net_device *dev_out = NULL;
++
++	res.fi		= NULL;
++#ifdef CONFIG_IP_MULTIPLE_TABLES
++	res.r		= NULL;
++#endif
++	if (fib_lookup(net, &fl, &res)) {
++			return 0;
++	}
++	*nh_gw = FIB_RES_GW(res);
++	if (res.type == RTN_LOCAL) {
++		dev_out = init_net.loopback_dev;
++	} else {
++		dev_out = FIB_RES_DEV(res);
++	}
++	dev_hold(dev_out);
++	fib_res_put(&res);
++	strcpy(p, dev_out->name);
++       fl.oif = dev_out->ifindex;
++	dev_put(dev_out);
++	return fl.oif;
++}
++
+ /*
+  *	Handle IP routing ioctl calls. These are used to manipulate the routing tables
+  */
+@@ -459,7 +499,24 @@
+ 	struct rtentry rt;
+ 	int err;
+ 
++	struct {
++		u32 addr;
++		u32 nh;
++		char name[IFNAMSIZ];
++	} nh_req;
++
+ 	switch (cmd) {
++	case SIOCFINDEV:
++		if (copy_from_user(&nh_req, arg, sizeof(nh_req))) {
++			return -EFAULT;
++		} else {
++		        int oif = findev(net, nh_req.addr, nh_req.name, &nh_req.nh);
++			if (oif == 0)
++				return -ENETUNREACH;
++			if (copy_to_user(arg, &nh_req, sizeof(nh_req)))
++			    return -EFAULT;
++			return(oif);
++		}
+ 	case SIOCADDRT:		/* Add a route */
+ 	case SIOCDELRT:		/* Delete a route */
+ 		if (!capable(CAP_NET_ADMIN))
