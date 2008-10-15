@@ -271,7 +271,7 @@ Index: linux-2.6-2.6.26/net/ipv4/tcp_ipv4.c
 +    int ihl;
 +    struct iphdr *iph = (struct iphdr *)skb->data;
 +    if (iph->frag_off & htons(IP_MF|IP_OFFSET)) {
-+        if (!ip_defrag(skb,IP_DEFRAG_NONLOCAL))
++        if (ip_defrag(skb,IP_DEFRAG_NONLOCAL))
 +            return NULL;
 +        iph = (struct iphdr *)skb->data;
 +    }
