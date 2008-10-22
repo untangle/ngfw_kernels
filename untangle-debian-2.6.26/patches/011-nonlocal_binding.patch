@@ -1,7 +1,7 @@
-Index: linux-2.6-2.6.26/include/linux/in.h
+Index: build_amd64_untangle_amd64/include/linux/in.h
 ===================================================================
---- linux-2.6-2.6.26.orig/include/linux/in.h	2008-10-06 11:08:09.000000000 -0700
-+++ linux-2.6-2.6.26/include/linux/in.h	2008-10-06 11:08:19.000000000 -0700
+--- build_amd64_untangle_amd64.orig/include/linux/in.h	2008-10-15 12:14:19.000000000 -0700
++++ build_amd64_untangle_amd64/include/linux/in.h	2008-10-15 14:11:23.000000000 -0700
 @@ -75,6 +75,7 @@
  #define IP_IPSEC_POLICY	16
  #define IP_XFRM_POLICY	17
@@ -10,10 +10,10 @@ Index: linux-2.6-2.6.26/include/linux/in.h
  
  /* BSD compatibility */
  #define IP_RECVRETOPTS	IP_RETOPTS
-Index: linux-2.6-2.6.26/include/net/ip.h
+Index: build_amd64_untangle_amd64/include/net/ip.h
 ===================================================================
---- linux-2.6-2.6.26.orig/include/net/ip.h	2008-10-06 11:08:09.000000000 -0700
-+++ linux-2.6-2.6.26/include/net/ip.h	2008-10-06 11:08:19.000000000 -0700
+--- build_amd64_untangle_amd64.orig/include/net/ip.h	2008-10-15 12:14:19.000000000 -0700
++++ build_amd64_untangle_amd64/include/net/ip.h	2008-10-15 14:11:23.000000000 -0700
 @@ -335,6 +335,7 @@
  	IP_DEFRAG_CALL_RA_CHAIN,
  	IP_DEFRAG_CONNTRACK_IN,
@@ -22,10 +22,10 @@ Index: linux-2.6-2.6.26/include/net/ip.h
  	IP_DEFRAG_VS_IN,
  	IP_DEFRAG_VS_OUT,
  	IP_DEFRAG_VS_FWD
-Index: linux-2.6-2.6.26/include/net/route.h
+Index: build_amd64_untangle_amd64/include/net/route.h
 ===================================================================
---- linux-2.6-2.6.26.orig/include/net/route.h	2008-07-13 14:51:29.000000000 -0700
-+++ linux-2.6-2.6.26/include/net/route.h	2008-10-06 11:08:19.000000000 -0700
+--- build_amd64_untangle_amd64.orig/include/net/route.h	2008-07-13 14:51:29.000000000 -0700
++++ build_amd64_untangle_amd64/include/net/route.h	2008-10-15 14:11:23.000000000 -0700
 @@ -40,12 +40,19 @@
  #endif
  
@@ -47,10 +47,10 @@ Index: linux-2.6-2.6.26/include/net/route.h
  
  struct fib_nh;
  struct inet_peer;
-Index: linux-2.6-2.6.26/include/net/tcp.h
+Index: build_amd64_untangle_amd64/include/net/tcp.h
 ===================================================================
---- linux-2.6-2.6.26.orig/include/net/tcp.h	2008-07-13 14:51:29.000000000 -0700
-+++ linux-2.6-2.6.26/include/net/tcp.h	2008-10-06 11:08:19.000000000 -0700
+--- build_amd64_untangle_amd64.orig/include/net/tcp.h	2008-07-13 14:51:29.000000000 -0700
++++ build_amd64_untangle_amd64/include/net/tcp.h	2008-10-15 14:11:23.000000000 -0700
 @@ -279,6 +279,8 @@
  
  extern int			tcp_v4_rcv(struct sk_buff *skb);
@@ -60,10 +60,10 @@ Index: linux-2.6-2.6.26/include/net/tcp.h
  extern int			tcp_v4_remember_stamp(struct sock *sk);
  
  extern int		    	tcp_v4_tw_remember_stamp(struct inet_timewait_sock *tw);
-Index: linux-2.6-2.6.26/net/ipv4/ip_sockglue.c
+Index: build_amd64_untangle_amd64/net/ipv4/ip_sockglue.c
 ===================================================================
---- linux-2.6-2.6.26.orig/net/ipv4/ip_sockglue.c	2008-10-06 11:08:09.000000000 -0700
-+++ linux-2.6-2.6.26/net/ipv4/ip_sockglue.c	2008-10-06 11:08:19.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/ip_sockglue.c	2008-10-15 12:14:19.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/ip_sockglue.c	2008-10-15 14:11:23.000000000 -0700
 @@ -466,7 +466,7 @@
  			     (1<<IP_TTL) | (1<<IP_HDRINCL) |
  			     (1<<IP_MTU_DISCOVER) | (1<<IP_RECVERR) |
@@ -90,10 +90,10 @@ Index: linux-2.6-2.6.26/net/ipv4/ip_sockglue.c
  	case IP_MULTICAST_TTL:
  		if (sk->sk_type == SOCK_STREAM)
  			goto e_inval;
-Index: linux-2.6-2.6.26/net/ipv4/netfilter/Kconfig
+Index: build_amd64_untangle_amd64/net/ipv4/netfilter/Kconfig
 ===================================================================
---- linux-2.6-2.6.26.orig/net/ipv4/netfilter/Kconfig	2008-10-06 11:08:10.000000000 -0700
-+++ linux-2.6-2.6.26/net/ipv4/netfilter/Kconfig	2008-10-06 11:08:19.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/netfilter/Kconfig	2008-10-15 12:14:19.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/netfilter/Kconfig	2008-10-15 14:11:23.000000000 -0700
 @@ -31,6 +31,13 @@
  
  	  If unsure, say Y.
@@ -108,10 +108,10 @@ Index: linux-2.6-2.6.26/net/ipv4/netfilter/Kconfig
  config IP_NF_FRAG_ACCEPT
  	tristate "ICMP UDP Fragmentation Accept"
  	help
-Index: linux-2.6-2.6.26/net/ipv4/netfilter/Makefile
+Index: build_amd64_untangle_amd64/net/ipv4/netfilter/Makefile
 ===================================================================
---- linux-2.6-2.6.26.orig/net/ipv4/netfilter/Makefile	2008-10-06 11:08:10.000000000 -0700
-+++ linux-2.6-2.6.26/net/ipv4/netfilter/Makefile	2008-10-06 11:08:19.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/netfilter/Makefile	2008-10-15 12:14:19.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/netfilter/Makefile	2008-10-15 14:11:23.000000000 -0700
 @@ -16,6 +16,9 @@
  # icmp udp fragmentation accept
  obj-$(CONFIG_IP_NF_FRAG_ACCEPT) += ip_frag_accept.o
@@ -122,10 +122,10 @@ Index: linux-2.6-2.6.26/net/ipv4/netfilter/Makefile
  # connection tracking
  obj-$(CONFIG_NF_CONNTRACK_IPV4) += nf_conntrack_ipv4.o
  
-Index: linux-2.6-2.6.26/net/ipv4/netfilter/ip_nonlocal.c
+Index: build_amd64_untangle_amd64/net/ipv4/netfilter/ip_nonlocal.c
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ linux-2.6-2.6.26/net/ipv4/netfilter/ip_nonlocal.c	2008-10-06 11:08:19.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/netfilter/ip_nonlocal.c	2008-10-15 14:15:48.000000000 -0700
 @@ -0,0 +1,71 @@
 +#include <linux/types.h>
 +#include <linux/ip.h>
@@ -161,7 +161,7 @@ Index: linux-2.6-2.6.26/net/ipv4/netfilter/ip_nonlocal.c
 +	.owner		= THIS_MODULE,
 +	.pf  		= PF_INET,
 +	.hooknum	= NF_INET_PRE_ROUTING,
-+	.priority	= NF_IP_PRI_FIRST+1,
++	.priority	= NF_IP_PRI_NONLOCAL,
 +};
 +
 +static int init_or_cleanup(int init)
@@ -198,10 +198,10 @@ Index: linux-2.6-2.6.26/net/ipv4/netfilter/ip_nonlocal.c
 +module_exit(fini);
 +
 +
-Index: linux-2.6-2.6.26/net/ipv4/raw.c
+Index: build_amd64_untangle_amd64/net/ipv4/raw.c
 ===================================================================
---- linux-2.6-2.6.26.orig/net/ipv4/raw.c	2008-10-06 11:08:09.000000000 -0700
-+++ linux-2.6-2.6.26/net/ipv4/raw.c	2008-10-06 11:08:19.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/raw.c	2008-10-15 12:14:19.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/raw.c	2008-10-15 14:11:23.000000000 -0700
 @@ -528,6 +528,9 @@
  	tos = RT_CONN_FLAGS(sk);
  	if (msg->msg_flags & MSG_DONTROUTE)
@@ -212,10 +212,10 @@ Index: linux-2.6-2.6.26/net/ipv4/raw.c
  
  	if (ipv4_is_multicast(daddr)) {
  		if (!ipc.oif)
-Index: linux-2.6-2.6.26/net/ipv4/route.c
+Index: build_amd64_untangle_amd64/net/ipv4/route.c
 ===================================================================
---- linux-2.6-2.6.26.orig/net/ipv4/route.c	2008-07-13 14:51:29.000000000 -0700
-+++ linux-2.6-2.6.26/net/ipv4/route.c	2008-10-06 11:08:19.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/route.c	2008-07-13 14:51:29.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/route.c	2008-10-15 14:11:23.000000000 -0700
 @@ -1962,8 +1962,10 @@
  		goto local_input;
  	}
@@ -257,10 +257,10 @@ Index: linux-2.6-2.6.26/net/ipv4/route.c
  		    && (ipv4_is_multicast(oldflp->fl4_dst) ||
  			oldflp->fl4_dst == htonl(0xFFFFFFFF))) {
  			/* Special hack: user can direct multicasts
-Index: linux-2.6-2.6.26/net/ipv4/tcp_ipv4.c
+Index: build_amd64_untangle_amd64/net/ipv4/tcp_ipv4.c
 ===================================================================
---- linux-2.6-2.6.26.orig/net/ipv4/tcp_ipv4.c	2008-10-06 11:08:09.000000000 -0700
-+++ linux-2.6-2.6.26/net/ipv4/tcp_ipv4.c	2008-10-06 11:10:10.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/tcp_ipv4.c	2008-10-15 12:14:19.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/tcp_ipv4.c	2008-10-15 14:11:23.000000000 -0700
 @@ -1736,6 +1736,79 @@
  	goto discard_it;
  }
@@ -278,14 +278,14 @@ Index: linux-2.6-2.6.26/net/ipv4/tcp_ipv4.c
 +
 +    ihl = iph->ihl*4;
 +
-+    if (!pskb_may_pull(skb, ihl+8) || skb->dev == NULL || skb->dst == NULL)
++    if (!pskb_may_pull(skb, ihl+8) || skb->dev == NULL)
 +        goto out;
 +
 +    if (iph->protocol == IPPROTO_TCP) {           
 +        struct tcphdr *th = (struct tcphdr *)(skb->data + (iph->ihl << 2));
 +    
 +        sk = __inet_lookup(dev_net(skb->dev), &tcp_hashinfo, iph->saddr, th->source,
-+			   iph->daddr, th->dest, inet_iif(skb));
++			   iph->daddr, th->dest, skb->dev->ifindex);
 +    }
 +    if (iph->protocol == IPPROTO_ICMP) {
 +#define ICMP_HDR_SIZE 8 /* 4 plus 4 unused */
@@ -310,7 +310,7 @@ Index: linux-2.6-2.6.26/net/ipv4/tcp_ipv4.c
 +
 +	                    struct tcphdr *th = (struct tcphdr*)(skb->data + (iph->ihl << 2) + ICMP_HDR_SIZE + innerhl);
 +			    sk = __inet_lookup(dev_net(skb->dev), &tcp_hashinfo, innerh->daddr, th->dest,
-+					       innerh->saddr, th->source, inet_iif(skb));
++					       innerh->saddr, th->source, skb->dev->ifindex);
 +
 +                }
 +            }
@@ -341,3 +341,15 @@ Index: linux-2.6-2.6.26/net/ipv4/tcp_ipv4.c
  /* VJ's idea. Save last timestamp seen from this destination
   * and hold it at least for normal timewait interval to use for duplicate
   * segment detection in subsequent connections, before they enter synchronized
+Index: build_amd64_untangle_amd64/include/linux/netfilter_ipv4.h
+===================================================================
+--- build_amd64_untangle_amd64.orig/include/linux/netfilter_ipv4.h	2008-10-15 14:11:41.000000000 -0700
++++ build_amd64_untangle_amd64/include/linux/netfilter_ipv4.h	2008-10-15 14:16:09.000000000 -0700
+@@ -53,6 +53,7 @@
+ 
+ enum nf_ip_hook_priorities {
+ 	NF_IP_PRI_FIRST = INT_MIN,
++	NF_IP_PRI_NONLOCAL = INT_MIN + 5,
+ 	NF_IP_PRI_ICMP_FRAG_ACCEPT = -450,
+ 	NF_IP_PRI_CONNTRACK_DEFRAG = -400,
+ 	NF_IP_PRI_RAW = -300,

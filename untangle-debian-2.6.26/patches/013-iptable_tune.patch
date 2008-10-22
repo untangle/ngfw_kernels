@@ -1,7 +1,7 @@
-Index: source_i386_untangle/net/ipv4/netfilter/Kconfig
+Index: build_amd64_untangle_amd64/net/ipv4/netfilter/Kconfig
 ===================================================================
---- source_i386_untangle.orig/net/ipv4/netfilter/Kconfig	2008-10-03 16:10:47.000000000 -0700
-+++ source_i386_untangle/net/ipv4/netfilter/Kconfig	2008-10-03 16:11:21.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/netfilter/Kconfig	2008-10-15 14:11:23.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/netfilter/Kconfig	2008-10-15 14:32:38.000000000 -0700
 @@ -390,6 +390,18 @@
  	  If you want to compile it as a module, say M here and read
  	  <file:Documentation/kbuild/modules.txt>.  If unsure, say `N'.
@@ -21,10 +21,10 @@ Index: source_i386_untangle/net/ipv4/netfilter/Kconfig
  # ARP tables
  config IP_NF_ARPTABLES
  	tristate "ARP tables support"
-Index: source_i386_untangle/net/ipv4/netfilter/Makefile
+Index: build_amd64_untangle_amd64/net/ipv4/netfilter/Makefile
 ===================================================================
---- source_i386_untangle.orig/net/ipv4/netfilter/Makefile	2008-10-03 16:10:47.000000000 -0700
-+++ source_i386_untangle/net/ipv4/netfilter/Makefile	2008-10-03 16:11:21.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/netfilter/Makefile	2008-10-15 14:11:23.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/netfilter/Makefile	2008-10-15 14:32:38.000000000 -0700
 @@ -48,6 +48,7 @@
  obj-$(CONFIG_IP_NF_MANGLE) += iptable_mangle.o
  obj-$(CONFIG_NF_NAT) += iptable_nat.o
@@ -33,10 +33,10 @@ Index: source_i386_untangle/net/ipv4/netfilter/Makefile
  
  # matches
  obj-$(CONFIG_IP_NF_MATCH_ADDRTYPE) += ipt_addrtype.o
-Index: source_i386_untangle/net/ipv4/netfilter/iptable_tune.c
+Index: build_amd64_untangle_amd64/net/ipv4/netfilter/iptable_tune.c
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ source_i386_untangle/net/ipv4/netfilter/iptable_tune.c	2008-10-03 16:38:31.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/netfilter/iptable_tune.c	2008-10-15 14:35:41.000000000 -0700
 @@ -0,0 +1,140 @@
 +/*
 + * 'tune' table, which is the last hooked in at POST_ROUTING and LOCAL_OUT .
@@ -76,10 +76,10 @@ Index: source_i386_untangle/net/ipv4/netfilter/iptable_tune.c
 +	.term = IPT_ERROR_INIT,			/* ERROR */
 +};
 +
-+static struct xt_table packet_tune = {
++static struct xt_table packet_tuner = {
 +	.name = "tune",
 +	.valid_hooks =  TUNE_VALID_HOOKS,
-+	.lock = __RW_LOCK_UNLOCKED(packet_tune.lock),
++	.lock = __RW_LOCK_UNLOCKED(packet_tuner.lock),
 +	.me = THIS_MODULE,
 +	.af = AF_INET,
 +};
@@ -117,14 +117,14 @@ Index: source_i386_untangle/net/ipv4/netfilter/iptable_tune.c
 +		.hook = ipt_hook,
 +		.pf = PF_INET,
 +		.hooknum = NF_INET_POST_ROUTING,
-+		.priority = NF_IP_PRI_LAST,
++		.priority = NF_IP_PRI_TUNE,
 +		.owner = THIS_MODULE,
 +	},
 +	{
 +		.hook = ipt_local_hook,
 +		.pf = PF_INET,
 +		.hooknum = NF_INET_LOCAL_OUT,
-+		.priority = NF_IP_PRI_LAST,
++		.priority = NF_IP_PRI_TUNE,
 +		.owner = THIS_MODULE,
 +	},
 +};
@@ -133,7 +133,7 @@ Index: source_i386_untangle/net/ipv4/netfilter/iptable_tune.c
 +{
 +	/* Register table */
 +	net->ipv4.iptable_tune =
-+		ipt_register_table(net, &packet_tune, &initial_table.repl);
++		ipt_register_table(net, &packet_tuner, &initial_table.repl);
 +	if (IS_ERR(net->ipv4.iptable_tune))
 +		return PTR_ERR(net->ipv4.iptable_tune);
 +	return 0;
@@ -178,10 +178,10 @@ Index: source_i386_untangle/net/ipv4/netfilter/iptable_tune.c
 +module_init(iptable_tune_init);
 +module_exit(iptable_tune_fini);
 +MODULE_LICENSE("GPL");
-Index: source_i386_untangle/include/net/netns/ipv4.h
+Index: build_amd64_untangle_amd64/include/net/netns/ipv4.h
 ===================================================================
---- source_i386_untangle.orig/include/net/netns/ipv4.h	2008-10-03 17:17:00.000000000 -0700
-+++ source_i386_untangle/include/net/netns/ipv4.h	2008-10-03 17:17:02.000000000 -0700
+--- build_amd64_untangle_amd64.orig/include/net/netns/ipv4.h	2008-07-13 14:51:29.000000000 -0700
++++ build_amd64_untangle_amd64/include/net/netns/ipv4.h	2008-10-15 14:32:38.000000000 -0700
 @@ -35,6 +35,7 @@
  	struct xt_table		*iptable_filter;
  	struct xt_table		*iptable_mangle;
@@ -190,3 +190,15 @@ Index: source_i386_untangle/include/net/netns/ipv4.h
  	struct xt_table		*arptable_filter;
  #endif
  
+Index: build_amd64_untangle_amd64/include/linux/netfilter_ipv4.h
+===================================================================
+--- build_amd64_untangle_amd64.orig/include/linux/netfilter_ipv4.h	2008-10-15 14:32:44.000000000 -0700
++++ build_amd64_untangle_amd64/include/linux/netfilter_ipv4.h	2008-10-15 14:40:02.000000000 -0700
+@@ -64,6 +64,7 @@
+ 	NF_IP_PRI_FILTER = 0,
+ 	NF_IP_PRI_NAT_SRC = 100,
+ 	NF_IP_PRI_SELINUX_LAST = 225,
++	NF_IP_PRI_TUNE = INT_MAX - 5,
+ 	NF_IP_PRI_CONNTRACK_CONFIRM = INT_MAX,
+ 	NF_IP_PRI_LAST = INT_MAX,
+ };

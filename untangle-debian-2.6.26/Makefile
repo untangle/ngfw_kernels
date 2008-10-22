@@ -33,7 +33,7 @@ kpkg:	${WORKDIR} force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules clean
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_${MACHINE}_untangle setup_${MACHINE}_untangle
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle
-	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules binary-indep
+#	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules binary-indep
 
 
 # This combines our "generic" kernel patches with the specific Debian kernel

@@ -46,19 +46,15 @@ Index: linux-2.6-2.6.26/net/netfilter/nfnetlink_queue.c
  
  	size =    NLMSG_SPACE(sizeof(struct nfgenmsg))
  		+ nla_total_size(sizeof(struct nfqnl_msg_packet_hdr))
-@@ -240,6 +256,18 @@
+@@ -240,6 +256,14 @@
  
  	spin_lock_bh(&queue->lock);
  
 +#ifdef CONFIG_NFNETLINK_COPY_UNTANGLE_MODE
-+#define NFA_ALIGNTO     4
-+#define NFA_ALIGN(len)	(((len) + NFA_ALIGNTO - 1) & ~(NFA_ALIGNTO - 1))
-+#define NFA_LENGTH(len)	(NFA_ALIGN(sizeof(struct {u_int16_t nfa_len; u_int16_t nfa_type;})) + (len))
-+#define NFA_SPACE(len)	NFA_ALIGN(NFA_LENGTH(len))
 +	if( queue->untangle_mode){
-+	        size += NFA_SPACE(sizeof(enum ip_conntrack_info))
-+		    + NFA_SPACE(sizeof(struct nf_conntrack_tuple))  /* dir original */
-+		    + NFA_SPACE(sizeof(struct nf_conntrack_tuple));  /* dir reply */
++	        size += nla_total_size(sizeof(enum ip_conntrack_info))
++		    + nla_total_size(sizeof(struct nf_conntrack_tuple))  /* dir original */
++		    + nla_total_size(sizeof(struct nf_conntrack_tuple));  /* dir reply */
 +	}
 +#endif
 +

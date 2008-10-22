@@ -1,7 +1,7 @@
-Index: source_i386_untangle/include/linux/sysctl.h
+Index: build_amd64_untangle_amd64/include/linux/sysctl.h
 ===================================================================
---- source_i386_untangle.orig/include/linux/sysctl.h	2008-10-03 15:44:28.000000000 -0700
-+++ source_i386_untangle/include/linux/sysctl.h	2008-10-03 15:47:57.000000000 -0700
+--- build_amd64_untangle_amd64.orig/include/linux/sysctl.h	2008-07-13 14:51:29.000000000 -0700
++++ build_amd64_untangle_amd64/include/linux/sysctl.h	2008-10-15 12:14:19.000000000 -0700
 @@ -435,6 +435,7 @@
  	NET_TCP_ALLOWED_CONG_CONTROL=123,
  	NET_TCP_MAX_SSTHRESH=124,
@@ -10,10 +10,10 @@ Index: source_i386_untangle/include/linux/sysctl.h
  };
  
  enum {
-Index: source_i386_untangle/net/ipv4/netfilter/Kconfig
+Index: build_amd64_untangle_amd64/net/ipv4/netfilter/Kconfig
 ===================================================================
---- source_i386_untangle.orig/net/ipv4/netfilter/Kconfig	2008-10-03 15:44:28.000000000 -0700
-+++ source_i386_untangle/net/ipv4/netfilter/Kconfig	2008-10-03 15:50:35.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/netfilter/Kconfig	2008-10-15 12:14:08.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/netfilter/Kconfig	2008-10-15 12:14:19.000000000 -0700
 @@ -31,6 +31,14 @@
  
  	  If unsure, say Y.
@@ -29,10 +29,10 @@ Index: source_i386_untangle/net/ipv4/netfilter/Kconfig
  config IP_NF_QUEUE
  	tristate "IP Userspace queueing via NETLINK (OBSOLETE)"
  	depends on NETFILTER_ADVANCED
-Index: source_i386_untangle/net/ipv4/netfilter/Makefile
+Index: build_amd64_untangle_amd64/net/ipv4/netfilter/Makefile
 ===================================================================
---- source_i386_untangle.orig/net/ipv4/netfilter/Makefile	2008-10-03 15:44:28.000000000 -0700
-+++ source_i386_untangle/net/ipv4/netfilter/Makefile	2008-10-03 15:50:35.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/netfilter/Makefile	2008-10-15 12:14:08.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/netfilter/Makefile	2008-10-15 12:14:19.000000000 -0700
 @@ -13,6 +13,9 @@
  nf_nat-objs		:= nf_nat_core.o nf_nat_helper.o nf_nat_proto_unknown.o nf_nat_proto_common.o nf_nat_proto_tcp.o nf_nat_proto_udp.o nf_nat_proto_icmp.o
  iptable_nat-objs	:= nf_nat_rule.o nf_nat_standalone.o
@@ -43,10 +43,10 @@ Index: source_i386_untangle/net/ipv4/netfilter/Makefile
  # connection tracking
  obj-$(CONFIG_NF_CONNTRACK_IPV4) += nf_conntrack_ipv4.o
  
-Index: source_i386_untangle/net/ipv4/netfilter/ip_frag_accept.c
+Index: build_amd64_untangle_amd64/net/ipv4/netfilter/ip_frag_accept.c
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ source_i386_untangle/net/ipv4/netfilter/ip_frag_accept.c	2008-10-03 16:09:26.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/netfilter/ip_frag_accept.c	2008-10-15 12:18:25.000000000 -0700
 @@ -0,0 +1,112 @@
 +#include <linux/types.h>
 +#include <linux/ip.h>
@@ -124,7 +124,7 @@ Index: source_i386_untangle/net/ipv4/netfilter/ip_frag_accept.c
 +	.owner		= THIS_MODULE,
 +	.pf  		= PF_INET,
 +	.hooknum	= NF_INET_PRE_ROUTING,
-+	.priority	= NF_IP_PRI_FIRST+2,
++	.priority	= NF_IP_PRI_ICMP_FRAG_ACCEPT,
 +};
 +
 +static int init_or_cleanup(int init)
@@ -160,10 +160,10 @@ Index: source_i386_untangle/net/ipv4/netfilter/ip_frag_accept.c
 +module_init(init);
 +module_exit(fini);
 +
-Index: source_i386_untangle/net/ipv4/sysctl_net_ipv4.c
+Index: build_amd64_untangle_amd64/net/ipv4/sysctl_net_ipv4.c
 ===================================================================
---- source_i386_untangle.orig/net/ipv4/sysctl_net_ipv4.c	2008-10-03 15:44:28.000000000 -0700
-+++ source_i386_untangle/net/ipv4/sysctl_net_ipv4.c	2008-10-03 15:47:57.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/sysctl_net_ipv4.c	2008-07-13 14:51:29.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/sysctl_net_ipv4.c	2008-10-15 12:14:19.000000000 -0700
 @@ -23,6 +23,7 @@
  #include <net/cipso_ipv4.h>
  #include <net/inet_frag.h>
@@ -187,10 +187,10 @@ Index: source_i386_untangle/net/ipv4/sysctl_net_ipv4.c
  		.ctl_name	= NET_IPV4_IGMP_MAX_MSF,
  		.procname	= "igmp_max_msf",
  		.data		= &sysctl_igmp_max_msf,
-Index: source_i386_untangle/kernel/sysctl_check.c
+Index: build_amd64_untangle_amd64/kernel/sysctl_check.c
 ===================================================================
---- source_i386_untangle.orig/kernel/sysctl_check.c	2008-10-03 15:44:28.000000000 -0700
-+++ source_i386_untangle/kernel/sysctl_check.c	2008-10-03 15:47:57.000000000 -0700
+--- build_amd64_untangle_amd64.orig/kernel/sysctl_check.c	2008-07-13 14:51:29.000000000 -0700
++++ build_amd64_untangle_amd64/kernel/sysctl_check.c	2008-10-15 12:14:19.000000000 -0700
 @@ -389,6 +389,7 @@
  	{ NET_TCP_ALLOWED_CONG_CONTROL,		"tcp_allowed_congestion_control" },
  	{ NET_TCP_MAX_SSTHRESH,			"tcp_max_ssthresh" },
@@ -199,3 +199,15 @@ Index: source_i386_untangle/kernel/sysctl_check.c
  	{ 2088 /* NET_IPQ_QMAX */,		"ip_queue_maxlen" },
  	{}
  };
+Index: build_amd64_untangle_amd64/include/linux/netfilter_ipv4.h
+===================================================================
+--- build_amd64_untangle_amd64.orig/include/linux/netfilter_ipv4.h	2008-10-15 12:17:33.000000000 -0700
++++ build_amd64_untangle_amd64/include/linux/netfilter_ipv4.h	2008-10-15 12:18:07.000000000 -0700
+@@ -53,6 +53,7 @@
+ 
+ enum nf_ip_hook_priorities {
+ 	NF_IP_PRI_FIRST = INT_MIN,
++	NF_IP_PRI_ICMP_FRAG_ACCEPT = -450,
+ 	NF_IP_PRI_CONNTRACK_DEFRAG = -400,
+ 	NF_IP_PRI_RAW = -300,
+ 	NF_IP_PRI_SELINUX_FIRST = -225,
