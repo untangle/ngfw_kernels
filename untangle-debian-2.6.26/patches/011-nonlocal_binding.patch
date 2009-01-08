@@ -1,7 +1,7 @@
 Index: build_amd64_untangle_amd64/include/linux/in.h
 ===================================================================
---- build_amd64_untangle_amd64.orig/include/linux/in.h	2008-10-15 12:14:19.000000000 -0700
-+++ build_amd64_untangle_amd64/include/linux/in.h	2008-10-15 14:11:23.000000000 -0700
+--- build_amd64_untangle_amd64.orig/include/linux/in.h	2008-10-24 12:13:03.000000000 -0700
++++ build_amd64_untangle_amd64/include/linux/in.h	2008-10-24 12:13:05.000000000 -0700
 @@ -75,6 +75,7 @@
  #define IP_IPSEC_POLICY	16
  #define IP_XFRM_POLICY	17
@@ -12,8 +12,8 @@ Index: build_amd64_untangle_amd64/include/linux/in.h
  #define IP_RECVRETOPTS	IP_RETOPTS
 Index: build_amd64_untangle_amd64/include/net/ip.h
 ===================================================================
---- build_amd64_untangle_amd64.orig/include/net/ip.h	2008-10-15 12:14:19.000000000 -0700
-+++ build_amd64_untangle_amd64/include/net/ip.h	2008-10-15 14:11:23.000000000 -0700
+--- build_amd64_untangle_amd64.orig/include/net/ip.h	2008-10-24 12:13:03.000000000 -0700
++++ build_amd64_untangle_amd64/include/net/ip.h	2008-10-24 12:13:05.000000000 -0700
 @@ -335,6 +335,7 @@
  	IP_DEFRAG_CALL_RA_CHAIN,
  	IP_DEFRAG_CONNTRACK_IN,
@@ -25,7 +25,7 @@ Index: build_amd64_untangle_amd64/include/net/ip.h
 Index: build_amd64_untangle_amd64/include/net/route.h
 ===================================================================
 --- build_amd64_untangle_amd64.orig/include/net/route.h	2008-07-13 14:51:29.000000000 -0700
-+++ build_amd64_untangle_amd64/include/net/route.h	2008-10-15 14:11:23.000000000 -0700
++++ build_amd64_untangle_amd64/include/net/route.h	2008-10-24 12:13:05.000000000 -0700
 @@ -40,12 +40,19 @@
  #endif
  
@@ -50,7 +50,7 @@ Index: build_amd64_untangle_amd64/include/net/route.h
 Index: build_amd64_untangle_amd64/include/net/tcp.h
 ===================================================================
 --- build_amd64_untangle_amd64.orig/include/net/tcp.h	2008-07-13 14:51:29.000000000 -0700
-+++ build_amd64_untangle_amd64/include/net/tcp.h	2008-10-15 14:11:23.000000000 -0700
++++ build_amd64_untangle_amd64/include/net/tcp.h	2008-10-24 12:13:05.000000000 -0700
 @@ -279,6 +279,8 @@
  
  extern int			tcp_v4_rcv(struct sk_buff *skb);
@@ -62,8 +62,8 @@ Index: build_amd64_untangle_amd64/include/net/tcp.h
  extern int		    	tcp_v4_tw_remember_stamp(struct inet_timewait_sock *tw);
 Index: build_amd64_untangle_amd64/net/ipv4/ip_sockglue.c
 ===================================================================
---- build_amd64_untangle_amd64.orig/net/ipv4/ip_sockglue.c	2008-10-15 12:14:19.000000000 -0700
-+++ build_amd64_untangle_amd64/net/ipv4/ip_sockglue.c	2008-10-15 14:11:23.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/ip_sockglue.c	2008-10-24 12:13:03.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/ip_sockglue.c	2008-10-24 12:13:05.000000000 -0700
 @@ -466,7 +466,7 @@
  			     (1<<IP_TTL) | (1<<IP_HDRINCL) |
  			     (1<<IP_MTU_DISCOVER) | (1<<IP_RECVERR) |
@@ -92,8 +92,8 @@ Index: build_amd64_untangle_amd64/net/ipv4/ip_sockglue.c
  			goto e_inval;
 Index: build_amd64_untangle_amd64/net/ipv4/netfilter/Kconfig
 ===================================================================
---- build_amd64_untangle_amd64.orig/net/ipv4/netfilter/Kconfig	2008-10-15 12:14:19.000000000 -0700
-+++ build_amd64_untangle_amd64/net/ipv4/netfilter/Kconfig	2008-10-15 14:11:23.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/netfilter/Kconfig	2008-10-24 12:13:04.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/netfilter/Kconfig	2008-10-24 12:13:05.000000000 -0700
 @@ -31,6 +31,13 @@
  
  	  If unsure, say Y.
@@ -110,8 +110,8 @@ Index: build_amd64_untangle_amd64/net/ipv4/netfilter/Kconfig
  	help
 Index: build_amd64_untangle_amd64/net/ipv4/netfilter/Makefile
 ===================================================================
---- build_amd64_untangle_amd64.orig/net/ipv4/netfilter/Makefile	2008-10-15 12:14:19.000000000 -0700
-+++ build_amd64_untangle_amd64/net/ipv4/netfilter/Makefile	2008-10-15 14:11:23.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/netfilter/Makefile	2008-10-24 12:13:04.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/netfilter/Makefile	2008-10-24 12:13:05.000000000 -0700
 @@ -16,6 +16,9 @@
  # icmp udp fragmentation accept
  obj-$(CONFIG_IP_NF_FRAG_ACCEPT) += ip_frag_accept.o
@@ -125,7 +125,7 @@ Index: build_amd64_untangle_amd64/net/ipv4/netfilter/Makefile
 Index: build_amd64_untangle_amd64/net/ipv4/netfilter/ip_nonlocal.c
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ build_amd64_untangle_amd64/net/ipv4/netfilter/ip_nonlocal.c	2008-10-15 14:15:48.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/netfilter/ip_nonlocal.c	2008-10-24 12:13:05.000000000 -0700
 @@ -0,0 +1,71 @@
 +#include <linux/types.h>
 +#include <linux/ip.h>
@@ -200,8 +200,8 @@ Index: build_amd64_untangle_amd64/net/ipv4/netfilter/ip_nonlocal.c
 +
 Index: build_amd64_untangle_amd64/net/ipv4/raw.c
 ===================================================================
---- build_amd64_untangle_amd64.orig/net/ipv4/raw.c	2008-10-15 12:14:19.000000000 -0700
-+++ build_amd64_untangle_amd64/net/ipv4/raw.c	2008-10-15 14:11:23.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/raw.c	2008-10-24 12:13:03.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/raw.c	2008-10-24 12:13:05.000000000 -0700
 @@ -528,6 +528,9 @@
  	tos = RT_CONN_FLAGS(sk);
  	if (msg->msg_flags & MSG_DONTROUTE)
@@ -215,7 +215,7 @@ Index: build_amd64_untangle_amd64/net/ipv4/raw.c
 Index: build_amd64_untangle_amd64/net/ipv4/route.c
 ===================================================================
 --- build_amd64_untangle_amd64.orig/net/ipv4/route.c	2008-07-13 14:51:29.000000000 -0700
-+++ build_amd64_untangle_amd64/net/ipv4/route.c	2008-10-15 14:11:23.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/route.c	2008-10-24 12:13:05.000000000 -0700
 @@ -1962,8 +1962,10 @@
  		goto local_input;
  	}
@@ -259,8 +259,8 @@ Index: build_amd64_untangle_amd64/net/ipv4/route.c
  			/* Special hack: user can direct multicasts
 Index: build_amd64_untangle_amd64/net/ipv4/tcp_ipv4.c
 ===================================================================
---- build_amd64_untangle_amd64.orig/net/ipv4/tcp_ipv4.c	2008-10-15 12:14:19.000000000 -0700
-+++ build_amd64_untangle_amd64/net/ipv4/tcp_ipv4.c	2008-10-15 14:11:23.000000000 -0700
+--- build_amd64_untangle_amd64.orig/net/ipv4/tcp_ipv4.c	2008-10-24 12:13:03.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/tcp_ipv4.c	2008-10-24 12:13:05.000000000 -0700
 @@ -1736,6 +1736,79 @@
  	goto discard_it;
  }
@@ -343,8 +343,8 @@ Index: build_amd64_untangle_amd64/net/ipv4/tcp_ipv4.c
   * segment detection in subsequent connections, before they enter synchronized
 Index: build_amd64_untangle_amd64/include/linux/netfilter_ipv4.h
 ===================================================================
---- build_amd64_untangle_amd64.orig/include/linux/netfilter_ipv4.h	2008-10-15 14:11:41.000000000 -0700
-+++ build_amd64_untangle_amd64/include/linux/netfilter_ipv4.h	2008-10-15 14:16:09.000000000 -0700
+--- build_amd64_untangle_amd64.orig/include/linux/netfilter_ipv4.h	2008-10-24 12:13:04.000000000 -0700
++++ build_amd64_untangle_amd64/include/linux/netfilter_ipv4.h	2008-10-24 12:13:05.000000000 -0700
 @@ -53,6 +53,7 @@
  
  enum nf_ip_hook_priorities {
@@ -353,3 +353,16 @@ Index: build_amd64_untangle_amd64/include/linux/netfilter_ipv4.h
  	NF_IP_PRI_ICMP_FRAG_ACCEPT = -450,
  	NF_IP_PRI_CONNTRACK_DEFRAG = -400,
  	NF_IP_PRI_RAW = -300,
+Index: build_amd64_untangle_amd64/net/ipv4/netfilter/iptable_mangle.c
+===================================================================
+--- build_amd64_untangle_amd64.orig/net/ipv4/netfilter/iptable_mangle.c	2008-10-24 12:13:18.000000000 -0700
++++ build_amd64_untangle_amd64/net/ipv4/netfilter/iptable_mangle.c	2008-10-24 12:13:43.000000000 -0700
+@@ -154,7 +154,7 @@
+ 
+ 		if (iph->saddr != saddr ||
+ 		    iph->daddr != daddr ||
+-		    skb->mark != mark ||
++		    (!sysctl_ip_nonlocal_bind && skb->mark != mark) ||
+ 		    iph->tos != tos)
+ 			if (ip_route_me_harder(skb, RTN_UNSPEC))
+ 				ret = NF_DROP;
