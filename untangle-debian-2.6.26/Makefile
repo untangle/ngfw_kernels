@@ -7,7 +7,7 @@ REPOSITORY=lenny
 
 # Upstream version numbers
 KVER=2.6.26
-KDEBVER=5
+KDEBVER=12
 
 KUPVER=${KDEBVER}
 PACKPFX=linux-2.6_${KVER}
@@ -33,7 +33,7 @@ kpkg:	${WORKDIR} force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules clean
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_${MACHINE}_untangle setup_${MACHINE}_untangle
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle
-#	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules binary-indep
+	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules binary-indep
 
 
 # This combines our "generic" kernel patches with the specific Debian kernel
@@ -81,7 +81,5 @@ legitify:
 # Utility rule to fetch the new ones
 getsrc:
 	-sudo apt-get update
-	apt-get --download-only source linux-image
-	apt-get --download-only source linux-image-2.6.24-19-generic
-	apt-get --download-only source linux-restricted-modules-2.6.24-19-generic
-	apt-get --download-only source linux-ubuntu-modules-2.6.24-19-generic
+	apt-get --download-only source linux-image-2.6.26-1-amd64
+	apt-get --download-only source linux-latest-2.6 

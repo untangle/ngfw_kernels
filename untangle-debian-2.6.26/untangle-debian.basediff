@@ -1,16 +1,17 @@
 diff -uwr ./debian/changelog /home/jdi/linux-2.6-2.6.26/debian/changelog
 --- ./debian/changelog	2008-10-14 14:55:10.000000000 -0700
 +++ /home/jdi/linux-2.6-2.6.26/debian/changelog	2008-10-14 11:13:01.000000000 -0700
-@@ -1,3 +1,11 @@
-+linux-2.6 (2.6.26-5untangle4) unstable; urgency=low
+@@ -1,3 +1,12 @@
++linux-2.6 (2.6.26-12untangle1) unstable; urgency=low
 +
 +  * Added untangle to featureset
 +  * patch ported to 2.6.26, ip_defrag return, new net arg first arg, new netfilter table hook setup
 +  * bridging fixed by not forcing routing for outgoing nonlocal packets with changed mark
++  * mark merged, now or's socket mark and our nfmark
 +	
 + -- John Irwin <jdi@untangle.com>  Tue, 14 Oct 2008 11:10:10 -0700
 +
- linux-2.6 (2.6.26-5) unstable; urgency=low
+ linux-2.6 (2.6.26-12) unstable; urgency=high
  
    [ Martin Michlmayr ]
 diff -Nuwr ./debian/config/amd64/defines /home/jdi/linux-2.6-2.6.26/debian/config/amd64/defines
@@ -37,7 +38,7 @@ diff -Nuwr ./debian/config/amd64/untangle/defines /home/jdi/linux-2.6-2.6.26/deb
 diff -Nuwr ./debian/config/defines /home/jdi/linux-2.6-2.6.26/debian/config/defines
 --- ./debian/config/defines	2008-10-14 14:55:10.000000000 -0700
 +++ /home/jdi/linux-2.6-2.6.26/debian/config/defines	2008-10-14 15:03:07.000000000 -0700
-@@ -23,12 +23,16 @@
+@@ -20,12 +20,16 @@
  featuresets:
   none
   openvz
@@ -143,12 +144,10 @@ diff -Nuwr ./debian/config/i386/untangle/defines /home/jdi/linux-2.6-2.6.26/debi
 +configs:
 +  i386/config.686-bigmem
 +
-Only in /home/jdi/linux-2.6-2.6.26/debian/patches/features/all: untangle
 diff -uwr ./debian/patches/series/1-extra /home/jdi/linux-2.6-2.6.26/debian/patches/series/1-extra
 --- ./debian/patches/series/1-extra	2008-10-14 14:55:10.000000000 -0700
 +++ /home/jdi/linux-2.6-2.6.26/debian/patches/series/1-extra	2008-10-14 11:21:06.000000000 -0700
-@@ -7,6 +7,17 @@
- 
+@@ -1,5 +1,16 @@
  + features/all/openvz/openvz.patch featureset=openvz
  
 ++ features/all/untangle/005-bitmark.patch featureset=untangle
@@ -165,5 +164,3 @@ diff -uwr ./debian/patches/series/1-extra /home/jdi/linux-2.6-2.6.26/debian/patc
  # m68k patches
  
  # updated 2008/07/17 srm notes based on 
-Only in /home/jdi/linux-2.6-2.6.26: doit32.sh
-Only in /home/jdi/linux-2.6-2.6.26: doit64.sh
