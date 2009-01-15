@@ -1,4 +1,4 @@
-BUILDDEPS=automake sudo fakeroot debhelper module-assistant module-init-tools kernel-wedge xmlto docbook-utils gs transfig bzip2 sharutils cpio rpm sed g++ lftp devscripts apt-utils \
+BUILDDEPS=gcc-4.1 automake sudo fakeroot debhelper module-assistant module-init-tools kernel-wedge xmlto docbook-utils gs transfig bzip2 sharutils cpio rpm sed g++ lftp devscripts apt-utils \
 libc6-dev libqt3-mt-dev libgtk2.0-dev libxxf86misc-dev libxtst-dev libxxf86vm-dev libxinerama-dev libstdc++5 liburi-perl libncurses5-dev
 
 REPOSITORY=lenny
@@ -32,9 +32,8 @@ deps:	force
 kpkg:	${WORKDIR} force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules clean
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_${MACHINE}_untangle setup_${MACHINE}_untangle
-	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle
+	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle binary-arch_${MACHINE}_real
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules binary-indep
-
 
 # This combines our "generic" kernel patches with the specific Debian kernel
 # patches into one patch to rule them all.
