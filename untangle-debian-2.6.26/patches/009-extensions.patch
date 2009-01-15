@@ -124,6 +124,24 @@ Index: source_i386_untangle/net/ipv4/ip_output.c
 ===================================================================
 --- source_i386_untangle.orig/net/ipv4/ip_output.c	2008-07-13 14:51:29.000000000 -0700
 +++ source_i386_untangle/net/ipv4/ip_output.c	2008-10-03 14:33:08.000000000 -0700
+@@ -168,7 +168,7 @@
+ 	}
+ 
+ 	skb->priority = sk->sk_priority;
+-	skb->mark = sk->sk_mark;
++	skb->mark |= sk->sk_mark;
+ 
+ 	/* Send it out. */
+ 	return ip_local_out(skb);
+@@ -386,7 +386,7 @@
+ 			     (skb_shinfo(skb)->gso_segs ?: 1) - 1);
+ 
+ 	skb->priority = sk->sk_priority;
+-	skb->mark = sk->sk_mark;
++	skb->mark |= sk->sk_mark;
+ 
+ 	return ip_local_out(skb);
+ 
 @@ -951,6 +951,17 @@
  						 fragheaderlen);
  			data += fragheaderlen;
@@ -142,7 +160,7 @@ Index: source_i386_untangle/net/ipv4/ip_output.c
  			if (fraggap) {
  				skb->csum = skb_copy_and_csum_bits(
  					skb_prev, maxfraglen,
-@@ -1270,9 +1281,13 @@
+@@ -1270,15 +1281,19 @@
  		ip_options_build(skb, opt, inet->cork.addr, rt, 0);
  	}
  	iph->tos = inet->tos;
@@ -156,6 +174,13 @@ Index: source_i386_untangle/net/ipv4/ip_output.c
  	iph->protocol = sk->sk_protocol;
  	iph->saddr = rt->rt_src;
  	iph->daddr = rt->rt_dst;
+ 
+ 	skb->priority = sk->sk_priority;
+-	skb->mark = sk->sk_mark;
++	skb->mark |= sk->sk_mark;
+ 	skb->dst = dst_clone(&rt->u.dst);
+ 
+ 	if (iph->protocol == IPPROTO_ICMP)
 @@ -1353,6 +1368,7 @@
  		return;
  
