@@ -2,9 +2,9 @@ diff -uwr ./debian/changelog /home/jdi/linux-2.6-2.6.26/debian/changelog
 --- ./debian/changelog	2008-10-14 14:55:10.000000000 -0700
 +++ /home/jdi/linux-2.6-2.6.26/debian/changelog	2008-10-14 11:13:01.000000000 -0700
 @@ -1,3 +1,12 @@
-+linux-2.6 (2.6.26-13untangle3) unstable; urgency=low
++linux-2.6 (2.6.26-13untangle4) unstable; urgency=low
 +
-+  * Added untangle to featureset, build both 486 and 686 versions for i386 
++  * Added untangle to featureset, build both 486 and 686 versions for i386, add additional provides
 +  * patch ported to 2.6.26, ip_defrag return, new net arg first arg, new netfilter table hook setup, bootsplash removed
 +  * bridging fixed by not forcing routing for outgoing nonlocal packets with changed mark
 +  * mark merged, now or's socket mark and our nfmark
@@ -34,7 +34,7 @@ diff -Nuwr ./debian/config/amd64/untangle/defines /home/jdi/linux-2.6-2.6.26/deb
 + amd64
 +
 +[amd64_image]
-+provides: untangle-linux-image, linux-untangle
++provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-amd64
 diff -Nuwr ./debian/config/defines /home/jdi/linux-2.6-2.6.26/debian/config/defines
 --- ./debian/config/defines	2008-10-14 14:55:10.000000000 -0700
 +++ /home/jdi/linux-2.6-2.6.26/debian/config/defines	2008-10-14 15:03:07.000000000 -0700
@@ -140,12 +140,12 @@ diff -Nuwr ./debian/config/i386/untangle/defines /home/jdi/linux-2.6-2.6.26/debi
 + 686
 +
 +[486_image]
-+provides: untangle-linux-image, linux-untangle
++provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-486
 +configs:
 +  i386/config.486
 +
 +[686_image]
-+provides: untangle-linux-image, linux-untangle
++provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-686
 +configs:
 +  i386/config.686
 +
