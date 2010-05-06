@@ -55,6 +55,7 @@ ${WORKDIR}:	${KDSC} ${KOURPATCH}
 	dpkg-source -x ${KDSC}
 	cd ${WORKDIR};gunzip -c ../${KOURPATCH} | patch -p1
 	-cd ${WORKDIR};make -f debian/rules debian/control-real
+	true
 #	cd ${WORKDIR};make -f debian/rules debian/
 
 clean::
