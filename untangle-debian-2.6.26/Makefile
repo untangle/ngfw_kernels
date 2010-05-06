@@ -29,7 +29,7 @@ pkgs::	kpkg
 deps:	force
 	sudo aptitude install ${BUILDDEPS} || echo "unable to run sudo"
 
-kpkg:	${WORKDIR} force
+kpkg:	${WORKDIR} control-real force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules clean
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_${MACHINE}_untangle setup_${MACHINE}_untangle
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle binary-arch_${MACHINE}_real
@@ -54,9 +54,11 @@ ${WORKDIR}:	${KDSC} ${KOURPATCH}
 	rm -rf ${WORKDIR}
 	dpkg-source -x ${KDSC}
 	cd ${WORKDIR};gunzip -c ../${KOURPATCH} | patch -p1
-	-cd ${WORKDIR};make -f debian/rules debian/control-real
-	true
 #	cd ${WORKDIR};make -f debian/rules debian/
+
+control-real:
+	cd ${WORKDIR};make -f debian/rules debian/control-real
+	true
 
 clean::
 	rm -f ${KOURPATCH}
