@@ -57,8 +57,7 @@ ${WORKDIR}:	${KDSC} ${KOURPATCH}
 #	cd ${WORKDIR};make -f debian/rules debian/
 
 control-real:
-	cd ${WORKDIR};make -f debian/rules debian/control-real
-	true
+	cd ${WORKDIR};make -f debian/rules debian/control-real || true
 
 clean::
 	rm -f ${KOURPATCH}
