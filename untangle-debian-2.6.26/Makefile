@@ -27,7 +27,7 @@ all:	clean pkgs legitify
 pkgs::	kpkg
 
 deps:	force
-	sudo apt-get install ${BUILDDEPS} || echo "unable to run sudo"
+	sudo aptitude install ${BUILDDEPS} || echo "unable to run sudo"
 
 kpkg:	${WORKDIR} force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules clean
@@ -49,6 +49,7 @@ ${KOURPATCH}: untangle-debian.basediff patches/*
 	if [ -f untangle-debian.${REPOSITORY}diff ]; then cat untangle-debian.${REPOSITORY}diff >> ${TEMPDIR}/all.diff; fi
 	gzip -c ${TEMPDIR}/all.diff > ${KOURPATCH}
 
+patch: ${WORKDIR}
 ${WORKDIR}:	${KDSC} ${KOURPATCH}
 	rm -rf ${WORKDIR}
 	dpkg-source -x ${KDSC}
