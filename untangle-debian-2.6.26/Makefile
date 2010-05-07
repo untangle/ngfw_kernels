@@ -54,7 +54,6 @@ ${WORKDIR}:	${KDSC} ${KOURPATCH}
 	rm -rf ${WORKDIR}
 	dpkg-source -x ${KDSC}
 	cd ${WORKDIR};gunzip -c ../${KOURPATCH} | patch -p1
-	touch ${WORKDIR}/UNTANGLE-FORCE-UPSTREAM-VERSION
 #	cd ${WORKDIR};make -f debian/rules debian/
 
 control-real:
