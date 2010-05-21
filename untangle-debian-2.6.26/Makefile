@@ -7,7 +7,7 @@ REPOSITORY=lenny
 
 # Upstream version numbers
 KVER=2.6.26
-KDEBVER=13
+KDEBVER=22
 
 KUPVER=${KDEBVER}
 PACKPFX=linux-2.6_${KVER}
