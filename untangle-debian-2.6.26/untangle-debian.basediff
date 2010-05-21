@@ -1,7 +1,7 @@
 diff -uwr ./debian/changelog /home/jdi/linux-2.6-2.6.26/debian/changelog
 --- ./debian/changelog	2008-10-14 14:55:10.000000000 -0700
 +++ /home/jdi/linux-2.6-2.6.26/debian/changelog	2008-10-14 11:13:01.000000000 -0700
-@@ -1,0 +1,18 @@
+@@ -1,1 +1,16 @@
 +linux-2.6 (2.6.26-22untangle1) unstable; urgency=low
 +
 +  * Moving to latest 2.6.26 from lenny-proposed-updates.
@@ -17,9 +17,9 @@ diff -uwr ./debian/changelog /home/jdi/linux-2.6-2.6.26/debian/changelog
 +	
 + -- John Irwin <jdi@untangle.com>  Tue, 23 Jan 2009 11:10:10 -0700
 +
-+linux-2.6 (2.6.26-22) stable; urgency=high
-+
-+  [ maximilian attems ]
+ linux-2.6 (2.6.26-22) stable; urgency=high
+
+   [ maximilian attems ]
 diff -Nuwr ./debian/config/amd64/defines /home/jdi/linux-2.6-2.6.26/debian/config/amd64/defines
 --- ./debian/config/amd64/defines	2008-10-14 14:55:10.000000000 -0700
 +++ /home/jdi/linux-2.6-2.6.26/debian/config/amd64/defines	2008-10-02 17:12:04.000000000 -0700
