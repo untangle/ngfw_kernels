@@ -1,8 +1,0 @@
-005-bitmark-2.6.24.patch
-006-bridgefib-2.6.24.patch
-007-bridge-mac-ageing-fix-2.6.24.patch
-009-extensions-2.6.24.patch
-010-icmp_frag-2.6.24.patch
-011-nonlocal_binding-2.6.24.patch
-013-iptable_tune-2.6.24.patch
-014-nfqueue-untangle-mode-2.6.24.patch

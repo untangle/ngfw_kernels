@@ -1,3 +1,0 @@
-+ prod/e1000-100mblimit.patch *_untangle-prod
-+ prod-xd/e1000-100mblimit.patch *_untangle-prod-xd
-+ prod-xd/reorder-enet.patch *_untangle-prod-xd

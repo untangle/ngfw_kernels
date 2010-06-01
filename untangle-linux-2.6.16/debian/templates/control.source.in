@@ -1,6 +1,0 @@
-Source: untangle-linux-@major@
-Section: devel
-Priority: optional
-Maintainer: Sebastien Delafond <seb@untangle.com>
-Build-Depends: debhelper (>= 4.1.0), module-init-tools, dpkg-dev (>= 1.10.23), debianutils (>= 1.6), bzip2, sparc-utils [sparc], kernel-package (>= 10.035), ocaml-interp, python
-Build-Depends-Indep: docbook-utils, gs, transfig, xmlto
