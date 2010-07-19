@@ -22,9 +22,9 @@ NPROCEXP:=$(shell echo "$$((1+`grep processor /proc/cpuinfo|wc -l`))")
 TEMPDIR:=$(shell mktemp)
 
 
-all:	clean pkgs legitify
+all:	clean kpkg legitify
 
-pkgs::	kpkg
+all-justkern:	clean kpkg2 legitify
 
 deps:	force
 	sudo aptitude install ${BUILDDEPS} || echo "unable to run sudo"
@@ -34,6 +34,10 @@ kpkg:	${WORKDIR} control-real force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_${MACHINE}_untangle setup_${MACHINE}_untangle
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle binary-arch_${MACHINE}_real
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules binary-indep
+
+kpkg2:	${WORKDIR} control-real force
+	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules clean
+	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle_686
 
 # This combines our "generic" kernel patches with the specific Debian kernel
 # patches into one patch to rule them all.

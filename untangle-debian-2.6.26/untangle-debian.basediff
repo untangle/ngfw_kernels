@@ -1,7 +1,13 @@
-diff -uwr ./debian/changelog /home/jdi/linux-2.6-2.6.26/debian/changelog
+diff -uwr ./debian/changelog /home/dmorris/linux-2.6-2.6.26/debian/changelog
 --- ./debian/changelog	2008-10-14 14:55:10.000000000 -0700
-+++ /home/jdi/linux-2.6-2.6.26/debian/changelog	2008-10-14 11:13:01.000000000 -0700
-@@ -1,1 +1,16 @@
++++ /home/dmorris/linux-2.6-2.6.26/debian/changelog	2008-10-14 11:13:01.000000000 -0700
+@@ -1,1 +1,22 @@
++linux-2.6 (2.6.26-22untangle1) unstable; urgency=low
++
++  * Adding IMQ support to kernel
++
++ -- Dirk Morris <dmorris@untangle.com>  Mon, 19 July 2010 10:00:00 -0700
++
 +linux-2.6 (2.6.26-22untangle1) unstable; urgency=low
 +
 +  * Moving to latest 2.6.26 from lenny-proposed-updates.
@@ -20,9 +26,9 @@ diff -uwr ./debian/changelog /home/jdi/linux-2.6-2.6.26/debian/changelog
  linux-2.6 (2.6.26-22) stable; urgency=high
 
    [ maximilian attems ]
-diff -Nuwr ./debian/config/amd64/defines /home/jdi/linux-2.6-2.6.26/debian/config/amd64/defines
+diff -Nuwr ./debian/config/amd64/defines /home/dmorris/linux-2.6-2.6.26/debian/config/amd64/defines
 --- ./debian/config/amd64/defines	2008-10-14 14:55:10.000000000 -0700
-+++ /home/jdi/linux-2.6-2.6.26/debian/config/amd64/defines	2008-10-02 17:12:04.000000000 -0700
++++ /home/dmorris/linux-2.6-2.6.26/debian/config/amd64/defines	2008-10-02 17:12:04.000000000 -0700
 @@ -1,6 +1,7 @@
  [base]
  featuresets:
@@ -31,9 +37,9 @@ diff -Nuwr ./debian/config/amd64/defines /home/jdi/linux-2.6-2.6.26/debian/confi
   vserver
   xen
  flavours:
-diff -Nuwr ./debian/config/amd64/untangle/defines /home/jdi/linux-2.6-2.6.26/debian/config/amd64/untangle/defines
+diff -Nuwr ./debian/config/amd64/untangle/defines /home/dmorris/linux-2.6-2.6.26/debian/config/amd64/untangle/defines
 --- ./debian/config/amd64/untangle/defines	1969-12-31 16:00:00.000000000 -0800
-+++ /home/jdi/linux-2.6-2.6.26/debian/config/amd64/untangle/defines	2008-10-10 12:17:44.000000000 -0700
++++ /home/dmorris/linux-2.6-2.6.26/debian/config/amd64/untangle/defines	2008-10-10 12:17:44.000000000 -0700
 @@ -0,0 +1,6 @@
 +[base]
 +flavours:
@@ -41,9 +47,9 @@ diff -Nuwr ./debian/config/amd64/untangle/defines /home/jdi/linux-2.6-2.6.26/deb
 +
 +[amd64_image]
 +provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-amd64
-diff -Nuwr ./debian/config/defines /home/jdi/linux-2.6-2.6.26/debian/config/defines
+diff -Nuwr ./debian/config/defines /home/dmorris/linux-2.6-2.6.26/debian/config/defines
 --- ./debian/config/defines	2008-10-14 14:55:10.000000000 -0700
-+++ /home/jdi/linux-2.6-2.6.26/debian/config/defines	2008-10-14 15:03:07.000000000 -0700
++++ /home/dmorris/linux-2.6-2.6.26/debian/config/defines	2008-10-14 15:03:07.000000000 -0700
 @@ -20,12 +20,16 @@
  featuresets:
   none
@@ -61,10 +67,10 @@ diff -Nuwr ./debian/config/defines /home/jdi/linux-2.6-2.6.26/debian/config/defi
  [featureset-vserver_base]
  enabled: true
  
-diff -Nuwr ./debian/config/featureset-untangle/config /home/jdi/linux-2.6-2.6.26/debian/config/featureset-untangle/config
---- ./debian/config/featureset-untangle/config	1969-12-31 16:00:00.000000000 -0800
-+++ /home/jdi/linux-2.6-2.6.26/debian/config/featureset-untangle/config	2008-10-14 11:08:11.000000000 -0700
-@@ -0,0 +1,51 @@
+diff -Nuwr ./debian/config/featureset-untangle/config /home/dmorris/linux-2.6-2.6.26/debian/config/featureset-untangle/config
+--- ./debian/config/featureset-untangle/config	2010-07-16 17:31:24.000000000 -0700
++++ /home/dmorris/linux-2.6-2.6.26/debian/config/featureset-untangle/config	2010-07-16 17:26:49.000000000 -0700
+@@ -0,0 +1,58 @@
 +# CONFIG_HZ=100 is not set
 +CONFIG_HZ=1000
 +CONFIG_HZ_1000=y
@@ -116,18 +122,25 @@ diff -Nuwr ./debian/config/featureset-untangle/config /home/jdi/linux-2.6-2.6.26
 +CONFIG_PREEMPT_VOLUNTARY=y
 +CONFIG_UFS_FS=y
 +CONFIG_LATENCYTOP=y
-diff -Nuwr ./debian/config/featureset-untangle/defines /home/jdi/linux-2.6-2.6.26/debian/config/featureset-untangle/defines
++CONFIG_IMQ=m
++# CONFIG_IMQ_BEHAVIOR_AA is not set
++CONFIG_IMQ_BEHAVIOR_AB=y
++# CONFIG_IMQ_BEHAVIOR_BA is not set
++# CONFIG_IMQ_BEHAVIOR_BB is not set
++CONFIG_IMQ_NUM_DEVS=7
++CONFIG_NETFILTER_XT_TARGET_IMQ=y
+diff -Nuwr ./debian/config/featureset-untangle/defines /home/dmorris/linux-2.6-2.6.26/debian/config/featureset-untangle/defines
 --- ./debian/config/featureset-untangle/defines	1969-12-31 16:00:00.000000000 -0800
-+++ /home/jdi/linux-2.6-2.6.26/debian/config/featureset-untangle/defines	2008-10-02 21:49:50.000000000 -0700
++++ /home/dmorris/linux-2.6-2.6.26/debian/config/featureset-untangle/defines	2008-10-02 21:49:50.000000000 -0700
 @@ -0,0 +1,5 @@
 +[image]
 +desc-long-part-untangle: Enables Untangle Virtual Networking.  Intended for IP network gateways.
 +desc-parts: untangle
 +desc-short-part-untangle: Untangle kernel
 +
-diff -Nuwr ./debian/config/i386/defines /home/jdi/linux-2.6-2.6.26/debian/config/i386/defines
+diff -Nuwr ./debian/config/i386/defines /home/dmorris/linux-2.6-2.6.26/debian/config/i386/defines
 --- ./debian/config/i386/defines	2008-10-14 14:55:10.000000000 -0700
-+++ /home/jdi/linux-2.6-2.6.26/debian/config/i386/defines	2008-10-02 17:11:27.000000000 -0700
++++ /home/dmorris/linux-2.6-2.6.26/debian/config/i386/defines	2008-10-02 17:11:27.000000000 -0700
 @@ -1,6 +1,7 @@
  [base]
  featuresets:
@@ -136,9 +149,9 @@ diff -Nuwr ./debian/config/i386/defines /home/jdi/linux-2.6-2.6.26/debian/config
   vserver
   xen
  flavours:
-diff -Nuwr ./debian/config/i386/untangle/defines /home/jdi/linux-2.6-2.6.26/debian/config/i386/untangle/defines
+diff -Nuwr ./debian/config/i386/untangle/defines /home/dmorris/linux-2.6-2.6.26/debian/config/i386/untangle/defines
 --- ./debian/config/i386/untangle/defines	1969-12-31 16:00:00.000000000 -0800
-+++ /home/jdi/linux-2.6-2.6.26/debian/config/i386/untangle/defines	2008-10-10 12:17:27.000000000 -0700
++++ /home/dmorris/linux-2.6-2.6.26/debian/config/i386/untangle/defines	2008-10-10 12:17:27.000000000 -0700
 @@ -0,0 +1,15 @@
 +[base]
 +flavours:
@@ -155,10 +168,10 @@ diff -Nuwr ./debian/config/i386/untangle/defines /home/jdi/linux-2.6-2.6.26/debi
 +configs:
 +  i386/config.686
 +
-diff -uwr ./debian/patches/series/1-extra /home/jdi/linux-2.6-2.6.26/debian/patches/series/1-extra
+diff -uwr ./debian/patches/series/1-extra /home/dmorris/linux-2.6-2.6.26/debian/patches/series/1-extra
 --- ./debian/patches/series/1-extra	2008-10-14 14:55:10.000000000 -0700
-+++ /home/jdi/linux-2.6-2.6.26/debian/patches/series/1-extra	2008-10-14 11:21:06.000000000 -0700
-@@ -1,5 +1,15 @@
++++ /home/dmorris/linux-2.6-2.6.26/debian/patches/series/1-extra	2008-10-14 11:21:06.000000000 -0700
+@@ -1,5 +1,16 @@
  + features/all/openvz/openvz.patch featureset=openvz
  
 ++ features/all/untangle/005-bitmark.patch featureset=untangle
@@ -169,6 +182,7 @@ diff -uwr ./debian/patches/series/1-extra /home/jdi/linux-2.6-2.6.26/debian/patc
 ++ features/all/untangle/011-nonlocal_binding.patch featureset=untangle
 ++ features/all/untangle/013-iptable_tune.patch featureset=untangle
 ++ features/all/untangle/014-nfqueue-untangle-mode.patch featureset=untangle
+++ features/all/untangle/020-imq-debian.patch featureset=untangle
 +
 +
  # m68k patches
