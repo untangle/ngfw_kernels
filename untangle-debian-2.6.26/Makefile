@@ -24,7 +24,6 @@ TEMPDIR:=$(shell mktemp)
 
 all:	clean kpkg legitify
 
-all-justkern:	clean kpkg2 legitify
 
 deps:	force
 	sudo aptitude install ${BUILDDEPS} || echo "unable to run sudo"
@@ -35,8 +34,8 @@ kpkg:	${WORKDIR} control-real force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle binary-arch_${MACHINE}_real
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules binary-indep
 
-kpkg2:	${WORKDIR} control-real force
-	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules clean
+# for development
+kern:	${WORKDIR} control-real force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle_686
 
 # This combines our "generic" kernel patches with the specific Debian kernel
