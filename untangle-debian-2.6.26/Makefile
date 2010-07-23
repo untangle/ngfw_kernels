@@ -35,6 +35,9 @@ kpkg:	${WORKDIR} control-real force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules binary-indep
 
 # for development
+src: 	${WORKDIR} control-real force
+	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_${MACHINE}_untangle setup_${MACHINE}_untangle
+
 kern:	${WORKDIR} control-real force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle_686
 

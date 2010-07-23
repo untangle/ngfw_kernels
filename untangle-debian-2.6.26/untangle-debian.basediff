@@ -70,7 +70,7 @@ diff -Nuwr ./debian/config/defines /home/dmorris/linux-2.6-2.6.26/debian/config/
 diff -Nuwr ./debian/config/featureset-untangle/config /home/dmorris/linux-2.6-2.6.26/debian/config/featureset-untangle/config
 --- ./debian/config/featureset-untangle/config	2010-07-16 17:31:24.000000000 -0700
 +++ /home/dmorris/linux-2.6-2.6.26/debian/config/featureset-untangle/config	2010-07-16 17:26:49.000000000 -0700
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,63 @@
 +# CONFIG_HZ=100 is not set
 +CONFIG_HZ=1000
 +CONFIG_HZ_1000=y
@@ -124,11 +124,16 @@ diff -Nuwr ./debian/config/featureset-untangle/config /home/dmorris/linux-2.6-2.
 +CONFIG_LATENCYTOP=y
 +CONFIG_IMQ=m
 +# CONFIG_IMQ_BEHAVIOR_AA is not set
-+CONFIG_IMQ_BEHAVIOR_AB=y
++# CONFIG_IMQ_BEHAVIOR_AB is not set
 +# CONFIG_IMQ_BEHAVIOR_BA is not set
-+# CONFIG_IMQ_BEHAVIOR_BB is not set
++CONFIG_IMQ_BEHAVIOR_BB=y
 +CONFIG_IMQ_NUM_DEVS=7
 +CONFIG_NETFILTER_XT_TARGET_IMQ=y
++# these required for tcp_ipv4 nonlocal
++CONFIG_NF_CONNTRACK_IPV4=y
++CONFIG_NF_CONNTRACK=y
++CONFIG_NF_NAT=y
++CONFIG_NETFILTER_XTABLES=y
 diff -Nuwr ./debian/config/featureset-untangle/defines /home/dmorris/linux-2.6-2.6.26/debian/config/featureset-untangle/defines
 --- ./debian/config/featureset-untangle/defines	1969-12-31 16:00:00.000000000 -0800
 +++ /home/dmorris/linux-2.6-2.6.26/debian/config/featureset-untangle/defines	2008-10-02 21:49:50.000000000 -0700
