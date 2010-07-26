@@ -1,7 +1,7 @@
-diff -urN build_i386_none_686/drivers/net/imq.c build_i386_none_686_patched/drivers/net/imq.c
---- build_i386_none_686/drivers/net/imq.c	1969-12-31 16:00:00.000000000 -0800
-+++ build_i386_none_686_patched/drivers/net/imq.c	2010-07-14 16:57:51.000000000 -0700
-@@ -0,0 +1,565 @@
+diff -urN build_i386_untangle_686.orig/drivers/net/imq.c build_i386_untangle_686/drivers/net/imq.c
+--- build_i386_untangle_686.orig/drivers/net/imq.c	1969-12-31 16:00:00.000000000 -0800
++++ build_i386_untangle_686/drivers/net/imq.c	2010-07-26 12:18:10.000000000 -0700
+@@ -0,0 +1,577 @@
 +/*
 + *             Pseudo-driver for the intermediate queue device.
 + *
@@ -51,7 +51,7 @@ diff -urN build_i386_none_686/drivers/net/imq.c build_i386_none_686_patched/driv
 + *             I didn't forget anybody). I apologize again for my lack of time.
 + *
 + *
-+ *             2008/06/17 - 2.6.25 - Changed imq.c to use qdisc_run() instead 
++ *             2008/06/17 - 2.6.25 - Changed imq.c to use qdisc_run() instead
 + *             of qdisc_restart() and moved qdisc_run() to tasklet to avoid
 + *             recursive locking. New initialization routines to fix 'rmmod' not
 + *             working anymore. Used code from ifb.c. (Jussi Kivilinna)
@@ -60,21 +60,43 @@ diff -urN build_i386_none_686/drivers/net/imq.c build_i386_none_686_patched/driv
 + *              - Replaced tasklet with 'netif_schedule()'.
 + *              - Cleaned up and added comments for imq_nf_queue().
 + *
-+ *             2009/05/02 - Backported 2.6.27 fixes to 2.6.26 (Jussi Kivilinna)
++ *             2009/04/12
 + *              - Add skb_save_cb/skb_restore_cb helper functions for backuping
-+ *                control buffer. This is needed because some networking layers
-+ *                on kernels before 2.6.27 overwrite control buffer when they
-+ *                should not. These errornous uses (wireless for example) of cb
-+ *                were found when qdisc-layer started using cb in 2.6.27. As we
-+ *                don't want to break up any code, even if it's buggy, use 
-+ *                same backup-cb trick as used with 2.6.27-patch.
-+ *              - Add better locking for IMQ device by using spin_lock_bh
-+ *                instead of spin_lock. There was problem where NIC-interrupt
-+ *                would happen while IMQ-spin_lock was held which could lead to
-+ *                deadlock. Hopefully this will solve the SMP issues.
-+ *              - Fix rmmod not working.
++ *                control buffer. This is needed because qdisc-layer on kernels
++ *                2.6.27 and newer overwrite control buffer. (Jussi Kivilinna)
++ *              - Add better locking for IMQ device. Hopefully this will solve
++ *                SMP issues. (Jussi Kivilinna)
++ *              - Port to 2.6.27
++ *              - Port to 2.6.28
++ *              - Port to 2.6.29 + fix rmmod not working
++ *
++ *             2009/04/20 - (Jussi Kivilinna)
 + *              - Use netdevice feature flags to avoid extra packet handling
 + *                by core networking layer and possibly increase performance.
++ *
++ *             2009/09/26 - (Jussi Kivilinna)
++ *              - Add imq_nf_reinject_lockless to fix deadlock with
++ *                imq_nf_queue/imq_nf_reinject.
++ *
++ *             2009/12/08 - (Jussi Kivilinna)
++ *              - Port to 2.6.32
++ *              - Add check for skb->nf_queue_entry==NULL in imq_dev_xmit()
++ *              - Also add better error checking for skb->nf_queue_entry usage
++ *
++ *             2010/02/25 - (Jussi Kivilinna)
++ *              - Port to 2.6.33
++ *
++ *             2010/07/26 - (Jussi Kivilinna)
++ *              - Port to 2.6.34
++ *              - bugfix: Changed IMQ queueing to work correctly when using
++ *                other nf_queues. nf_queue will now check if hook is infact
++ *                imq_hook and in this case forwards packets to IMQ queue
++ *                instead of other queues.
++ *              - cleanup: Use single nf_register_hooks/nf_unregister_hooks
++ *                instead of multiple nf_register_hook/nf_unregister_hook.
++ *
++ *             2010/07/26 - (Jussi Kivilinna)
++ *              - Backport to 2.6.26
 + *
 + *	       Also, many thanks to pablo Sebastian Greco for making the initial
 + *	       patch and to those who helped the testing.
@@ -100,57 +122,62 @@ diff -urN build_i386_none_686/drivers/net/imq.c build_i386_none_686_patched/driv
 +#include <net/pkt_sched.h>
 +#include <net/netfilter/nf_queue.h>
 +
++static int imq_nf_queue(struct nf_queue_entry *entry, unsigned queue_num);
++
 +static nf_hookfn imq_nf_hook;
 +
-+static struct nf_hook_ops imq_ingress_ipv4 = {
-+	.hook		= imq_nf_hook,
-+	.owner		= THIS_MODULE,
-+	.pf		= PF_INET,
-+	.hooknum	= NF_INET_PRE_ROUTING,
++static struct nf_hook_ops imq_ops[] = {
++	{
++	/* imq_ingress_ipv4 */
++		.hook		= imq_nf_hook,
++		.owner		= THIS_MODULE,
++		.pf		= PF_INET,
++		.hooknum	= NF_INET_PRE_ROUTING,
 +#if defined(CONFIG_IMQ_BEHAVIOR_BA) || defined(CONFIG_IMQ_BEHAVIOR_BB)
-+	.priority	= NF_IP_PRI_MANGLE + 1
++		.priority	= NF_IP_PRI_MANGLE + 1,
 +#else
-+	.priority	= NF_IP_PRI_NAT_DST + 1
++		.priority	= NF_IP_PRI_NAT_DST + 1,
 +#endif
-+};
-+
-+static struct nf_hook_ops imq_egress_ipv4 = {
-+	.hook		= imq_nf_hook,
-+	.owner		= THIS_MODULE,
-+	.pf		= PF_INET,
-+	.hooknum	= NF_INET_POST_ROUTING,
++	},
++	{
++	/* imq_egress_ipv4 */
++		.hook		= imq_nf_hook,
++		.owner		= THIS_MODULE,
++		.pf		= PF_INET,
++		.hooknum	= NF_INET_POST_ROUTING,
 +#if defined(CONFIG_IMQ_BEHAVIOR_AA) || defined(CONFIG_IMQ_BEHAVIOR_BA)
-+	.priority	= NF_IP_PRI_LAST
++		.priority	= NF_IP_PRI_LAST,
 +#else
-+	.priority	= NF_IP_PRI_NAT_SRC - 1
++		.priority	= NF_IP_PRI_NAT_SRC - 1,
 +#endif
-+};
-+
++	},
 +#if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
-+static struct nf_hook_ops imq_ingress_ipv6 = {
-+	.hook		= imq_nf_hook,
-+	.owner		= THIS_MODULE,
-+	.pf		= PF_INET6,
-+	.hooknum	= NF_INET_PRE_ROUTING,
++	{
++	/* imq_ingress_ipv6 */
++		.hook		= imq_nf_hook,
++		.owner		= THIS_MODULE,
++		.pf		= PF_INET6,
++		.hooknum	= NF_INET_PRE_ROUTING,
 +#if defined(CONFIG_IMQ_BEHAVIOR_BA) || defined(CONFIG_IMQ_BEHAVIOR_BB)
-+	.priority	= NF_IP6_PRI_MANGLE + 1
++		.priority	= NF_IP6_PRI_MANGLE + 1,
 +#else
-+	.priority	= NF_IP6_PRI_NAT_DST + 1
++		.priority	= NF_IP6_PRI_NAT_DST + 1,
 +#endif
-+};
-+
-+static struct nf_hook_ops imq_egress_ipv6 = {
-+	.hook		= imq_nf_hook,
-+	.owner		= THIS_MODULE,
-+	.pf		= PF_INET6,
-+	.hooknum	= NF_INET_POST_ROUTING,
++	},
++	{
++	/* imq_egress_ipv6 */
++		.hook		= imq_nf_hook,
++		.owner		= THIS_MODULE,
++		.pf		= PF_INET6,
++		.hooknum	= NF_INET_POST_ROUTING,
 +#if defined(CONFIG_IMQ_BEHAVIOR_AA) || defined(CONFIG_IMQ_BEHAVIOR_BA)
-+	.priority	= NF_IP6_PRI_LAST
++		.priority	= NF_IP6_PRI_LAST,
 +#else
-+	.priority	= NF_IP6_PRI_NAT_SRC - 1
++		.priority	= NF_IP6_PRI_NAT_SRC - 1,
++#endif
++	},
 +#endif
 +};
-+#endif
 +
 +#if defined(CONFIG_IMQ_NUM_DEVS)
 +static unsigned int numdevs = CONFIG_IMQ_NUM_DEVS;
@@ -162,6 +189,7 @@ diff -urN build_i386_none_686/drivers/net/imq.c build_i386_none_686_patched/driv
 +
 +static struct net_device *imq_devs_cache[IMQ_MAX_DEVS];
 +
++
 +static struct net_device_stats *imq_get_stats(struct net_device *dev)
 +{
 +	return &dev->stats;
@@ -171,6 +199,8 @@ diff -urN build_i386_none_686/drivers/net/imq.c build_i386_none_686_patched/driv
 +static void imq_skb_destructor(struct sk_buff *skb)
 +{
 +	struct nf_queue_entry *entry = skb->nf_queue_entry;
++
++	skb->nf_queue_entry = NULL;
 +
 +	if (entry) {
 +		nf_queue_entry_release_refs(entry);
@@ -182,41 +212,53 @@ diff -urN build_i386_none_686/drivers/net/imq.c build_i386_none_686_patched/driv
 +
 +static void imq_nf_reinject(struct nf_queue_entry *entry, unsigned int verdict)
 +{
-+	int status;
-+
-+	if (!entry->next_outfn) {
-+		spin_lock_bh(&imq_nf_queue_lock);
-+		nf_reinject(entry, verdict);
-+		spin_unlock_bh(&imq_nf_queue_lock);
-+		return;
-+	}
-+
-+	rcu_read_lock();
-+	local_bh_disable();
-+	status = entry->next_outfn(entry, entry->next_queuenum);
-+	local_bh_enable();
-+	if (status < 0) {
-+		nf_queue_entry_release_refs(entry);
-+		kfree_skb(entry->skb);
-+		kfree(entry);
-+	}
-+
-+	rcu_read_unlock();
++	spin_lock_bh(&imq_nf_queue_lock);
++	nf_reinject(entry, verdict);
++	spin_unlock_bh(&imq_nf_queue_lock);
 +}
 +
 +static int imq_dev_xmit(struct sk_buff *skb, struct net_device *dev)
 +{
++	struct nf_queue_entry *entry = skb->nf_queue_entry;
++
++	skb->nf_queue_entry = NULL;
++	dev->trans_start = jiffies;
++
 +	dev->stats.tx_bytes += skb->len;
 +	dev->stats.tx_packets++;
++
++	if (entry == NULL) {
++		/* We don't know what is going on here.. packet is queued for
++		 * imq device, but (probably) not by us.
++		 *
++		 * If this packet was not send here by imq_nf_queue(), then
++		 * skb_save_cb() was not used and skb_free() should not show:
++		 *   WARNING: IMQ: kfree_skb: skb->cb_next:..
++		 * and/or
++		 *   WARNING: IMQ: kfree_skb: skb->nf_queue_entry...
++		 *
++		 * However if this message is shown, then IMQ is somehow broken
++		 * and you should report this to linuximq.net.
++		 */
++
++		/* imq_dev_xmit is black hole that eats all packets, report that
++		 * we eat this packet happily and increase dropped counters.
++		 */
++
++		dev->stats.tx_dropped++;
++		dev_kfree_skb(skb);
++
++		return NETDEV_TX_OK;
++	}
++
++	skb_restore_cb(skb); /* restore skb->cb */
 +
 +	skb->imq_flags = 0;
 +	skb->destructor = NULL;
 +
-+	skb_restore_cb(skb); /* restore skb->cb */
++	imq_nf_reinject(entry, NF_ACCEPT);
 +
-+	dev->trans_start = jiffies;
-+	imq_nf_reinject(skb->nf_queue_entry, NF_ACCEPT);
-+	return 0;
++	return NETDEV_TX_OK;
 +}
 +
 +static int imq_nf_queue(struct nf_queue_entry *entry, unsigned queue_num)
@@ -224,7 +266,6 @@ diff -urN build_i386_none_686/drivers/net/imq.c build_i386_none_686_patched/driv
 +	struct net_device *dev;
 +	struct sk_buff *skb_orig, *skb, *skb_shared;
 +	struct Qdisc *q;
-+	/*spinlock_t *root_lock;*/
 +	int users, index;
 +	int retval = -EINVAL;
 +
@@ -259,7 +300,7 @@ diff -urN build_i386_none_686/drivers/net/imq.c build_i386_none_686_patched/driv
 +
 +	if (unlikely(!(dev->flags & IFF_UP))) {
 +		entry->skb->imq_flags = 0;
-+		imq_nf_reinject(entry, NF_ACCEPT);
++		nf_reinject(entry, NF_ACCEPT);
 +		retval = 0;
 +		goto out;
 +	}
@@ -306,14 +347,16 @@ diff -urN build_i386_none_686/drivers/net/imq.c build_i386_none_686_patched/driv
 +		if (skb_orig)
 +			kfree_skb(skb_orig); /* free original */
 +
-+		/* schedule qdisc dequeue */
-+		netif_schedule(dev);
-+
 +		spin_unlock_bh(&dev->queue_lock);
++
++		/* schedule qdisc dequeue */
++		__netif_schedule(dev);
++
 +		retval = 0;
 +		goto out;
 +	} else {
 +		skb_restore_cb(skb_shared); /* restore skb->cb */
++		skb->nf_queue_entry = NULL;
 +		/* qdisc dropped packet and decreased skb reference count of
 +		 * skb, so we don't really want to and try refree as that would
 +		 * actually destroy the skb. */
@@ -331,11 +374,6 @@ diff -urN build_i386_none_686/drivers/net/imq.c build_i386_none_686_patched/driv
 +out:
 +	return retval;
 +}
-+
-+static struct nf_queue_handler nfqh = {
-+	.name  = "imq",
-+	.outfn = imq_nf_queue,
-+};
 +
 +static unsigned int imq_nf_hook(unsigned int hook, struct sk_buff *pskb,
 +				const struct net_device *indev,
@@ -362,10 +400,11 @@ diff -urN build_i386_none_686/drivers/net/imq.c build_i386_none_686_patched/driv
 +
 +static void imq_setup(struct net_device *dev)
 +{
-+	dev->hard_start_xmit    = imq_dev_xmit;
 +	dev->open		= imq_open;
-+	dev->get_stats		= imq_get_stats;
 +	dev->stop		= imq_close;
++	dev->hard_start_xmit	= imq_dev_xmit;
++	dev->get_stats		= imq_get_stats;
++
 +	dev->type               = ARPHRD_VOID;
 +	dev->mtu                = 16000;
 +	dev->tx_queue_len       = 11000;
@@ -402,43 +441,22 @@ diff -urN build_i386_none_686/drivers/net/imq.c build_i386_none_686_patched/driv
 +	.validate	= imq_validate,
 +};
 +
++static const struct nf_queue_handler imq_nfqh = {
++	.name  = "imq",
++	.outfn = imq_nf_queue,
++};
++
 +static int __init imq_init_hooks(void)
 +{
-+	int err;
++	int ret;
 +
-+	nf_register_queue_imq_handler(&nfqh);
++	nf_register_queue_imq_handler(&imq_nfqh, &imq_nf_hook);
 +
-+	err = nf_register_hook(&imq_ingress_ipv4);
-+	if (err)
-+		goto err1;
++	ret = nf_register_hooks(imq_ops, ARRAY_SIZE(imq_ops));
++	if (ret < 0)
++		nf_unregister_queue_imq_handler();
 +
-+	err = nf_register_hook(&imq_egress_ipv4);
-+	if (err)
-+		goto err2;
-+
-+#if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
-+	err = nf_register_hook(&imq_ingress_ipv6);
-+	if (err)
-+		goto err3;
-+
-+	err = nf_register_hook(&imq_egress_ipv6);
-+	if (err)
-+		goto err4;
-+#endif
-+
-+	return 0;
-+
-+#if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
-+err4:
-+	nf_unregister_hook(&imq_ingress_ipv6);
-+err3:
-+	nf_unregister_hook(&imq_egress_ipv4);
-+#endif
-+err2:
-+	nf_unregister_hook(&imq_ingress_ipv4);
-+err1:
-+	nf_unregister_queue_imq_handler();
-+	return err;
++	return ret;
 +}
 +
 +static int __init imq_init_one(int index)
@@ -532,13 +550,7 @@ diff -urN build_i386_none_686/drivers/net/imq.c build_i386_none_686_patched/driv
 +
 +static void __exit imq_unhook(void)
 +{
-+#if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
-+	nf_unregister_hook(&imq_ingress_ipv6);
-+	nf_unregister_hook(&imq_egress_ipv6);
-+#endif
-+	nf_unregister_hook(&imq_ingress_ipv4);
-+	nf_unregister_hook(&imq_egress_ipv4);
-+
++	nf_unregister_hooks(imq_ops, ARRAY_SIZE(imq_ops));
 +	nf_unregister_queue_imq_handler();
 +}
 +
@@ -567,9 +579,9 @@ diff -urN build_i386_none_686/drivers/net/imq.c build_i386_none_686_patched/driv
 +MODULE_LICENSE("GPL");
 +MODULE_ALIAS_RTNL_LINK("imq");
 +
-diff -urN build_i386_none_686/drivers/net/Kconfig build_i386_none_686_patched/drivers/net/Kconfig
---- build_i386_none_686/drivers/net/Kconfig	2010-07-14 17:06:03.000000000 -0700
-+++ build_i386_none_686_patched/drivers/net/Kconfig	2010-07-14 16:57:51.000000000 -0700
+diff -urN build_i386_untangle_686.orig/drivers/net/Kconfig build_i386_untangle_686/drivers/net/Kconfig
+--- build_i386_untangle_686.orig/drivers/net/Kconfig	2010-07-26 12:17:53.000000000 -0700
++++ build_i386_untangle_686/drivers/net/Kconfig	2010-07-26 12:18:10.000000000 -0700
 @@ -117,6 +117,129 @@
  	  To compile this driver as a module, choose M here: the module
  	  will be called eql.  If unsure, say N.
@@ -700,9 +712,9 @@ diff -urN build_i386_none_686/drivers/net/Kconfig build_i386_none_686_patched/dr
  config TUN
  	tristate "Universal TUN/TAP device driver support"
  	select CRC32
-diff -urN build_i386_none_686/drivers/net/Makefile build_i386_none_686_patched/drivers/net/Makefile
---- build_i386_none_686/drivers/net/Makefile	2010-07-14 17:06:03.000000000 -0700
-+++ build_i386_none_686_patched/drivers/net/Makefile	2010-07-14 16:57:51.000000000 -0700
+diff -urN build_i386_untangle_686.orig/drivers/net/Makefile build_i386_untangle_686/drivers/net/Makefile
+--- build_i386_untangle_686.orig/drivers/net/Makefile	2010-07-26 12:17:53.000000000 -0700
++++ build_i386_untangle_686/drivers/net/Makefile	2010-07-26 12:18:10.000000000 -0700
 @@ -146,6 +146,7 @@
  obj-$(CONFIG_XEN_NETDEV_FRONTEND) += xen-netfront.o
  
@@ -711,9 +723,9 @@ diff -urN build_i386_none_686/drivers/net/Makefile build_i386_none_686_patched/d
  obj-$(CONFIG_IFB) += ifb.o
  obj-$(CONFIG_MACVLAN) += macvlan.o
  obj-$(CONFIG_DE600) += de600.o
-diff -urN build_i386_none_686/include/config/auto.conf build_i386_none_686_patched/include/config/auto.conf
---- build_i386_none_686/include/linux/imq.h	1969-12-31 16:00:00.000000000 -0800
-+++ build_i386_none_686_patched/include/linux/imq.h	2010-07-14 16:57:51.000000000 -0700
+diff -urN build_i386_untangle_686.orig/include/linux/imq.h build_i386_untangle_686/include/linux/imq.h
+--- build_i386_untangle_686.orig/include/linux/imq.h	1969-12-31 16:00:00.000000000 -0800
++++ build_i386_untangle_686/include/linux/imq.h	2010-07-26 12:18:10.000000000 -0700
 @@ -0,0 +1,13 @@
 +#ifndef _IMQ_H
 +#define _IMQ_H
@@ -728,9 +740,9 @@ diff -urN build_i386_none_686/include/config/auto.conf build_i386_none_686_patch
 +
 +#endif /* _IMQ_H */
 +
-diff -urN build_i386_none_686/include/linux/netfilter/xt_IMQ.h build_i386_none_686_patched/include/linux/netfilter/xt_IMQ.h
---- build_i386_none_686/include/linux/netfilter/xt_IMQ.h	1969-12-31 16:00:00.000000000 -0800
-+++ build_i386_none_686_patched/include/linux/netfilter/xt_IMQ.h	2010-07-14 16:57:51.000000000 -0700
+diff -urN build_i386_untangle_686.orig/include/linux/netfilter/xt_IMQ.h build_i386_untangle_686/include/linux/netfilter/xt_IMQ.h
+--- build_i386_untangle_686.orig/include/linux/netfilter/xt_IMQ.h	1969-12-31 16:00:00.000000000 -0800
++++ build_i386_untangle_686/include/linux/netfilter/xt_IMQ.h	2010-07-26 12:18:10.000000000 -0700
 @@ -0,0 +1,9 @@
 +#ifndef _XT_IMQ_H
 +#define _XT_IMQ_H
@@ -741,9 +753,9 @@ diff -urN build_i386_none_686/include/linux/netfilter/xt_IMQ.h build_i386_none_6
 +
 +#endif /* _XT_IMQ_H */
 +
-diff -urN build_i386_none_686/include/linux/netfilter_ipv4/ipt_IMQ.h build_i386_none_686_patched/include/linux/netfilter_ipv4/ipt_IMQ.h
---- build_i386_none_686/include/linux/netfilter_ipv4/ipt_IMQ.h	1969-12-31 16:00:00.000000000 -0800
-+++ build_i386_none_686_patched/include/linux/netfilter_ipv4/ipt_IMQ.h	2010-07-14 16:57:51.000000000 -0700
+diff -urN build_i386_untangle_686.orig/include/linux/netfilter_ipv4/ipt_IMQ.h build_i386_untangle_686/include/linux/netfilter_ipv4/ipt_IMQ.h
+--- build_i386_untangle_686.orig/include/linux/netfilter_ipv4/ipt_IMQ.h	1969-12-31 16:00:00.000000000 -0800
++++ build_i386_untangle_686/include/linux/netfilter_ipv4/ipt_IMQ.h	2010-07-26 12:18:10.000000000 -0700
 @@ -0,0 +1,10 @@
 +#ifndef _IPT_IMQ_H
 +#define _IPT_IMQ_H
@@ -755,9 +767,9 @@ diff -urN build_i386_none_686/include/linux/netfilter_ipv4/ipt_IMQ.h build_i386_
 +
 +#endif /* _IPT_IMQ_H */
 +
-diff -urN build_i386_none_686/include/linux/netfilter_ipv6/ip6t_IMQ.h build_i386_none_686_patched/include/linux/netfilter_ipv6/ip6t_IMQ.h
---- build_i386_none_686/include/linux/netfilter_ipv6/ip6t_IMQ.h	1969-12-31 16:00:00.000000000 -0800
-+++ build_i386_none_686_patched/include/linux/netfilter_ipv6/ip6t_IMQ.h	2010-07-14 16:57:51.000000000 -0700
+diff -urN build_i386_untangle_686.orig/include/linux/netfilter_ipv6/ip6t_IMQ.h build_i386_untangle_686/include/linux/netfilter_ipv6/ip6t_IMQ.h
+--- build_i386_untangle_686.orig/include/linux/netfilter_ipv6/ip6t_IMQ.h	1969-12-31 16:00:00.000000000 -0800
++++ build_i386_untangle_686/include/linux/netfilter_ipv6/ip6t_IMQ.h	2010-07-26 12:18:10.000000000 -0700
 @@ -0,0 +1,10 @@
 +#ifndef _IP6T_IMQ_H
 +#define _IP6T_IMQ_H
@@ -769,9 +781,9 @@ diff -urN build_i386_none_686/include/linux/netfilter_ipv6/ip6t_IMQ.h build_i386
 +
 +#endif /* _IP6T_IMQ_H */
 +
-diff -urN build_i386_none_686/include/linux/skbuff.h build_i386_none_686_patched/include/linux/skbuff.h
---- build_i386_none_686/include/linux/skbuff.h	2010-07-14 17:06:00.000000000 -0700
-+++ build_i386_none_686_patched/include/linux/skbuff.h	2010-07-14 16:57:51.000000000 -0700
+diff -urN build_i386_untangle_686.orig/include/linux/skbuff.h build_i386_untangle_686/include/linux/skbuff.h
+--- build_i386_untangle_686.orig/include/linux/skbuff.h	2010-07-26 12:17:58.000000000 -0700
++++ build_i386_untangle_686/include/linux/skbuff.h	2010-07-26 12:18:10.000000000 -0700
 @@ -28,6 +28,9 @@
  #include <linux/rcupdate.h>
  #include <linux/dmaengine.h>
@@ -787,7 +799,7 @@ diff -urN build_i386_none_686/include/linux/skbuff.h build_i386_none_686_patched
  	 */
  	char			cb[48];
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+	void			*cb_next;
++	void                    *cb_next;
 +#endif
  
  	unsigned int		len,
@@ -802,17 +814,18 @@ diff -urN build_i386_none_686/include/linux/skbuff.h build_i386_none_686_patched
  #ifdef CONFIG_BRIDGE_NETFILTER
  	struct nf_bridge_info	*nf_bridge;
  #endif
-@@ -318,6 +327,9 @@
- 	__u8			ndisc_nodetype:2;
+@@ -319,6 +328,10 @@
  #endif
  	/* 14 bit hole */
+ 
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
 +	__u8			imq_flags:IMQ_F_BITS;
 +#endif
- 
++
  #ifdef CONFIG_NET_DMA
  	dma_cookie_t		dma_cookie;
-@@ -348,6 +360,12 @@
+ #endif
+@@ -348,6 +361,12 @@
  
  #include <asm/system.h>
  
@@ -825,7 +838,7 @@ diff -urN build_i386_none_686/include/linux/skbuff.h build_i386_none_686_patched
  extern void kfree_skb(struct sk_buff *skb);
  extern void	       __kfree_skb(struct sk_buff *skb);
  extern struct sk_buff *__alloc_skb(unsigned int size,
-@@ -1624,6 +1642,10 @@
+@@ -1624,6 +1643,10 @@
  	dst->nfct_reasm = src->nfct_reasm;
  	nf_conntrack_get_reasm(src->nfct_reasm);
  #endif
@@ -836,39 +849,25 @@ diff -urN build_i386_none_686/include/linux/skbuff.h build_i386_none_686_patched
  #ifdef CONFIG_BRIDGE_NETFILTER
  	dst->nf_bridge  = src->nf_bridge;
  	nf_bridge_get(src->nf_bridge);
-
-diff -urN build_i386_none_686/include/net/netfilter/nf_queue.h build_i386_none_686_patched/include/net/netfilter/nf_queue.h
---- build_i386_none_686/include/net/netfilter/nf_queue.h	2008-07-13 14:51:29.000000000 -0700
-+++ build_i386_none_686_patched/include/net/netfilter/nf_queue.h	2010-07-14 16:57:51.000000000 -0700
-@@ -13,6 +13,12 @@
- 	struct net_device	*indev;
- 	struct net_device	*outdev;
- 	int			(*okfn)(struct sk_buff *);
-+
-+#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+	int			(*next_outfn)(struct nf_queue_entry *entry,
-+					      unsigned int queuenum);
-+	unsigned int		next_queuenum;
-+#endif
- };
- 
- #define nf_queue_entry_reroute(x) ((void *)x + sizeof(struct nf_queue_entry))
-@@ -30,5 +36,11 @@
+diff -urN build_i386_untangle_686.orig/include/net/netfilter/nf_queue.h build_i386_untangle_686/include/net/netfilter/nf_queue.h
+--- build_i386_untangle_686.orig/include/net/netfilter/nf_queue.h	2010-07-26 12:17:58.000000000 -0700
++++ build_i386_untangle_686/include/net/netfilter/nf_queue.h	2010-07-26 12:18:10.000000000 -0700
+@@ -30,5 +30,12 @@
  				       const struct nf_queue_handler *qh);
  extern void nf_unregister_queue_handlers(const struct nf_queue_handler *qh);
  extern void nf_reinject(struct nf_queue_entry *entry, unsigned int verdict);
 +extern void nf_queue_entry_release_refs(struct nf_queue_entry *entry);
 +
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+extern void nf_register_queue_imq_handler(const struct nf_queue_handler *qh);
++extern void nf_register_queue_imq_handler(const struct nf_queue_handler *qh,
++					  nf_hookfn *_imq_nf_hook);
 +extern void nf_unregister_queue_imq_handler(void);
 +#endif
  
  #endif /* _NF_QUEUE_H */
-
-diff -urN build_i386_none_686/net/core/dev.c build_i386_none_686_patched/net/core/dev.c
---- build_i386_none_686/net/core/dev.c	2010-07-14 17:05:59.000000000 -0700
-+++ build_i386_none_686_patched/net/core/dev.c	2010-07-14 16:57:51.000000000 -0700
+diff -urN build_i386_untangle_686.orig/net/core/dev.c build_i386_untangle_686/net/core/dev.c
+--- build_i386_untangle_686.orig/net/core/dev.c	2010-07-26 12:17:53.000000000 -0700
++++ build_i386_untangle_686/net/core/dev.c	2010-07-26 12:18:10.000000000 -0700
 @@ -95,6 +95,9 @@
  #include <net/net_namespace.h>
  #include <net/sock.h>
@@ -886,15 +885,15 @@ diff -urN build_i386_none_686/net/core/dev.c build_i386_none_686_patched/net/cor
 -		if (!list_empty(&ptype_all))
 +		if (!list_empty(&ptype_all)
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+		    && !(skb->imq_flags & IMQ_F_ENQUEUE)
++			&& !(skb->imq_flags & IMQ_F_ENQUEUE)
 +#endif
-+		    )
++		   )
  			dev_queue_xmit_nit(skb, dev);
  
  		if (netif_needs_gso(dev, skb)) {
-diff -urN build_i386_none_686/net/core/skbuff.c build_i386_none_686_patched/net/core/skbuff.c
---- build_i386_none_686/net/core/skbuff.c	2010-07-14 17:06:00.000000000 -0700
-+++ build_i386_none_686_patched/net/core/skbuff.c	2010-07-14 17:05:14.000000000 -0700
+diff -urN build_i386_untangle_686.orig/net/core/skbuff.c build_i386_untangle_686/net/core/skbuff.c
+--- build_i386_untangle_686.orig/net/core/skbuff.c	2010-07-26 12:17:53.000000000 -0700
++++ build_i386_untangle_686/net/core/skbuff.c	2010-07-26 12:18:10.000000000 -0700
 @@ -71,6 +71,9 @@
  
  static struct kmem_cache *skbuff_head_cache __read_mostly;
@@ -905,16 +904,16 @@ diff -urN build_i386_none_686/net/core/skbuff.c build_i386_none_686_patched/net/
  
  static void sock_pipe_buf_release(struct pipe_inode_info *pipe,
  				  struct pipe_buffer *buf)
-@@ -94,6 +97,81 @@
+@@ -94,6 +97,82 @@
  	return 1;
  }
  
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
 +/* Control buffer save/restore for IMQ devices */
 +struct skb_cb_table {
++	char			cb[48] __aligned(8);
 +	void			*cb_next;
 +	atomic_t		refcnt;
-+	char      		cb[48];
 +};
 +
 +static DEFINE_SPINLOCK(skb_cb_store_lock);
@@ -934,7 +933,6 @@ diff -urN build_i386_none_686/net/core/skbuff.c build_i386_none_686_patched/net/
 +
 +	atomic_set(&next->refcnt, 1);
 +
-+got_next:
 +	skb->cb_next = next;
 +	return 0;
 +}
@@ -956,9 +954,8 @@ diff -urN build_i386_none_686/net/core/skbuff.c build_i386_none_686_patched/net/
 +
 +	spin_lock(&skb_cb_store_lock);
 +
-+	if (atomic_dec_and_test(&next->refcnt)) {
++	if (atomic_dec_and_test(&next->refcnt))
 +		kmem_cache_free(skbuff_cb_store_cache, next);
-+	}
 +
 +	spin_unlock(&skb_cb_store_lock);
 +
@@ -966,16 +963,19 @@ diff -urN build_i386_none_686/net/core/skbuff.c build_i386_none_686_patched/net/
 +}
 +EXPORT_SYMBOL(skb_restore_cb);
 +
-+static void skb_copy_stored_cb(struct sk_buff *new, struct sk_buff *old)
++static void skb_copy_stored_cb(struct sk_buff *new, const struct sk_buff *__old)
 +{
 +	struct skb_cb_table *next;
++	struct sk_buff *old;
 +
-+	if (!old->cb_next) {
-+		new->cb_next = 0;
++	if (!__old->cb_next) {
++		new->cb_next = NULL;
 +		return;
 +	}
 +
 +	spin_lock(&skb_cb_store_lock);
++
++	old = (struct sk_buff *)__old;
 +
 +	next = old->cb_next;
 +	atomic_inc(&next->refcnt);
@@ -987,23 +987,34 @@ diff -urN build_i386_none_686/net/core/skbuff.c build_i386_none_686_patched/net/
  
  /* Pipe buffer operations for a socket. */
  static struct pipe_buf_operations sock_pipe_buf_ops = {
-@@ -368,6 +446,15 @@
+@@ -368,6 +447,26 @@
  		WARN_ON(in_irq());
  		skb->destructor(skb);
  	}
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
 +	/* This should not happen. When it does, avoid memleak by restoring
 +	the chain of cb-backups. */
-+	while(skb->cb_next != NULL) {
-+		printk(KERN_WARNING "kfree_skb: skb->cb_next: %08x\n",
-+			skb->cb_next);
++	while (skb->cb_next != NULL) {
++		if (net_ratelimit())
++			printk(KERN_WARNING "IMQ: kfree_skb: skb->cb_next: "
++				"%08x\n", (unsigned int)skb->cb_next);
++
 +		skb_restore_cb(skb);
 +	}
++	/* This should not happen either, nf_queue_entry is nullified in
++	 * imq_dev_xmit(). If we have non-NULL nf_queue_entry then we are
++	 * leaking entry pointers, maybe memory. We don't know if this is
++	 * pointer to already freed memory, or should this be freed.
++	 * If this happens we need to add refcounting, etc for nf_queue_entry.
++	 */
++	if (skb->nf_queue_entry && net_ratelimit())
++		printk(KERN_WARNING
++				"IMQ: kfree_skb: skb->nf_queue_entry != NULL");
 +#endif
  #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
  	nf_conntrack_put(skb->nfct);
  	nf_conntrack_put_reasm(skb->nfct_reasm);
-@@ -430,6 +517,9 @@
+@@ -430,6 +529,9 @@
  	new->sp			= secpath_get(old->sp);
  #endif
  	memcpy(new->cb, old->cb, sizeof(old->cb));
@@ -1013,15 +1024,7 @@ diff -urN build_i386_none_686/net/core/skbuff.c build_i386_none_686_patched/net/
  	new->csum_start		= old->csum_start;
  	new->csum_offset	= old->csum_offset;
  	new->local_df		= old->local_df;
-@@ -2277,6 +2367,7 @@
- 		tail = nskb;
- 
- 		__copy_skb_header(nskb, skb);
-+		skb_copy_stored_cb(nskb, skb);
- 		nskb->mac_len = skb->mac_len;
- 
- 		skb_reserve(nskb, headroom);
-@@ -2356,6 +2447,13 @@
+@@ -2356,6 +2458,13 @@
  						0,
  						SLAB_HWCACHE_ALIGN|SLAB_PANIC,
  						NULL);
@@ -1035,11 +1038,10 @@ diff -urN build_i386_none_686/net/core/skbuff.c build_i386_none_686_patched/net/
  }
  
  /**
-
-diff -urN build_i386_none_686/net/netfilter/Kconfig build_i386_none_686_patched/net/netfilter/Kconfig
---- build_i386_none_686/net/netfilter/Kconfig	2008-07-13 14:51:29.000000000 -0700
-+++ build_i386_none_686_patched/net/netfilter/Kconfig	2010-07-14 16:57:51.000000000 -0700
-@@ -334,6 +334,18 @@
+diff -urN build_i386_untangle_686.orig/net/netfilter/Kconfig build_i386_untangle_686/net/netfilter/Kconfig
+--- build_i386_untangle_686.orig/net/netfilter/Kconfig	2010-07-26 12:17:53.000000000 -0700
++++ build_i386_untangle_686/net/netfilter/Kconfig	2010-07-26 12:18:10.000000000 -0700
+@@ -342,6 +342,18 @@
  
  	  To compile it as a module, choose M here.  If unsure, say N.
  
@@ -1058,9 +1060,9 @@ diff -urN build_i386_none_686/net/netfilter/Kconfig build_i386_none_686_patched/
  config NETFILTER_XT_TARGET_MARK
  	tristate '"MARK" target support'
  	depends on NETFILTER_XTABLES
-diff -urN build_i386_none_686/net/netfilter/Makefile build_i386_none_686_patched/net/netfilter/Makefile
---- build_i386_none_686/net/netfilter/Makefile	2008-07-13 14:51:29.000000000 -0700
-+++ build_i386_none_686_patched/net/netfilter/Makefile	2010-07-14 16:57:51.000000000 -0700
+diff -urN build_i386_untangle_686.orig/net/netfilter/Makefile build_i386_untangle_686/net/netfilter/Makefile
+--- build_i386_untangle_686.orig/net/netfilter/Makefile	2010-07-26 12:17:53.000000000 -0700
++++ build_i386_untangle_686/net/netfilter/Makefile	2010-07-26 12:18:10.000000000 -0700
 @@ -42,6 +42,7 @@
  obj-$(CONFIG_NETFILTER_XT_TARGET_CONNMARK) += xt_CONNMARK.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_CONNSECMARK) += xt_CONNSECMARK.o
@@ -1069,37 +1071,42 @@ diff -urN build_i386_none_686/net/netfilter/Makefile build_i386_none_686_patched
  obj-$(CONFIG_NETFILTER_XT_TARGET_MARK) += xt_MARK.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_NFLOG) += xt_NFLOG.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_NFQUEUE) += xt_NFQUEUE.o
-diff -urN build_i386_none_686/net/netfilter/nf_queue.c build_i386_none_686_patched/net/netfilter/nf_queue.c
---- build_i386_none_686/net/netfilter/nf_queue.c	2008-07-13 14:51:29.000000000 -0700
-+++ build_i386_none_686_patched/net/netfilter/nf_queue.c	2010-07-14 16:57:51.000000000 -0700
-@@ -20,6 +20,26 @@
+diff -urN build_i386_untangle_686.orig/net/netfilter/nf_queue.c build_i386_untangle_686/net/netfilter/nf_queue.c
+--- build_i386_untangle_686.orig/net/netfilter/nf_queue.c	2010-07-26 12:17:53.000000000 -0700
++++ build_i386_untangle_686/net/netfilter/nf_queue.c	2010-07-26 12:18:10.000000000 -0700
+@@ -20,6 +20,31 @@
  
  static DEFINE_MUTEX(queue_handler_mutex);
  
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
++static nf_hookfn *nf_queue_imq_nf_hook;
 +static const struct nf_queue_handler *queue_imq_handler;
 +
-+void nf_register_queue_imq_handler(const struct nf_queue_handler *qh)
++void nf_register_queue_imq_handler(const struct nf_queue_handler *qh,
++				   nf_hookfn *_imq_nf_hook)
 +{
 +	mutex_lock(&queue_handler_mutex);
 +	rcu_assign_pointer(queue_imq_handler, qh);
++	rcu_assign_pointer(nf_queue_imq_nf_hook, _imq_nf_hook);
 +	mutex_unlock(&queue_handler_mutex);
 +}
-+EXPORT_SYMBOL(nf_register_queue_imq_handler);
++EXPORT_SYMBOL_GPL(nf_register_queue_imq_handler);
 +
 +void nf_unregister_queue_imq_handler(void)
 +{
 +	mutex_lock(&queue_handler_mutex);
++	rcu_assign_pointer(nf_queue_imq_nf_hook, NULL);
 +	rcu_assign_pointer(queue_imq_handler, NULL);
 +	mutex_unlock(&queue_handler_mutex);
 +}
-+EXPORT_SYMBOL(nf_unregister_queue_imq_handler);
++EXPORT_SYMBOL_GPL(nf_unregister_queue_imq_handler);
++
 +#endif
 +
  /* return EBUSY when somebody else is registered, return EEXIST if the
   * same handler is registered, return 0 in case of success. */
  int nf_register_queue_handler(int pf, const struct nf_queue_handler *qh)
-@@ -80,7 +100,7 @@
+@@ -80,7 +105,7 @@
  }
  EXPORT_SYMBOL_GPL(nf_unregister_queue_handlers);
  
@@ -1108,7 +1115,7 @@ diff -urN build_i386_none_686/net/netfilter/nf_queue.c build_i386_none_686_patch
  {
  	/* Release those devices we held, or Alexey will kill me. */
  	if (entry->indev)
-@@ -100,6 +120,7 @@
+@@ -100,6 +125,7 @@
  	/* Drop reference to owner of hook which queued us. */
  	module_put(entry->elem->owner);
  }
@@ -1116,12 +1123,12 @@ diff -urN build_i386_none_686/net/netfilter/nf_queue.c build_i386_none_686_patch
  
  /*
   * Any packet that leaves via this function must come back
-@@ -121,12 +142,26 @@
+@@ -121,11 +147,19 @@
  #endif
  	const struct nf_afinfo *afinfo;
  	const struct nf_queue_handler *qh;
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+	const struct nf_queue_handler *qih = NULL;
++	const struct nf_hook_ops *hook_ops;
 +#endif
  
  	/* QUEUE == DROP if noone is waiting, to be safe. */
@@ -1129,55 +1136,17 @@ diff -urN build_i386_none_686/net/netfilter/nf_queue.c build_i386_none_686_patch
  
  	qh = rcu_dereference(queue_handler[pf]);
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+#if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
-+	if (pf == PF_INET || pf == PF_INET6)
-+#else
-+	if (pf == PF_INET)
++	hook_ops = list_entry(elem, struct nf_hook_ops, list);
++	if (hook_ops && hook_ops->hook == nf_queue_imq_nf_hook)
++		qh = rcu_dereference(queue_imq_handler);
 +#endif
-+		qih = rcu_dereference(queue_imq_handler);
-+
-+	if (!qh && !qih)
-+#else /* !IMQ */
  	if (!qh)
-+#endif
  		goto err_unlock;
  
- 	afinfo = nf_get_afinfo(pf);
-@@ -145,6 +180,10 @@
- 		.indev	= indev,
- 		.outdev	= outdev,
- 		.okfn	= okfn,
-+#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+		.next_outfn = qh ? qh->outfn : NULL,
-+		.next_queuenum = queuenum,
-+#endif
- 	};
- 
- 	/* If it's going away, ignore hook. */
-@@ -170,8 +209,19 @@
- 	}
- #endif
- 	afinfo->saveroute(skb, entry);
-+
-+#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+	if (qih) {
-+		status = qih->outfn(entry, queuenum);
-+		goto imq_skip_queue;
-+	}
-+#endif
-+
- 	status = qh->outfn(entry, queuenum);
- 
-+#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+imq_skip_queue:
-+#endif
- 	rcu_read_unlock();
- 
- 	if (status < 0) {
-diff -urN build_i386_none_686/net/netfilter/xt_IMQ.c build_i386_none_686_patched/net/netfilter/xt_IMQ.c
---- build_i386_none_686/net/netfilter/xt_IMQ.c	1969-12-31 16:00:00.000000000 -0800
-+++ build_i386_none_686_patched/net/netfilter/xt_IMQ.c	2010-07-14 16:57:51.000000000 -0700
-@@ -0,0 +1,81 @@
+diff -urN build_i386_untangle_686.orig/net/netfilter/xt_IMQ.c build_i386_untangle_686/net/netfilter/xt_IMQ.c
+--- build_i386_untangle_686.orig/net/netfilter/xt_IMQ.c	1969-12-31 16:00:00.000000000 -0800
++++ build_i386_untangle_686/net/netfilter/xt_IMQ.c	2010-07-26 12:19:37.000000000 -0700
+@@ -0,0 +1,80 @@
 +/*
 + * This target marks packets to be enqueued to an imq device
 + */
@@ -1258,4 +1227,3 @@ diff -urN build_i386_none_686/net/netfilter/xt_IMQ.c build_i386_none_686_patched
 +MODULE_LICENSE("GPL");
 +MODULE_ALIAS("ipt_IMQ");
 +MODULE_ALIAS("ip6t_IMQ");
-+
