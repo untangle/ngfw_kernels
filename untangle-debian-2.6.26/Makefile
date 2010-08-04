@@ -24,6 +24,7 @@ TEMPDIR:=$(shell mktemp)
 
 all:	clean kpkg legitify
 
+pkgs:: kpkg
 
 deps:	force
 	sudo aptitude install ${BUILDDEPS} || echo "unable to run sudo"
