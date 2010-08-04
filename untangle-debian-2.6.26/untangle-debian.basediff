@@ -2,7 +2,7 @@ diff -uwr ./debian/changelog /home/dmorris/linux-2.6-2.6.26/debian/changelog
 --- ./debian/changelog	2008-10-14 14:55:10.000000000 -0700
 +++ /home/dmorris/linux-2.6-2.6.26/debian/changelog	2008-10-14 11:13:01.000000000 -0700
 @@ -1,1 +1,22 @@
-+linux-2.6 (2.6.26-22untangle1) unstable; urgency=low
++linux-2.6 (2.6.26-22untangle2) unstable; urgency=low
 +
 +  * Adding IMQ support to kernel
 +
