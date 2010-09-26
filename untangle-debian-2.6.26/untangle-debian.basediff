@@ -157,16 +157,10 @@ diff -Nuwr ./debian/config/i386/defines /home/dmorris/linux-2.6-2.6.26/debian/co
 diff -Nuwr ./debian/config/i386/untangle/defines /home/dmorris/linux-2.6-2.6.26/debian/config/i386/untangle/defines
 --- ./debian/config/i386/untangle/defines	1969-12-31 16:00:00.000000000 -0800
 +++ /home/dmorris/linux-2.6-2.6.26/debian/config/i386/untangle/defines	2008-10-10 12:17:27.000000000 -0700
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,9 @@
 +[base]
 +flavours:
-+ 486
 + 686
-+
-+[486_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-486
-+configs:
-+  i386/config.486
 +
 +[686_image]
 +provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-686
