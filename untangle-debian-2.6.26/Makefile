@@ -91,4 +91,5 @@ legitify:
 getsrc:
 	-sudo apt-get update
 	apt-get --download-only source linux-image-2.6.26-1-amd64
-	apt-get --download-only source linux-latest-2.6 
+	apt-get --download-only source linux-latest-2.6
+
