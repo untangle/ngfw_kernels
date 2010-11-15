@@ -1,7 +1,13 @@
-diff -uwr ./debian/changelog /home/dmorris/linux-2.6-2.6.26/debian/changelog
+diff -uwr ./debian/changelog ./debian/changelog
 --- ./debian/changelog	2008-10-14 14:55:10.000000000 -0700
-+++ /home/dmorris/linux-2.6-2.6.26/debian/changelog	2008-10-14 11:13:01.000000000 -0700
-@@ -1,1 +1,22 @@
++++ ./debian/changelog	2008-10-14 11:13:01.000000000 -0700
+@@ -1,1 +1,28 @@
++linux-2.6 (2.6.26-22untangle3) unstable; urgency=low
++
++  * Adding Xen support in new "untangle+xen" featureset.
++
++ -- Sebastien Delafond <seb@untangle.com>  Fri, 05 Nov 2010 07:05:41 -0700
++
 +linux-2.6 (2.6.26-22untangle2) unstable; urgency=low
 +
 +  * Adding IMQ support to kernel
@@ -26,20 +32,21 @@ diff -uwr ./debian/changelog /home/dmorris/linux-2.6-2.6.26/debian/changelog
  linux-2.6 (2.6.26-22) stable; urgency=high
 
    [ maximilian attems ]
-diff -Nuwr ./debian/config/amd64/defines /home/dmorris/linux-2.6-2.6.26/debian/config/amd64/defines
+diff -Nuwr ./debian/config/amd64/defines ./debian/config/amd64/defines
 --- ./debian/config/amd64/defines	2008-10-14 14:55:10.000000000 -0700
-+++ /home/dmorris/linux-2.6-2.6.26/debian/config/amd64/defines	2008-10-02 17:12:04.000000000 -0700
-@@ -1,6 +1,7 @@
++++ ./debian/config/amd64/defines	2008-10-02 17:12:04.000000000 -0700
+@@ -1,6 +1,8 @@
  [base]
  featuresets:
   openvz
++ untangle+xen
 + untangle
   vserver
   xen
  flavours:
-diff -Nuwr ./debian/config/amd64/untangle/defines /home/dmorris/linux-2.6-2.6.26/debian/config/amd64/untangle/defines
+diff -Nuwr ./debian/config/amd64/untangle/defines ./debian/config/amd64/untangle/defines
 --- ./debian/config/amd64/untangle/defines	1969-12-31 16:00:00.000000000 -0800
-+++ /home/dmorris/linux-2.6-2.6.26/debian/config/amd64/untangle/defines	2008-10-10 12:17:44.000000000 -0700
++++ ./debian/config/amd64/untangle/defines	2008-10-10 12:17:44.000000000 -0700
 @@ -0,0 +1,6 @@
 +[base]
 +flavours:
@@ -47,13 +54,23 @@ diff -Nuwr ./debian/config/amd64/untangle/defines /home/dmorris/linux-2.6-2.6.26
 +
 +[amd64_image]
 +provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-amd64
-diff -Nuwr ./debian/config/defines /home/dmorris/linux-2.6-2.6.26/debian/config/defines
+--- ./debian/config/amd64/untangle+xen/defines	1969-12-31 16:00:00.000000000 -0800
++++ ./debian/config/amd64/untangle+xen/defines	2008-10-10 12:17:44.000000000 -0700
+@@ -0,0 +1,6 @@
++[base]
++flavours:
++ amd64
++
++[amd64_image]
++provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-amd64, linux-image-2.6-untangle+xen, linux-image-2.6-untangle+xen-amd64
+diff -Nuwr ./debian/config/defines ./debian/config/defines
 --- ./debian/config/defines	2008-10-14 14:55:10.000000000 -0700
-+++ /home/dmorris/linux-2.6-2.6.26/debian/config/defines	2008-10-14 15:03:07.000000000 -0700
-@@ -20,12 +20,16 @@
++++ ./debian/config/defines	2008-10-14 15:03:07.000000000 -0700
+@@ -20,12 +20,23 @@
  featuresets:
   none
   openvz
++ untangle+xen
 + untangle
   vserver
   xen
@@ -61,15 +78,21 @@ diff -Nuwr ./debian/config/defines /home/dmorris/linux-2.6-2.6.26/debian/config/
  [featureset-openvz_base]
  enabled: true
  
++[featureset-untangle+xen_base]
++enabled: true
++
 +[featureset-untangle_base]
++enabled: true
++
++[featureset-xen_base]
 +enabled: true
 +
  [featureset-vserver_base]
  enabled: true
  
-diff -Nuwr ./debian/config/featureset-untangle/config /home/dmorris/linux-2.6-2.6.26/debian/config/featureset-untangle/config
+diff -Nuwr ./debian/config/featureset-untangle/config ./debian/config/featureset-untangle/config
 --- ./debian/config/featureset-untangle/config	2010-07-16 17:31:24.000000000 -0700
-+++ /home/dmorris/linux-2.6-2.6.26/debian/config/featureset-untangle/config	2010-07-16 17:26:49.000000000 -0700
++++ ./debian/config/featureset-untangle/config	2010-07-16 17:26:49.000000000 -0700
 @@ -0,0 +1,63 @@
 +# CONFIG_HZ=100 is not set
 +CONFIG_HZ=1000
@@ -134,29 +157,29 @@ diff -Nuwr ./debian/config/featureset-untangle/config /home/dmorris/linux-2.6-2.
 +CONFIG_NF_CONNTRACK=y
 +CONFIG_NF_NAT=y
 +CONFIG_NETFILTER_XTABLES=y
-diff -Nuwr ./debian/config/featureset-untangle/defines /home/dmorris/linux-2.6-2.6.26/debian/config/featureset-untangle/defines
+diff -Nuwr ./debian/config/featureset-untangle/defines ./debian/config/featureset-untangle/defines
 --- ./debian/config/featureset-untangle/defines	1969-12-31 16:00:00.000000000 -0800
-+++ /home/dmorris/linux-2.6-2.6.26/debian/config/featureset-untangle/defines	2008-10-02 21:49:50.000000000 -0700
++++ ./debian/config/featureset-untangle/defines	2008-10-02 21:49:50.000000000 -0700
 @@ -0,0 +1,5 @@
 +[image]
 +desc-long-part-untangle: Enables Untangle Virtual Networking.  Intended for IP network gateways.
 +desc-parts: untangle
 +desc-short-part-untangle: Untangle kernel
 +
-diff -Nuwr ./debian/config/i386/defines /home/dmorris/linux-2.6-2.6.26/debian/config/i386/defines
+diff -Nuwr ./debian/config/i386/defines ./debian/config/i386/defines
 --- ./debian/config/i386/defines	2008-10-14 14:55:10.000000000 -0700
-+++ /home/dmorris/linux-2.6-2.6.26/debian/config/i386/defines	2008-10-02 17:11:27.000000000 -0700
-@@ -1,6 +1,7 @@
++++ ./debian/config/i386/defines	2008-10-02 17:11:27.000000000 -0700
+@@ -1,6 +1,8 @@
  [base]
  featuresets:
   openvz
 + untangle
++ untangle+xen
   vserver
   xen
  flavours:
-diff -Nuwr ./debian/config/i386/untangle/defines /home/dmorris/linux-2.6-2.6.26/debian/config/i386/untangle/defines
 --- ./debian/config/i386/untangle/defines	1969-12-31 16:00:00.000000000 -0800
-+++ /home/dmorris/linux-2.6-2.6.26/debian/config/i386/untangle/defines	2008-10-10 12:17:27.000000000 -0700
++++ ./debian/config/i386/untangle/defines	2008-10-10 12:17:27.000000000 -0700
 @@ -0,0 +1,15 @@
 +[base]
 +flavours:
@@ -173,10 +196,36 @@ diff -Nuwr ./debian/config/i386/untangle/defines /home/dmorris/linux-2.6-2.6.26/
 +configs:
 +  i386/config.686
 +
-diff -uwr ./debian/patches/series/1-extra /home/dmorris/linux-2.6-2.6.26/debian/patches/series/1-extra
+--- ./debian/config/i386/untangle+xen/defines	1969-12-31 16:00:00.000000000 -0800
++++ ./debian/config/i386/untangle+xen/defines	2008-10-10 12:17:27.000000000 -0700
+@@ -0,0 +1,15 @@
++[base]
++flavours:
++ 486
++ 686
++
++[486_image]
++provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-486, linux-image-2.6-untangle+xen, linux-image-2.6-untangle+xen-486
++configs:
++  i386/config.486
++
++[686_image]
++provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-686, linux-image-2.6-untangle+xen, linux-image-2.6-untangle+xen-486
++configs:
++  i386/config.686
++
+diff -Nuwr ./debian/config/featureset-untangle+xen/defines ./debian/config/featureset-untangle+xen/defines
+--- ./debian/config/featureset-untangle+xen/defines	1969-12-31 16:00:00.000000000 -0800
++++ ./debian/config/featureset-untangle+xen/defines	2008-10-02 21:49:50.000000000 -0700
+@@ -0,0 +1,4 @@
++[image]
++configs:
++ featureset-untangle/config
++ featureset-xen/config
+diff -uwr ./debian/patches/series/1-extra ./debian/patches/series/1-extra
 --- ./debian/patches/series/1-extra	2008-10-14 14:55:10.000000000 -0700
-+++ /home/dmorris/linux-2.6-2.6.26/debian/patches/series/1-extra	2008-10-14 11:21:06.000000000 -0700
-@@ -1,5 +1,16 @@
++++ ./debian/patches/series/1-extra	2008-10-14 11:21:06.000000000 -0700
+@@ -1,5 +1,14 @@
  + features/all/openvz/openvz.patch featureset=openvz
  
 ++ features/all/untangle/005-bitmark.patch featureset=untangle
@@ -187,9 +236,35 @@ diff -uwr ./debian/patches/series/1-extra /home/dmorris/linux-2.6-2.6.26/debian/
 ++ features/all/untangle/011-nonlocal_binding.patch featureset=untangle
 ++ features/all/untangle/013-iptable_tune.patch featureset=untangle
 ++ features/all/untangle/014-nfqueue-untangle-mode.patch featureset=untangle
-++ features/all/untangle/020-imq-debian.patch featureset=untangle
-+
-+
++#+ features/all/untangle/020-imq-debian.patch featureset=untangle
  # m68k patches
  
  # updated 2008/10/13 srm notes based on 
+diff -uwr ./debian/templates/patch.apply.in ./debian/templates/patch.apply.in
+--- ./debian/templates/patch.apply.in	2010-11-12 09:35:53.000000000 -0800
++++ ./debian/templates/patch.apply.in	2010-11-12 08:29:28.000000000 -0800
+@@ -14,6 +14,10 @@
+ class MatchExtra(object):
+     def __init__(self, arch, featureset):
+         self.arch, self.featureset = arch, featureset
++        if self.featureset:
++            self.featuresets = self.featureset.split('+')
++            print "*"*200
++            print self.featuresets
+ 
+         self.matched_arch = self.matched_featureset = False
+ 
+@@ -44,9 +48,10 @@
+ 
+         if match_featureset:
+             if self.featureset is not None:
+-                if self.featureset in match_featureset:
+-                    self.matched_featureset = True
+-                    ret_featureset = True
++                for fs in self.featuresets:
++                    if fs in match_featureset:
++                        self.matched_featureset = True
++                        ret_featureset = True
+ 
+         else:
+             ret_featureset = True

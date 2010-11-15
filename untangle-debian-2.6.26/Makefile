@@ -13,7 +13,8 @@ KUPVER=${KDEBVER}
 PACKPFX=linux-2.6_${KVER}
 WORKDIR=linux-2.6-${KVER}
 KDSC=${PACKPFX}-${KUPVER}.dsc
-KOURPATCH=untangle-debian.diff.gz
+KOURDIFF=untangle-debian.diff
+KOURPATCH=${KOURDIFF}.gz
 
 DOPTIONS=DEBIAN_KERNEL_JOBS="${NPROCEXP}" DEB_BUILD_OPTIONS="parallel=${NPROCEXP}" AUTOBUILD=1
 
@@ -31,8 +32,8 @@ deps:	force
 
 kpkg:	${WORKDIR} control-real force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules clean
-	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_${MACHINE}_untangle setup_${MACHINE}_untangle
-	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle binary-arch_${MACHINE}_real
+	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_${MACHINE}_untangle+xen setup_${MACHINE}_untangle+xen source_${MACHINE}_untangle setup_${MACHINE}_untangle
+	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle+xen binary-arch_${MACHINE}_untangle binary-arch_${MACHINE}_real
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules binary-indep
 
 # for development
@@ -47,14 +48,16 @@ kern:	${WORKDIR} control-real force
 UPATCHSETLOC=${WORKDIR}/debian/patches/features/all/untangle
 ${KOURPATCH}: untangle-debian.basediff patches/*
 	rm -rf ${TEMPDIR}
+	mkdir -p ${TEMPDIR}/${WORKDIR}/debian/templates
 	mkdir -p ${TEMPDIR}/${UPATCHSETLOC}
 	mkdir -p ${TEMPDIR}/old/${UPATCHSETLOC}
 	cp patches/* ${TEMPDIR}/${UPATCHSETLOC}
+	cp maintainer-scripts/* ${TEMPDIR}/${WORKDIR}/debian
 	if [ -n "${EXTRAPATCHES}" ]; then cp "${EXTRAPATCHES}" ${TEMPDIR}/${UPATCHSETLOC}; fi
-	-cd ${TEMPDIR};diff -Ncr old/${UPATCHSETLOC} ${UPATCHSETLOC} > ${TEMPDIR}/all.diff
-	cat untangle-debian.basediff >> ${TEMPDIR}/all.diff
-	if [ -f untangle-debian.${REPOSITORY}diff ]; then cat untangle-debian.${REPOSITORY}diff >> ${TEMPDIR}/all.diff; fi
-	gzip -c ${TEMPDIR}/all.diff > ${KOURPATCH}
+	-cd ${TEMPDIR};diff -Ncr old ${TEMPDIR} > ${KOURDIFF}
+	cat untangle-debian.basediff >> ${KOURDIFF}
+	if [ -f untangle-debian.${REPOSITORY}diff ]; then cat untangle-debian.${REPOSITORY}diff >> ${KOURDIFF}; fi
+	gzip -c ${KOURDIFF} > ${KOURPATCH}
 
 patch: ${WORKDIR}
 ${WORKDIR}:	${KDSC} ${KOURPATCH}
@@ -67,7 +70,7 @@ control-real:
 	cd ${WORKDIR};make -f debian/rules debian/control-real || true
 
 clean::
-	rm -f ${KOURPATCH}
+	rm -f ${KOURPATCH} ${KOURDIFF}
 	rm -rf ${WORKDIR}
 	rm -rf notlegit
 	rm -f *.deb modules/*.deb
