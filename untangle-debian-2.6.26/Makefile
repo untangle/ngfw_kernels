@@ -21,7 +21,7 @@ DOPTIONS=DEBIAN_KERNEL_JOBS="${NPROCEXP}" DEB_BUILD_OPTIONS="parallel=${NPROCEXP
 MACHINE:=$(shell if [ `uname -m` = "x86_64" ]; then echo "amd64"; else echo "i386"; fi)
 NPROCEXP:=$(shell echo "$$((1+`grep processor /proc/cpuinfo|wc -l`))")
 TEMPDIR:=$(shell mktemp)
-
+TEMPDIR2:=$(shell mktemp)
 
 all:	clean kpkg legitify
 
@@ -47,14 +47,14 @@ kern:	${WORKDIR} control-real force
 # patches into one patch to rule them all.
 UPATCHSETLOC=${WORKDIR}/debian/patches/features/all/untangle
 ${KOURPATCH}: untangle-debian.basediff patches/*
-	rm -rf ${TEMPDIR}
+	rm -rf ${TEMPDIR} ${TEMPDIR2}
 	mkdir -p ${TEMPDIR}/${WORKDIR}/debian/templates
 	mkdir -p ${TEMPDIR}/${UPATCHSETLOC}
-	mkdir -p ${TEMPDIR}/old/${UPATCHSETLOC}
+	mkdir -p ${TEMPDIR2}/${UPATCHSETLOC}
 	cp patches/* ${TEMPDIR}/${UPATCHSETLOC}
 	cp maintainer-scripts/* ${TEMPDIR}/${WORKDIR}/debian
 	if [ -n "${EXTRAPATCHES}" ]; then cp "${EXTRAPATCHES}" ${TEMPDIR}/${UPATCHSETLOC}; fi
-	-cd ${TEMPDIR};diff -Ncr old ${TEMPDIR} > ${KOURDIFF}
+	-(cd ${TEMPDIR2}/${WORKDIR} ; diff -Ncr . ${TEMPDIR}/${WORKDIR}) > ${KOURDIFF}
 	cat untangle-debian.basediff >> ${KOURDIFF}
 	if [ -f untangle-debian.${REPOSITORY}diff ]; then cat untangle-debian.${REPOSITORY}diff >> ${KOURDIFF}; fi
 	gzip -c ${KOURDIFF} > ${KOURPATCH}
