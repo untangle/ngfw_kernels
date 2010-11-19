@@ -56,8 +56,16 @@ diff -Nuwr ./debian/config/amd64/untangle/defines ./debian/config/amd64/untangle
 +provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-amd64
 --- ./debian/config/amd64/untangle+xen/defines	1969-12-31 16:00:00.000000000 -0800
 +++ ./debian/config/amd64/untangle+xen/defines	2008-10-10 12:17:44.000000000 -0700
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,16 @@
 +[base]
++flavours:
++ amd64
++
++[image]
++initramfs-generators: initramfs-tools
++type: plain-xen
++
++[xen]
 +flavours:
 + amd64
 +
@@ -200,11 +208,16 @@ diff -Nuwr ./debian/config/i386/defines ./debian/config/i386/defines
 +
 --- ./debian/config/i386/untangle+xen/defines	1969-12-31 16:00:00.000000000 -0800
 +++ ./debian/config/i386/untangle+xen/defines	2008-10-10 12:17:27.000000000 -0700
-@@ -0,0 +1,17 @@
+@@ -0,0 +1,22 @@
 +[base]
 +flavours:
 + 486
 + 686
++
++[xen]
++flavours:
++ i386
++ amd64
 +
 +[486_image]
 +provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-486, linux-image-2.6-untangle+xen, linux-image-2.6-untangle+xen-486
@@ -221,11 +234,13 @@ diff -Nuwr ./debian/config/i386/defines ./debian/config/i386/defines
 diff -Nuwr ./debian/config/featureset-untangle+xen/defines ./debian/config/featureset-untangle+xen/defines
 --- ./debian/config/featureset-untangle+xen/defines	1969-12-31 16:00:00.000000000 -0800
 +++ ./debian/config/featureset-untangle+xen/defines	2008-10-02 21:49:50.000000000 -0700
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,10 @@
 +[image]
 +desc-long-part-untangle: Enables Untangle Virtual Networking.  Intended for IP network gateways (with Xen).
 +desc-parts: untangle
 +desc-short-part-untangle: Untangle kernel (with Xen)
++initramfs-generators: initramfs-tools
++type: plain-xen
 +configs:
 + featureset-untangle/config
 + featureset-xen/config
