@@ -259,7 +259,7 @@ diff -uwr ./debian/patches/series/1-extra ./debian/patches/series/1-extra
 ++ features/all/untangle/011-nonlocal_binding.patch featureset=untangle
 ++ features/all/untangle/013-iptable_tune.patch featureset=untangle
 ++ features/all/untangle/014-nfqueue-untangle-mode.patch featureset=untangle
-+#+ features/all/untangle/020-imq-debian.patch featureset=untangle
+++ features/all/untangle/020-imq-debian.patch featureset=untangle
  # m68k patches
  
  # updated 2008/10/13 srm notes based on 

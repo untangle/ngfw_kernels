@@ -1,6 +1,6 @@
 diff -urN build_i386_untangle_686.orig/drivers/net/imq.c build_i386_untangle_686/drivers/net/imq.c
 --- build_i386_untangle_686.orig/drivers/net/imq.c	1969-12-31 16:00:00.000000000 -0800
-+++ build_i386_untangle_686/drivers/net/imq.c	2010-07-26 12:18:10.000000000 -0700
++++ build_i386_untangle_686/drivers/net/imq.c	2010-11-23 09:52:10.000000000 -0800
 @@ -0,0 +1,577 @@
 +/*
 + *             Pseudo-driver for the intermediate queue device.
@@ -580,8 +580,8 @@ diff -urN build_i386_untangle_686.orig/drivers/net/imq.c build_i386_untangle_686
 +MODULE_ALIAS_RTNL_LINK("imq");
 +
 diff -urN build_i386_untangle_686.orig/drivers/net/Kconfig build_i386_untangle_686/drivers/net/Kconfig
---- build_i386_untangle_686.orig/drivers/net/Kconfig	2010-07-26 12:17:53.000000000 -0700
-+++ build_i386_untangle_686/drivers/net/Kconfig	2010-07-26 12:18:10.000000000 -0700
+--- build_i386_untangle_686.orig/drivers/net/Kconfig	2010-11-23 09:50:14.000000000 -0800
++++ build_i386_untangle_686/drivers/net/Kconfig	2010-11-23 09:52:10.000000000 -0800
 @@ -117,6 +117,129 @@
  	  To compile this driver as a module, choose M here: the module
  	  will be called eql.  If unsure, say N.
@@ -713,8 +713,8 @@ diff -urN build_i386_untangle_686.orig/drivers/net/Kconfig build_i386_untangle_6
  	tristate "Universal TUN/TAP device driver support"
  	select CRC32
 diff -urN build_i386_untangle_686.orig/drivers/net/Makefile build_i386_untangle_686/drivers/net/Makefile
---- build_i386_untangle_686.orig/drivers/net/Makefile	2010-07-26 12:17:53.000000000 -0700
-+++ build_i386_untangle_686/drivers/net/Makefile	2010-07-26 12:18:10.000000000 -0700
+--- build_i386_untangle_686.orig/drivers/net/Makefile	2010-11-23 09:50:14.000000000 -0800
++++ build_i386_untangle_686/drivers/net/Makefile	2010-11-23 09:52:10.000000000 -0800
 @@ -146,6 +146,7 @@
  obj-$(CONFIG_XEN_NETDEV_FRONTEND) += xen-netfront.o
  
@@ -725,7 +725,7 @@ diff -urN build_i386_untangle_686.orig/drivers/net/Makefile build_i386_untangle_
  obj-$(CONFIG_DE600) += de600.o
 diff -urN build_i386_untangle_686.orig/include/linux/imq.h build_i386_untangle_686/include/linux/imq.h
 --- build_i386_untangle_686.orig/include/linux/imq.h	1969-12-31 16:00:00.000000000 -0800
-+++ build_i386_untangle_686/include/linux/imq.h	2010-07-26 12:18:10.000000000 -0700
++++ build_i386_untangle_686/include/linux/imq.h	2010-11-23 09:52:10.000000000 -0800
 @@ -0,0 +1,13 @@
 +#ifndef _IMQ_H
 +#define _IMQ_H
@@ -742,7 +742,7 @@ diff -urN build_i386_untangle_686.orig/include/linux/imq.h build_i386_untangle_6
 +
 diff -urN build_i386_untangle_686.orig/include/linux/netfilter/xt_IMQ.h build_i386_untangle_686/include/linux/netfilter/xt_IMQ.h
 --- build_i386_untangle_686.orig/include/linux/netfilter/xt_IMQ.h	1969-12-31 16:00:00.000000000 -0800
-+++ build_i386_untangle_686/include/linux/netfilter/xt_IMQ.h	2010-07-26 12:18:10.000000000 -0700
++++ build_i386_untangle_686/include/linux/netfilter/xt_IMQ.h	2010-11-23 09:52:10.000000000 -0800
 @@ -0,0 +1,9 @@
 +#ifndef _XT_IMQ_H
 +#define _XT_IMQ_H
@@ -755,7 +755,7 @@ diff -urN build_i386_untangle_686.orig/include/linux/netfilter/xt_IMQ.h build_i3
 +
 diff -urN build_i386_untangle_686.orig/include/linux/netfilter_ipv4/ipt_IMQ.h build_i386_untangle_686/include/linux/netfilter_ipv4/ipt_IMQ.h
 --- build_i386_untangle_686.orig/include/linux/netfilter_ipv4/ipt_IMQ.h	1969-12-31 16:00:00.000000000 -0800
-+++ build_i386_untangle_686/include/linux/netfilter_ipv4/ipt_IMQ.h	2010-07-26 12:18:10.000000000 -0700
++++ build_i386_untangle_686/include/linux/netfilter_ipv4/ipt_IMQ.h	2010-11-23 09:52:10.000000000 -0800
 @@ -0,0 +1,10 @@
 +#ifndef _IPT_IMQ_H
 +#define _IPT_IMQ_H
@@ -769,7 +769,7 @@ diff -urN build_i386_untangle_686.orig/include/linux/netfilter_ipv4/ipt_IMQ.h bu
 +
 diff -urN build_i386_untangle_686.orig/include/linux/netfilter_ipv6/ip6t_IMQ.h build_i386_untangle_686/include/linux/netfilter_ipv6/ip6t_IMQ.h
 --- build_i386_untangle_686.orig/include/linux/netfilter_ipv6/ip6t_IMQ.h	1969-12-31 16:00:00.000000000 -0800
-+++ build_i386_untangle_686/include/linux/netfilter_ipv6/ip6t_IMQ.h	2010-07-26 12:18:10.000000000 -0700
++++ build_i386_untangle_686/include/linux/netfilter_ipv6/ip6t_IMQ.h	2010-11-23 09:52:10.000000000 -0800
 @@ -0,0 +1,10 @@
 +#ifndef _IP6T_IMQ_H
 +#define _IP6T_IMQ_H
@@ -782,8 +782,8 @@ diff -urN build_i386_untangle_686.orig/include/linux/netfilter_ipv6/ip6t_IMQ.h b
 +#endif /* _IP6T_IMQ_H */
 +
 diff -urN build_i386_untangle_686.orig/include/linux/skbuff.h build_i386_untangle_686/include/linux/skbuff.h
---- build_i386_untangle_686.orig/include/linux/skbuff.h	2010-07-26 12:17:58.000000000 -0700
-+++ build_i386_untangle_686/include/linux/skbuff.h	2010-07-26 12:18:10.000000000 -0700
+--- build_i386_untangle_686.orig/include/linux/skbuff.h	2010-11-23 09:50:38.000000000 -0800
++++ build_i386_untangle_686/include/linux/skbuff.h	2010-11-23 09:52:10.000000000 -0800
 @@ -28,6 +28,9 @@
  #include <linux/rcupdate.h>
  #include <linux/dmaengine.h>
@@ -814,18 +814,19 @@ diff -urN build_i386_untangle_686.orig/include/linux/skbuff.h build_i386_untangl
  #ifdef CONFIG_BRIDGE_NETFILTER
  	struct nf_bridge_info	*nf_bridge;
  #endif
-@@ -319,6 +328,10 @@
- #endif
- 	/* 14 bit hole */
- 
-+#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+	__u8			imq_flags:IMQ_F_BITS;
-+#endif
-+
+@@ -322,6 +331,11 @@
  #ifdef CONFIG_NET_DMA
  	dma_cookie_t		dma_cookie;
  #endif
-@@ -348,6 +361,12 @@
++
++#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
++       __u8                    imq_flags:IMQ_F_BITS;
++#endif
++
+ #ifdef CONFIG_NETWORK_SECMARK
+ 	__u32			secmark;
+ #endif
+@@ -348,6 +362,12 @@
  
  #include <asm/system.h>
  
@@ -838,7 +839,7 @@ diff -urN build_i386_untangle_686.orig/include/linux/skbuff.h build_i386_untangl
  extern void kfree_skb(struct sk_buff *skb);
  extern void	       __kfree_skb(struct sk_buff *skb);
  extern struct sk_buff *__alloc_skb(unsigned int size,
-@@ -1624,6 +1643,10 @@
+@@ -1624,6 +1644,10 @@
  	dst->nfct_reasm = src->nfct_reasm;
  	nf_conntrack_get_reasm(src->nfct_reasm);
  #endif
@@ -850,8 +851,8 @@ diff -urN build_i386_untangle_686.orig/include/linux/skbuff.h build_i386_untangl
  	dst->nf_bridge  = src->nf_bridge;
  	nf_bridge_get(src->nf_bridge);
 diff -urN build_i386_untangle_686.orig/include/net/netfilter/nf_queue.h build_i386_untangle_686/include/net/netfilter/nf_queue.h
---- build_i386_untangle_686.orig/include/net/netfilter/nf_queue.h	2010-07-26 12:17:58.000000000 -0700
-+++ build_i386_untangle_686/include/net/netfilter/nf_queue.h	2010-07-26 12:18:10.000000000 -0700
+--- build_i386_untangle_686.orig/include/net/netfilter/nf_queue.h	2010-11-23 09:50:39.000000000 -0800
++++ build_i386_untangle_686/include/net/netfilter/nf_queue.h	2010-11-23 09:52:10.000000000 -0800
 @@ -30,5 +30,12 @@
  				       const struct nf_queue_handler *qh);
  extern void nf_unregister_queue_handlers(const struct nf_queue_handler *qh);
@@ -866,8 +867,8 @@ diff -urN build_i386_untangle_686.orig/include/net/netfilter/nf_queue.h build_i3
  
  #endif /* _NF_QUEUE_H */
 diff -urN build_i386_untangle_686.orig/net/core/dev.c build_i386_untangle_686/net/core/dev.c
---- build_i386_untangle_686.orig/net/core/dev.c	2010-07-26 12:17:53.000000000 -0700
-+++ build_i386_untangle_686/net/core/dev.c	2010-07-26 12:18:10.000000000 -0700
+--- build_i386_untangle_686.orig/net/core/dev.c	2010-11-23 09:50:50.000000000 -0800
++++ build_i386_untangle_686/net/core/dev.c	2010-11-23 09:52:10.000000000 -0800
 @@ -95,6 +95,9 @@
  #include <net/net_namespace.h>
  #include <net/sock.h>
@@ -892,8 +893,8 @@ diff -urN build_i386_untangle_686.orig/net/core/dev.c build_i386_untangle_686/ne
  
  		if (netif_needs_gso(dev, skb)) {
 diff -urN build_i386_untangle_686.orig/net/core/skbuff.c build_i386_untangle_686/net/core/skbuff.c
---- build_i386_untangle_686.orig/net/core/skbuff.c	2010-07-26 12:17:53.000000000 -0700
-+++ build_i386_untangle_686/net/core/skbuff.c	2010-07-26 12:18:10.000000000 -0700
+--- build_i386_untangle_686.orig/net/core/skbuff.c	2010-11-23 09:50:50.000000000 -0800
++++ build_i386_untangle_686/net/core/skbuff.c	2010-11-23 09:52:10.000000000 -0800
 @@ -71,6 +71,9 @@
  
  static struct kmem_cache *skbuff_head_cache __read_mostly;
@@ -1039,8 +1040,8 @@ diff -urN build_i386_untangle_686.orig/net/core/skbuff.c build_i386_untangle_686
  
  /**
 diff -urN build_i386_untangle_686.orig/net/netfilter/Kconfig build_i386_untangle_686/net/netfilter/Kconfig
---- build_i386_untangle_686.orig/net/netfilter/Kconfig	2010-07-26 12:17:53.000000000 -0700
-+++ build_i386_untangle_686/net/netfilter/Kconfig	2010-07-26 12:18:10.000000000 -0700
+--- build_i386_untangle_686.orig/net/netfilter/Kconfig	2010-11-23 09:50:53.000000000 -0800
++++ build_i386_untangle_686/net/netfilter/Kconfig	2010-11-23 09:52:10.000000000 -0800
 @@ -342,6 +342,18 @@
  
  	  To compile it as a module, choose M here.  If unsure, say N.
@@ -1061,8 +1062,8 @@ diff -urN build_i386_untangle_686.orig/net/netfilter/Kconfig build_i386_untangle
  	tristate '"MARK" target support'
  	depends on NETFILTER_XTABLES
 diff -urN build_i386_untangle_686.orig/net/netfilter/Makefile build_i386_untangle_686/net/netfilter/Makefile
---- build_i386_untangle_686.orig/net/netfilter/Makefile	2010-07-26 12:17:53.000000000 -0700
-+++ build_i386_untangle_686/net/netfilter/Makefile	2010-07-26 12:18:10.000000000 -0700
+--- build_i386_untangle_686.orig/net/netfilter/Makefile	2010-11-23 09:50:53.000000000 -0800
++++ build_i386_untangle_686/net/netfilter/Makefile	2010-11-23 09:52:10.000000000 -0800
 @@ -42,6 +42,7 @@
  obj-$(CONFIG_NETFILTER_XT_TARGET_CONNMARK) += xt_CONNMARK.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_CONNSECMARK) += xt_CONNSECMARK.o
@@ -1072,8 +1073,8 @@ diff -urN build_i386_untangle_686.orig/net/netfilter/Makefile build_i386_untangl
  obj-$(CONFIG_NETFILTER_XT_TARGET_NFLOG) += xt_NFLOG.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_NFQUEUE) += xt_NFQUEUE.o
 diff -urN build_i386_untangle_686.orig/net/netfilter/nf_queue.c build_i386_untangle_686/net/netfilter/nf_queue.c
---- build_i386_untangle_686.orig/net/netfilter/nf_queue.c	2010-07-26 12:17:53.000000000 -0700
-+++ build_i386_untangle_686/net/netfilter/nf_queue.c	2010-07-26 12:18:10.000000000 -0700
+--- build_i386_untangle_686.orig/net/netfilter/nf_queue.c	2010-11-23 09:50:53.000000000 -0800
++++ build_i386_untangle_686/net/netfilter/nf_queue.c	2010-11-23 09:52:10.000000000 -0800
 @@ -20,6 +20,31 @@
  
  static DEFINE_MUTEX(queue_handler_mutex);
@@ -1145,7 +1146,7 @@ diff -urN build_i386_untangle_686.orig/net/netfilter/nf_queue.c build_i386_untan
  
 diff -urN build_i386_untangle_686.orig/net/netfilter/xt_IMQ.c build_i386_untangle_686/net/netfilter/xt_IMQ.c
 --- build_i386_untangle_686.orig/net/netfilter/xt_IMQ.c	1969-12-31 16:00:00.000000000 -0800
-+++ build_i386_untangle_686/net/netfilter/xt_IMQ.c	2010-07-26 12:19:37.000000000 -0700
++++ build_i386_untangle_686/net/netfilter/xt_IMQ.c	2010-11-23 09:52:10.000000000 -0800
 @@ -0,0 +1,80 @@
 +/*
 + * This target marks packets to be enqueued to an imq device
