@@ -56,7 +56,7 @@ diff -Nuwr ./debian/config/amd64/untangle/defines ./debian/config/amd64/untangle
 +provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-amd64
 --- ./debian/config/amd64/untangle+xen/defines	1969-12-31 16:00:00.000000000 -0800
 +++ ./debian/config/amd64/untangle+xen/defines	2008-10-10 12:17:44.000000000 -0700
-@@ -0,0 +1,16 @@
+@@ -0,0 +1,17 @@
 +[base]
 +flavours:
 + amd64
@@ -72,6 +72,7 @@ diff -Nuwr ./debian/config/amd64/untangle/defines ./debian/config/amd64/untangle
 +[amd64_image]
 +provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-amd64, linux-image-2.6-untangle+xen, linux-image-2.6-untangle+xen-amd64
 +configs:
++  featureset-untangle/config
 +  amd64/xen/config
 diff -Nuwr ./debian/config/defines ./debian/config/defines
 --- ./debian/config/defines	2008-10-14 14:55:10.000000000 -0700
@@ -208,7 +209,7 @@ diff -Nuwr ./debian/config/i386/defines ./debian/config/i386/defines
 +
 --- ./debian/config/i386/untangle+xen/defines	1969-12-31 16:00:00.000000000 -0800
 +++ ./debian/config/i386/untangle+xen/defines	2008-10-10 12:17:27.000000000 -0700
-@@ -0,0 +1,22 @@
+@@ -0,0 +1,24 @@
 +[base]
 +flavours:
 + 486
@@ -223,12 +224,14 @@ diff -Nuwr ./debian/config/i386/defines ./debian/config/i386/defines
 +provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-486, linux-image-2.6-untangle+xen, linux-image-2.6-untangle+xen-486
 +configs:
 +  i386/config.486
++  featureset-untangle/config
 +  i386/xen/config
 +
 +[686_image]
 +provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-686, linux-image-2.6-untangle+xen, linux-image-2.6-untangle+xen-486
 +configs:
 +  i386/config.686
++  featureset-untangle/config
 +  i386/xen/config
 +
 diff -Nuwr ./debian/config/featureset-untangle+xen/defines ./debian/config/featureset-untangle+xen/defines
