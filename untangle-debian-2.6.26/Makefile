@@ -23,9 +23,9 @@ NPROCEXP:=$(shell echo "$$((1+`grep processor /proc/cpuinfo|wc -l`))")
 TEMPDIR:=$(shell mktemp)
 TEMPDIR2:=$(shell mktemp)
 
-all:	clean kpkg legitify
+all:	clean kpkg 
 
-pkgs:: kpkg
+pkgs:	kpkg
 
 deps:	force
 	sudo aptitude install ${BUILDDEPS} || echo "unable to run sudo"
@@ -40,8 +40,9 @@ kpkg:	${WORKDIR} control-real force
 src: 	${WORKDIR} control-real force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_${MACHINE}_untangle setup_${MACHINE}_untangle
 
+# for development
 kern:	${WORKDIR} control-real force
-	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle_686
+	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle
 
 # This combines our "generic" kernel patches with the specific Debian kernel
 # patches into one patch to rule them all.
@@ -72,23 +73,10 @@ control-real:
 clean::
 	rm -f ${KOURPATCH} ${KOURDIFF}
 	rm -rf ${WORKDIR}
-	rm -rf notlegit
 	rm -f *.deb modules/*.deb
 	rm -f *.udeb modules/*.udeb
 
 force:
-
-# Get rid of packages we don't need.
-# Ugly alert. XXX
-legitify:
-	mkdir -p notlegit
-#	for i in *deb; do dpkg-deb -I $$i | grep untangle | grep -v -q ${OURVERSION} || mv $$i notlegit; done
-#	mv notlegit/linux-libc-dev*deb .
-#	mv notlegit/linux-headers*_all.deb .
-#	mv notlegit/linux-source*_all.deb .
-#	mv notlegit/linux-restricted-modules-common*deb .
-#	mv notlegit/nvidia-glx-new_*deb .
-
 
 # Utility rule to fetch the new ones
 getsrc:
