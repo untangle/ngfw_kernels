@@ -1,7 +1,13 @@
 diff -uwr ./debian/changelog ./debian/changelog
 --- ./debian/changelog	2008-10-14 14:55:10.000000000 -0700
 +++ ./debian/changelog	2008-10-14 11:13:01.000000000 -0700
-@@ -1,1 +1,34 @@
+@@ -1,1 +1,40 @@
++linux-2.6 (2.6.26-22untangle5) unstable; urgency=low
++
++  * Adding physdev patch.
++
++ -- Sebastien Delafond <seb@untangle.com>  Thu, 05 May 2011 03:24:38 -0700
++
 +linux-2.6 (2.6.26-22untangle4) unstable; urgency=low
 +
 +  * Adding IPSEC patch even if IPv6 is disabled.
