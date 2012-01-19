@@ -179,7 +179,6 @@ diff -Nuwr ./debian/config/featureset-untangle/config ./debian/config/featureset
 +# CONFIG_IMQ_BEHAVIOR_AB is not set
 +# CONFIG_IMQ_BEHAVIOR_BA is not set
 +CONFIG_IMQ_BEHAVIOR_BB=y
-+CONFIG_IMQ_NUM_DEVS=7
 +CONFIG_NETFILTER_XT_TARGET_IMQ=y
 +# these required for tcp_ipv4 nonlocal
 +CONFIG_NF_CONNTRACK_IPV4=y
