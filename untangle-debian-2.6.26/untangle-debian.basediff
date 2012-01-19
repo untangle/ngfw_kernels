@@ -122,7 +122,7 @@ diff -Nuwr ./debian/config/defines ./debian/config/defines
 diff -Nuwr ./debian/config/featureset-untangle/config ./debian/config/featureset-untangle/config
 --- ./debian/config/featureset-untangle/config	2010-07-16 17:31:24.000000000 -0700
 +++ ./debian/config/featureset-untangle/config	2010-07-16 17:26:49.000000000 -0700
-@@ -0,0 +1,63 @@
+@@ -0,0 +1,62 @@
 +# CONFIG_HZ=100 is not set
 +CONFIG_HZ=1000
 +CONFIG_HZ_1000=y
