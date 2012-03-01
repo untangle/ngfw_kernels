@@ -1,0 +1,275 @@
+diff -uwr ./debian/changelog ./debian/changelog
+--- ./debian/changelog	2008-10-14 14:55:10.000000000 -0700
++++ ./debian/changelog	2008-10-14 11:13:01.000000000 -0700
+@@ -1,1 +1,46 @@
++linux-2.6 (2.6.32-41untangle1) unstable; urgency=low
++
++  * 2.6.32 from squeeze.
++
++ -- Sebastien Delafond <seb@untangle.com>  Thu, 01 Mar 2012 09:00:14 -0800
++
+ linux-2.6 (2.6.32-41) stable; urgency=high
+
+   [ maximilian attems ]
+diff -Nuwr ./debian/config/amd64/defines ./debian/config/amd64/defines
+--- ./debian/config/amd64/defines	2008-10-14 14:55:10.000000000 -0700
++++ ./debian/config/amd64/defines	2008-10-02 17:12:04.000000000 -0700
+@@ -1,6 +1,8 @@
+ [base]
+ featuresets:
+  openvz
++ untangle+xen
++ untangle
+  vserver
+  xen
+ flavours:
+diff -Nuwr ./debian/config/amd64/untangle/defines ./debian/config/amd64/untangle/defines
+--- ./debian/config/amd64/untangle/defines	1969-12-31 16:00:00.000000000 -0800
++++ ./debian/config/amd64/untangle/defines	2008-10-10 12:17:44.000000000 -0700
+@@ -0,0 +1,6 @@
++[base]
++flavours:
++ amd64
++
++[amd64_image]
++provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-amd64
+--- ./debian/config/amd64/untangle+xen/defines	1969-12-31 16:00:00.000000000 -0800
++++ ./debian/config/amd64/untangle+xen/defines	2008-10-10 12:17:44.000000000 -0700
+@@ -0,0 +1,17 @@
++[base]
++flavours:
++ amd64
++
++[image]
++initramfs-generators: initramfs-tools
++type: plain-xen
++
++[xen]
++flavours:
++ amd64
++
++[amd64_image]
++provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-amd64, linux-image-2.6-untangle+xen, linux-image-2.6-untangle+xen-amd64
++configs:
++  featureset-untangle/config
++  amd64/xen/config
+diff -Nuwr ./debian/config/defines ./debian/config/defines
+--- ./debian/config/defines	2008-10-14 14:55:10.000000000 -0700
++++ ./debian/config/defines	2008-10-14 15:03:07.000000000 -0700
+@@ -20,12 +20,23 @@
+ featuresets:
+  none
+  openvz
++ untangle+xen
++ untangle
+  vserver
+  xen
+ 
+ [featureset-openvz_base]
+ enabled: true
+ 
++[featureset-untangle+xen_base]
++enabled: true
++
++[featureset-untangle_base]
++enabled: true
++
++[featureset-xen_base]
++enabled: true
++
+ [featureset-vserver_base]
+ enabled: true
+ 
+diff -Nuwr ./debian/config/featureset-untangle/config ./debian/config/featureset-untangle/config
+--- ./debian/config/featureset-untangle/config	2010-07-16 17:31:24.000000000 -0700
++++ ./debian/config/featureset-untangle/config	2010-07-16 17:26:49.000000000 -0700
+@@ -0,0 +1,62 @@
++# CONFIG_HZ=100 is not set
++CONFIG_HZ=1000
++CONFIG_HZ_1000=y
++# CONFIG_HZ_100 is not set
++# CONFIG_IEEE1394_ETH1394 is not set
++# CONFIG_IEEE1394_ETH1394_ROM_ENTRY is not set
++# CONFIG_INET6_AH is not set
++# CONFIG_INET6_ESP is not set
++# CONFIG_INET6_IPCOMP is not set
++# CONFIG_INET6_TUNNEL is not set
++# CONFIG_INET6_XFRM_MODE_BEET is not set
++# CONFIG_INET6_XFRM_MODE_ROUTEOPTIMIZATION is not set
++# CONFIG_INET6_XFRM_MODE_TRANSPORT is not set
++# CONFIG_INET6_XFRM_MODE_TUNNEL is not set
++# CONFIG_INET6_XFRM_TUNNEL is not set
++# CONFIG_IP6_NF_FILTER is not set
++# CONFIG_IP6_NF_IPTABLES is not set
++# CONFIG_IP6_NF_MANGLE is not set
++# CONFIG_IP6_NF_MATCH_AH is not set
++# CONFIG_IP6_NF_MATCH_EUI64 is not set
++# CONFIG_IP6_NF_MATCH_FRAG is not set
++# CONFIG_IP6_NF_MATCH_HL is not set
++# CONFIG_IP6_NF_MATCH_IPV6HEADER is not set
++# CONFIG_IP6_NF_MATCH_MH is not set
++# CONFIG_IP6_NF_MATCH_OPTS is not set
++# CONFIG_IP6_NF_MATCH_OWNER is not set
++# CONFIG_IP6_NF_MATCH_RT is not set
++# CONFIG_IP6_NF_QUEUE is not set
++# CONFIG_IP6_NF_RAW is not set
++# CONFIG_IP6_NF_TARGET_HL is not set
++# CONFIG_IP6_NF_TARGET_LOG is not set
++# CONFIG_IP6_NF_TARGET_REJECT is not set
++CONFIG_IP_NF_FRAG_ACCEPT=y
++CONFIG_IP_NF_MATCH_BITMARK=m
++CONFIG_IP_NF_NONLOCAL=y
++CONFIG_IP_NF_TUNE=m
++# CONFIG_IPV6 is not set
++# CONFIG_IPV6_MULTIPLE_TABLES is not set
++# CONFIG_IPV6_PRIVACY is not set
++# CONFIG_IPV6_SIT is not set
++# CONFIG_IPV6_TUNNEL is not set
++# CONFIG_IPV6 is not set
++# CONFIG_NETFILTER_NETLINK is not set
++CONFIG_NETFILTER_NETLINK=y
++# CONFIG_NF_CONNTRACK_IPV6 is not set
++CONFIG_NFNETLINK_COPY_UNTANGLE_MODE=y
++CONFIG_PREEMPT_BKL=y
++# CONFIG_PREEMPT_NONE is not set
++CONFIG_PREEMPT_VOLUNTARY=y
++CONFIG_UFS_FS=y
++CONFIG_LATENCYTOP=y
++CONFIG_IMQ=m
++# CONFIG_IMQ_BEHAVIOR_AA is not set
++# CONFIG_IMQ_BEHAVIOR_AB is not set
++# CONFIG_IMQ_BEHAVIOR_BA is not set
++CONFIG_IMQ_BEHAVIOR_BB=y
++CONFIG_NETFILTER_XT_TARGET_IMQ=y
++# these required for tcp_ipv4 nonlocal
++CONFIG_NF_CONNTRACK_IPV4=y
++CONFIG_NF_CONNTRACK=y
++CONFIG_NF_NAT=y
++CONFIG_NETFILTER_XTABLES=y
+diff -Nuwr ./debian/config/featureset-untangle/defines ./debian/config/featureset-untangle/defines
+--- ./debian/config/featureset-untangle/defines	1969-12-31 16:00:00.000000000 -0800
++++ ./debian/config/featureset-untangle/defines	2008-10-02 21:49:50.000000000 -0700
+@@ -0,0 +1,5 @@
++[image]
++desc-long-part-untangle: Enables Untangle Virtual Networking.  Intended for IP network gateways.
++desc-parts: untangle
++desc-short-part-untangle: Untangle kernel
++
+diff -Nuwr ./debian/config/i386/defines ./debian/config/i386/defines
+--- ./debian/config/i386/defines	2008-10-14 14:55:10.000000000 -0700
++++ ./debian/config/i386/defines	2008-10-02 17:11:27.000000000 -0700
+@@ -1,6 +1,8 @@
+ [base]
+ featuresets:
+  openvz
++ untangle
++ untangle+xen
+  vserver
+  xen
+ flavours:
+--- ./debian/config/i386/untangle/defines	1969-12-31 16:00:00.000000000 -0800
++++ ./debian/config/i386/untangle/defines	2008-10-10 12:17:27.000000000 -0700
+@@ -0,0 +1,15 @@
++[base]
++flavours:
++ 486
++ 686
++
++[486_image]
++provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-486
++configs:
++  i386/config.486
++
++[686_image]
++provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-686
++configs:
++  i386/config.686
++
+--- ./debian/config/i386/untangle+xen/defines	1969-12-31 16:00:00.000000000 -0800
++++ ./debian/config/i386/untangle+xen/defines	2008-10-10 12:17:27.000000000 -0700
+@@ -0,0 +1,24 @@
++[base]
++flavours:
++ 486
++ 686
++
++[xen]
++flavours:
++ i386
++ amd64
++
++[486_image]
++provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-486, linux-image-2.6-untangle+xen, linux-image-2.6-untangle+xen-486
++configs:
++  i386/config.486
++  featureset-untangle/config
++  i386/xen/config
++
++[686_image]
++provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-686, linux-image-2.6-untangle+xen, linux-image-2.6-untangle+xen-486
++configs:
++  i386/config.686
++  featureset-untangle/config
++  i386/xen/config
++
+diff -Nuwr ./debian/config/featureset-untangle+xen/defines ./debian/config/featureset-untangle+xen/defines
+--- ./debian/config/featureset-untangle+xen/defines	1969-12-31 16:00:00.000000000 -0800
++++ ./debian/config/featureset-untangle+xen/defines	2008-10-02 21:49:50.000000000 -0700
+@@ -0,0 +1,10 @@
++[image]
++desc-long-part-untangle: Enables Untangle Virtual Networking.  Intended for IP network gateways (with Xen).
++desc-parts: untangle
++desc-short-part-untangle: Untangle kernel (with Xen)
++initramfs-generators: initramfs-tools
++type: plain-xen
++configs:
++ featureset-untangle/config
++ featureset-xen/config
++
+diff -uwr ./debian/patches/series/1-extra ./debian/patches/series/1-extra
+--- ./debian/patches/series/1-extra	2008-10-14 14:55:10.000000000 -0700
++++ ./debian/patches/series/1-extra	2008-10-14 11:21:06.000000000 -0700
+@@ -1,5 +1,15 @@
+ + features/all/openvz/openvz.patch featureset=openvz
+ 
+++ features/all/untangle/005-bitmark.patch featureset=untangle
+++ features/all/untangle/006-bridgefib.patch featureset=untangle
+++ features/all/untangle/007-bridge-mac-ageing-fix.patch featureset=untangle
+++ features/all/untangle/009-extensions.patch featureset=untangle
+++ features/all/untangle/010-icmp_frag.patch featureset=untangle
+++ features/all/untangle/011-nonlocal_binding.patch featureset=untangle
+++ features/all/untangle/013-iptable_tune.patch featureset=untangle
+++ features/all/untangle/014-nfqueue-untangle-mode.patch featureset=untangle
+++ features/all/untangle/020-imq-debian.patch featureset=untangle
+++ features/all/untangle/030-ipsec.patch featureset=untangle
+ # m68k patches
+ 
+ # updated 2008/10/13 srm notes based on 
+diff -uwr ./debian/templates/patch.apply.in ./debian/templates/patch.apply.in
+--- ./debian/templates/patch.apply.in	2010-11-12 09:35:53.000000000 -0800
++++ ./debian/templates/patch.apply.in	2010-11-12 08:29:28.000000000 -0800
+@@ -14,6 +14,10 @@
+ class MatchExtra(object):
+     def __init__(self, arch, featureset):
+         self.arch, self.featureset = arch, featureset
++        if self.featureset:
++            self.featuresets = self.featureset.split('+')
++            print "*"*200
++            print self.featuresets
+ 
+         self.matched_arch = self.matched_featureset = False
+ 
+@@ -44,9 +48,10 @@
+ 
+         if match_featureset:
+             if self.featureset is not None:
+-                if self.featureset in match_featureset:
+-                    self.matched_featureset = True
+-                    ret_featureset = True
++                for fs in self.featuresets:
++                    if fs in match_featureset:
++                        self.matched_featureset = True
++                        ret_featureset = True
+ 
+         else:
+             ret_featureset = True
