@@ -226,9 +226,9 @@ diff -Nuwr ./debian/config/featureset-untangle+xen/defines ./debian/config/featu
 + featureset-untangle/config
 + featureset-xen/config
 +
-diff -uwr ./debian/patches/series/2 ./debian/patches/series/2
---- debian/patches/series/2    2012-03-01 09:14:22.000000000 -0800
-+++ debian/patches/series/2    2012-03-01 09:14:16.000000000 -0800
+diff -Nuwr ./debian/patches/series/2 ./debian/patches/series/2
+--- ./debian/patches/series/2    2012-03-01 09:14:22.000000000 -0800
++++ ./debian/patches/series/2    2012-03-01 09:14:16.000000000 -0800
 @@ -3,3 +3,14 @@
  + bugfix/all/netfilter-xtables-fix-conntrack-match-v1-ipt-save-output.patch
  - bugfix/arm/scsi-osd-build-fix.patch
