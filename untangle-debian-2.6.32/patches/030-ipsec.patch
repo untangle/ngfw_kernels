@@ -1,0 +1,54 @@
+diff -rupN linux-source-2.6.24.orig/net/xfrm/xfrm_state.c linux-source-2.6.24/net/xfrm/xfrm_state.c
+--- linux-source-2.6.24.orig/net/xfrm/xfrm_state.c	2011-03-22 08:07:16.000000000 -0700
++++ linux-source-2.6.24/net/xfrm/xfrm_state.c	2011-03-22 11:46:36.000000000 -0700
+@@ -2017,9 +2017,13 @@ int xfrm_init_state(struct xfrm_state *x
+ 
+ 		x->inner_mode = inner_mode;
+ 	} else {
++
++/*----- BEGIN IPSEC W/O IPV6 PATCH -----*/
++
+ 		struct xfrm_mode *inner_mode_iaf;
++		int iafamily = AF_INET;
+ 
+-		inner_mode = xfrm_get_mode(x->props.mode, AF_INET);
++		inner_mode = xfrm_get_mode(x->props.mode, x->props.family);
+ 		if (inner_mode == NULL)
+ 			goto error;
+ 
+@@ -2027,24 +2031,21 @@ int xfrm_init_state(struct xfrm_state *x
+ 			xfrm_put_mode(inner_mode);
+ 			goto error;
+ 		}
++		x->inner_mode = inner_mode;
+ 
+-		inner_mode_iaf = xfrm_get_mode(x->props.mode, AF_INET6);
+-		if (inner_mode_iaf == NULL)
+-			goto error;
++		if (x->props.family == AF_INET)
++			iafamily = AF_INET6;
+ 
+-		if (!(inner_mode_iaf->flags & XFRM_MODE_FLAG_TUNNEL)) {
+-			xfrm_put_mode(inner_mode_iaf);
+-			goto error;
++		inner_mode_iaf = xfrm_get_mode(x->props.mode, iafamily);
++		if (inner_mode_iaf) {
++			if (inner_mode_iaf->flags & XFRM_MODE_FLAG_TUNNEL)
++				x->inner_mode_iaf = inner_mode_iaf;
++			else
++				xfrm_put_mode(inner_mode_iaf);
++			}
+ 		}
+ 
+-		if (x->props.family == AF_INET) {
+-			x->inner_mode = inner_mode;
+-			x->inner_mode_iaf = inner_mode_iaf;
+-		} else {
+-			x->inner_mode = inner_mode_iaf;
+-			x->inner_mode_iaf = inner_mode;
+-		}
+-	}
++/*----- END IPSEC W/O IPV6 PATCH -----*/
+ 
+ 	x->type = xfrm_get_type(x->id.proto, family);
+ 	if (x->type == NULL)
