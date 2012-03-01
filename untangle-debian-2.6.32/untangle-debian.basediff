@@ -2,7 +2,7 @@ diff -uwr ./debian/changelog ./debian/changelog
 --- ./debian/changelog	2008-10-14 14:55:10.000000000 -0700
 +++ ./debian/changelog	2008-10-14 11:13:01.000000000 -0700
 @@ -1,1 +1,7 @@
-+linux-2.6 (2.6.32-41untangle1) unstable; urgency=low
++linux-2.6 (2.6.32-41untangle1) stable; urgency=low
 +
 +  * 2.6.32 from squeeze.
 +
@@ -10,7 +10,6 @@ diff -uwr ./debian/changelog ./debian/changelog
 +
  linux-2.6 (2.6.32-41) stable; urgency=high
 
-   [ maximilian attems ]
 diff -Nuwr ./debian/config/amd64/defines ./debian/config/amd64/defines
 --- ./debian/config/amd64/defines	2008-10-14 14:55:10.000000000 -0700
 +++ ./debian/config/amd64/defines	2008-10-02 17:12:04.000000000 -0700
