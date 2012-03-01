@@ -226,12 +226,14 @@ diff -Nuwr ./debian/config/featureset-untangle+xen/defines ./debian/config/featu
 + featureset-untangle/config
 + featureset-xen/config
 +
-diff -uwr ./debian/patches/series/1-extra ./debian/patches/series/1-extra
---- ./debian/patches/series/1-extra	2008-10-14 14:55:10.000000000 -0700
-+++ ./debian/patches/series/1-extra	2008-10-14 11:21:06.000000000 -0700
-@@ -1,5 +1,15 @@
- + features/all/openvz/openvz.patch featureset=openvz
- 
+diff -uwr ./debian/patches/series/2 ./debian/patches/series/2
+--- debian/patches/series/2    2012-03-01 09:14:22.000000000 -0800
++++ debian/patches/series/2    2012-03-01 09:14:16.000000000 -0800
+@@ -3,3 +3,14 @@
+ + bugfix/all/netfilter-xtables-fix-conntrack-match-v1-ipt-save-output.patch
+ - bugfix/arm/scsi-osd-build-fix.patch
+ + bugfix/all/stable/2.6.32.1.patch
++
 ++ features/all/untangle/005-bitmark.patch featureset=untangle
 ++ features/all/untangle/006-bridgefib.patch featureset=untangle
 ++ features/all/untangle/007-bridge-mac-ageing-fix.patch featureset=untangle
@@ -242,9 +244,6 @@ diff -uwr ./debian/patches/series/1-extra ./debian/patches/series/1-extra
 ++ features/all/untangle/014-nfqueue-untangle-mode.patch featureset=untangle
 ++ features/all/untangle/020-imq-debian.patch featureset=untangle
 ++ features/all/untangle/030-ipsec.patch featureset=untangle
- # m68k patches
- 
- # updated 2008/10/13 srm notes based on 
 diff -uwr ./debian/templates/patch.apply.in ./debian/templates/patch.apply.in
 --- ./debian/templates/patch.apply.in	2010-11-12 09:35:53.000000000 -0800
 +++ ./debian/templates/patch.apply.in	2010-11-12 08:29:28.000000000 -0800
