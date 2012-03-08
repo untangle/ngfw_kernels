@@ -1,10 +1,7 @@
-diff --git ./linux-2.6-2.6.32/debian/bin/gencontrol.py ./linux-2.6-2.6.32/debian/bin/gencontrol.py
-old mode 100644
-new mode 100755
-diff --git ./linux-2.6-2.6.32/debian/changelog ./linux-2.6-2.6.32/debian/changelog
+diff --git ./debian/changelog ./debian/changelog
 index bcf2e3c..6f2f003 100644
---- ./linux-2.6-2.6.32/debian/changelog
-+++ ./linux-2.6-2.6.32/debian/changelog
+--- ./debian/changelog
++++ ./debian/changelog
 @@ -1,3 +1,9 @@
 +linux-2.6 (2.6.32-41untangle1) stable; urgency=low
 +
@@ -15,10 +12,10 @@ index bcf2e3c..6f2f003 100644
  linux-2.6 (2.6.32-41) stable; urgency=low
  
    [ Ben Hutchings ]
-diff --git ./linux-2.6-2.6.32/debian/config/amd64/defines ./linux-2.6-2.6.32/debian/config/amd64/defines
+diff --git ./debian/config/amd64/defines ./debian/config/amd64/defines
 index e086612..92a709a 100644
---- ./linux-2.6-2.6.32/debian/config/amd64/defines
-+++ ./linux-2.6-2.6.32/debian/config/amd64/defines
+--- ./debian/config/amd64/defines
++++ ./debian/config/amd64/defines
 @@ -5,6 +5,8 @@ ignore-changes:
  [base]
  featuresets:
@@ -28,11 +25,11 @@ index e086612..92a709a 100644
   vserver
   xen
  flavours:
-diff --git ./linux-2.6-2.6.32/debian/config/amd64/untangle+xen/defines ./linux-2.6-2.6.32/debian/config/amd64/untangle+xen/defines
+diff --git ./debian/config/amd64/untangle+xen/defines ./debian/config/amd64/untangle+xen/defines
 new file mode 100644
 index 0000000..ac416b2
 --- /dev/null
-+++ ./linux-2.6-2.6.32/debian/config/amd64/untangle+xen/defines
++++ ./debian/config/amd64/untangle+xen/defines
 @@ -0,0 +1,16 @@
 +[base]
 +flavours:
@@ -50,11 +47,11 @@ index 0000000..ac416b2
 +configs:
 +  featureset-untangle/config
 +  amd64/xen/config
-diff --git ./linux-2.6-2.6.32/debian/config/amd64/untangle/defines ./linux-2.6-2.6.32/debian/config/amd64/untangle/defines
+diff --git ./debian/config/amd64/untangle/defines ./debian/config/amd64/untangle/defines
 new file mode 100644
 index 0000000..ab475e4
 --- /dev/null
-+++ ./linux-2.6-2.6.32/debian/config/amd64/untangle/defines
++++ ./debian/config/amd64/untangle/defines
 @@ -0,0 +1,6 @@
 +[base]
 +flavours:
@@ -62,10 +59,10 @@ index 0000000..ab475e4
 +
 +[amd64_image]
 +provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-amd64
-diff --git ./linux-2.6-2.6.32/debian/config/defines ./linux-2.6-2.6.32/debian/config/defines
+diff --git ./debian/config/defines ./debian/config/defines
 index 890ed95..8cdce59 100644
---- ./linux-2.6-2.6.32/debian/config/defines
-+++ ./linux-2.6-2.6.32/debian/config/defines
+--- ./debian/config/defines
++++ ./debian/config/defines
 @@ -29,12 +29,23 @@ compiler: gcc-4.3
  featuresets:
   none
@@ -90,11 +87,11 @@ index 890ed95..8cdce59 100644
  [featureset-vserver_base]
  enabled: true
  
-diff --git ./linux-2.6-2.6.32/debian/config/featureset-untangle+xen/defines ./linux-2.6-2.6.32/debian/config/featureset-untangle+xen/defines
+diff --git ./debian/config/featureset-untangle+xen/defines ./debian/config/featureset-untangle+xen/defines
 new file mode 100644
 index 0000000..6b9cb6f
 --- /dev/null
-+++ ./linux-2.6-2.6.32/debian/config/featureset-untangle+xen/defines
++++ ./debian/config/featureset-untangle+xen/defines
 @@ -0,0 +1,14 @@
 +[abi]
 +ignore-changes: *
@@ -110,11 +107,11 @@ index 0000000..6b9cb6f
 +
 +[xen]
 +dom0-support: true
-diff --git ./linux-2.6-2.6.32/debian/config/featureset-untangle/config ./linux-2.6-2.6.32/debian/config/featureset-untangle/config
+diff --git ./debian/config/featureset-untangle/config ./debian/config/featureset-untangle/config
 new file mode 100644
 index 0000000..2b885d9
 --- /dev/null
-+++ ./linux-2.6-2.6.32/debian/config/featureset-untangle/config
++++ ./debian/config/featureset-untangle/config
 @@ -0,0 +1,62 @@
 +# CONFIG_HZ=100 is not set
 +CONFIG_HZ=1000
@@ -178,21 +175,21 @@ index 0000000..2b885d9
 +CONFIG_NF_CONNTRACK=y
 +CONFIG_NF_NAT=y
 +CONFIG_NETFILTER_XTABLES=y
-diff --git ./linux-2.6-2.6.32/debian/config/featureset-untangle/defines ./linux-2.6-2.6.32/debian/config/featureset-untangle/defines
+diff --git ./debian/config/featureset-untangle/defines ./debian/config/featureset-untangle/defines
 new file mode 100644
 index 0000000..3a0bc15
 --- /dev/null
-+++ ./linux-2.6-2.6.32/debian/config/featureset-untangle/defines
++++ ./debian/config/featureset-untangle/defines
 @@ -0,0 +1,5 @@
 +[image]
 +desc-long-part-untangle: Enables Untangle Virtual Networking.  Intended for IP network gateways.
 +desc-parts: untangle
 +desc-short-part-untangle: Untangle kernel
 +
-diff --git ./linux-2.6-2.6.32/debian/config/i386/defines ./linux-2.6-2.6.32/debian/config/i386/defines
+diff --git ./debian/config/i386/defines ./debian/config/i386/defines
 index a1c346e..61f99c6 100644
---- ./linux-2.6-2.6.32/debian/config/i386/defines
-+++ ./linux-2.6-2.6.32/debian/config/i386/defines
+--- ./debian/config/i386/defines
++++ ./debian/config/i386/defines
 @@ -5,6 +5,8 @@ ignore-changes:
  [base]
  featuresets:
@@ -202,11 +199,11 @@ index a1c346e..61f99c6 100644
   vserver
   xen
  flavours:
-diff --git ./linux-2.6-2.6.32/debian/config/i386/untangle+xen/defines ./linux-2.6-2.6.32/debian/config/i386/untangle+xen/defines
+diff --git ./debian/config/i386/untangle+xen/defines ./debian/config/i386/untangle+xen/defines
 new file mode 100644
 index 0000000..09cc2db
 --- /dev/null
-+++ ./linux-2.6-2.6.32/debian/config/i386/untangle+xen/defines
++++ ./debian/config/i386/untangle+xen/defines
 @@ -0,0 +1,16 @@
 +[base]
 +flavours:
@@ -224,11 +221,11 @@ index 0000000..09cc2db
 +  featureset-untangle/config
 +  i386/xen/config
 +
-diff --git ./linux-2.6-2.6.32/debian/config/i386/untangle/defines ./linux-2.6-2.6.32/debian/config/i386/untangle/defines
+diff --git ./debian/config/i386/untangle/defines ./debian/config/i386/untangle/defines
 new file mode 100644
 index 0000000..4cc1164
 --- /dev/null
-+++ ./linux-2.6-2.6.32/debian/config/i386/untangle/defines
++++ ./debian/config/i386/untangle/defines
 @@ -0,0 +1,9 @@
 +[base]
 +flavours:
@@ -239,11 +236,11 @@ index 0000000..4cc1164
 +configs:
 +  i386/none/config.686
 +
-diff --git ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-686.postinst ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-686.postinst
+diff --git ./debian/linux-image-2.6.32-2-untangle+xen-686.postinst ./debian/linux-image-2.6.32-2-untangle+xen-686.postinst
 new file mode 100644
 index 0000000..9709e34
 --- /dev/null
-+++ ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-686.postinst
++++ ./debian/linux-image-2.6.32-2-untangle+xen-686.postinst
 @@ -0,0 +1,28 @@
 +#!/bin/bash
 +
@@ -273,11 +270,11 @@ index 0000000..9709e34
 +exit 0
 +
 +
-diff --git ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-686.postrm ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-686.postrm
+diff --git ./debian/linux-image-2.6.32-2-untangle+xen-686.postrm ./debian/linux-image-2.6.32-2-untangle+xen-686.postrm
 new file mode 100644
 index 0000000..9ce193b
 --- /dev/null
-+++ ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-686.postrm
++++ ./debian/linux-image-2.6.32-2-untangle+xen-686.postrm
 @@ -0,0 +1,21 @@
 +#!/bin/bash
 +
@@ -300,11 +297,11 @@ index 0000000..9ce193b
 +#DEBHELPER#
 +
 +exit 0
-diff --git ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-686.prerm ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-686.prerm
+diff --git ./debian/linux-image-2.6.32-2-untangle+xen-686.prerm ./debian/linux-image-2.6.32-2-untangle+xen-686.prerm
 new file mode 100644
 index 0000000..a92c35c
 --- /dev/null
-+++ ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-686.prerm
++++ ./debian/linux-image-2.6.32-2-untangle+xen-686.prerm
 @@ -0,0 +1,23 @@
 +#!/bin/bash
 +
@@ -329,11 +326,11 @@ index 0000000..a92c35c
 +exit 0
 +
 +
-diff --git ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-amd64.postinst ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-amd64.postinst
+diff --git ./debian/linux-image-2.6.32-2-untangle+xen-amd64.postinst ./debian/linux-image-2.6.32-2-untangle+xen-amd64.postinst
 new file mode 100644
 index 0000000..fb8b116
 --- /dev/null
-+++ ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-amd64.postinst
++++ ./debian/linux-image-2.6.32-2-untangle+xen-amd64.postinst
 @@ -0,0 +1,28 @@
 +#!/bin/bash
 +
@@ -363,11 +360,11 @@ index 0000000..fb8b116
 +exit 0
 +
 +
-diff --git ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-amd64.postrm ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-amd64.postrm
+diff --git ./debian/linux-image-2.6.32-2-untangle+xen-amd64.postrm ./debian/linux-image-2.6.32-2-untangle+xen-amd64.postrm
 new file mode 100644
 index 0000000..9ce193b
 --- /dev/null
-+++ ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-amd64.postrm
++++ ./debian/linux-image-2.6.32-2-untangle+xen-amd64.postrm
 @@ -0,0 +1,21 @@
 +#!/bin/bash
 +
@@ -390,11 +387,11 @@ index 0000000..9ce193b
 +#DEBHELPER#
 +
 +exit 0
-diff --git ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-amd64.prerm ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-amd64.prerm
+diff --git ./debian/linux-image-2.6.32-2-untangle+xen-amd64.prerm ./debian/linux-image-2.6.32-2-untangle+xen-amd64.prerm
 new file mode 100644
 index 0000000..5ce55e2
 --- /dev/null
-+++ ./linux-2.6-2.6.32/debian/linux-image-2.6.32-2-untangle+xen-amd64.prerm
++++ ./debian/linux-image-2.6.32-2-untangle+xen-amd64.prerm
 @@ -0,0 +1,23 @@
 +#!/bin/bash
 +
@@ -419,10 +416,10 @@ index 0000000..5ce55e2
 +exit 0
 +
 +
-diff --git ./linux-2.6-2.6.32/debian/patches/series/40-extra ./linux-2.6-2.6.32/debian/patches/series/40-extra
+diff --git ./debian/patches/series/40-extra ./debian/patches/series/40-extra
 index 530549d..a338aa5 100644
---- ./linux-2.6-2.6.32/debian/patches/series/40-extra
-+++ ./linux-2.6-2.6.32/debian/patches/series/40-extra
+--- ./debian/patches/series/40-extra
++++ ./debian/patches/series/40-extra
 @@ -69,3 +69,14 @@
  + features/all/xen/xen-improvements-to-VIRQ_DEBUG-output.patch featureset=xen
  
@@ -438,10 +435,10 @@ index 530549d..a338aa5 100644
 ++ features/all/untangle/014-nfqueue-untangle-mode.patch featureset=untangle
 ++ features/all/untangle/020-imq-debian.patch featureset=untangle
 ++ features/all/untangle/030-ipsec.patch featureset=untangle
-diff --git ./linux-2.6-2.6.32/debian/templates/patch.apply.in ./linux-2.6-2.6.32/debian/templates/patch.apply.in
+diff --git ./debian/templates/patch.apply.in ./debian/templates/patch.apply.in
 index dd35c65..8d366b9 100644
---- ./linux-2.6-2.6.32/debian/templates/patch.apply.in
-+++ ./linux-2.6-2.6.32/debian/templates/patch.apply.in
+--- ./debian/templates/patch.apply.in
++++ ./debian/templates/patch.apply.in
 @@ -14,6 +14,10 @@ upstream = "@upstream@"
  class MatchExtra(object):
      def __init__(self, arch, featureset):
