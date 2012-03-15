@@ -67,14 +67,14 @@ Index: source_i386_untangle/net/ipv4/af_inet.c
 ===================================================================
 --- source_i386_untangle.orig/net/ipv4/af_inet.c	2008-07-13 14:51:29.000000000 -0700
 +++ source_i386_untangle/net/ipv4/af_inet.c	2008-10-03 10:48:23.000000000 -0700
-@@ -811,6 +811,7 @@
- 		case SIOCGSTAMPNS:
- 			err = sock_get_timestampns(sk, (struct timespec __user *)arg);
- 			break;
-+		case SIOCFINDEV:
- 		case SIOCADDRT:
- 		case SIOCDELRT:
- 		case SIOCRTMSG:
+@@ -815,6 +815,7 @@
+ 	case SIOCGSTAMPNS:
+ 		err = sock_get_timestampns(sk, (struct timespec __user *)arg);
+ 		break;
++        case SIOCFINDEV:
+ 	case SIOCADDRT:
+ 	case SIOCDELRT:
+ 	case SIOCRTMSG:
 Index: source_i386_untangle/net/ipv4/fib_frontend.c
 ===================================================================
 --- source_i386_untangle.orig/net/ipv4/fib_frontend.c	2008-07-13 14:51:29.000000000 -0700

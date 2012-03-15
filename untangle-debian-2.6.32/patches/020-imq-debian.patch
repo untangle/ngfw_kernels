@@ -784,7 +784,7 @@ diff -urN build_i386_untangle_686.orig/include/linux/netfilter_ipv6/ip6t_IMQ.h b
 diff -urN build_i386_untangle_686.orig/include/linux/skbuff.h build_i386_untangle_686/include/linux/skbuff.h
 --- build_i386_untangle_686.orig/include/linux/skbuff.h	2010-11-23 09:50:38.000000000 -0800
 +++ build_i386_untangle_686/include/linux/skbuff.h	2010-11-23 09:52:10.000000000 -0800
-@@ -28,6 +28,9 @@
+@@ -29,6 +29,9 @@
  #include <linux/rcupdate.h>
  #include <linux/dmaengine.h>
  #include <linux/hrtimer.h>
@@ -792,8 +792,8 @@ diff -urN build_i386_untangle_686.orig/include/linux/skbuff.h build_i386_untangl
 +#include <linux/imq.h>
 +#endif
  
- #define HAVE_ALLOC_SKB		/* For the drivers to know */
- #define HAVE_ALIGNABLE_SKB	/* Ditto 8)		   */
+ /* Don't change this without changing skb_csum_unnecessary! */
+ #define CHECKSUM_NONE 0
 @@ -270,6 +273,9 @@
  	 * first. This is owned by whoever has the skb queued ATM.
  	 */
@@ -826,7 +826,7 @@ diff -urN build_i386_untangle_686.orig/include/linux/skbuff.h build_i386_untangl
  #ifdef CONFIG_NETWORK_SECMARK
  	__u32			secmark;
  #endif
-@@ -348,6 +362,12 @@
+@@ -428,6 +428,12 @@
  
  #include <asm/system.h>
  
@@ -836,9 +836,9 @@ diff -urN build_i386_untangle_686.orig/include/linux/skbuff.h build_i386_untangl
 +extern int skb_restore_cb(struct sk_buff *skb);
 +#endif
 +
- extern void kfree_skb(struct sk_buff *skb);
- extern void	       __kfree_skb(struct sk_buff *skb);
- extern struct sk_buff *__alloc_skb(unsigned int size,
+ #ifdef CONFIG_HAS_DMA
+ #include <linux/dma-mapping.h>
+ extern int skb_dma_map(struct device *dev, struct sk_buff *skb,
 @@ -1624,6 +1644,10 @@
  	dst->nfct_reasm = src->nfct_reasm;
  	nf_conntrack_get_reasm(src->nfct_reasm);
@@ -879,9 +879,9 @@ diff -urN build_i386_untangle_686.orig/net/core/dev.c build_i386_untangle_686/ne
  #include <linux/proc_fs.h>
  #include <linux/seq_file.h>
  #include <linux/stat.h>
-@@ -1569,7 +1572,11 @@
- int dev_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
- {
+@@ -1707,7 +1707,11 @@
+ 	int rc;
+ 
  	if (likely(!skb->next)) {
 -		if (!list_empty(&ptype_all))
 +		if (!list_empty(&ptype_all)
@@ -1015,15 +1015,14 @@ diff -urN build_i386_untangle_686.orig/net/core/skbuff.c build_i386_untangle_686
  #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
  	nf_conntrack_put(skb->nfct);
  	nf_conntrack_put_reasm(skb->nfct_reasm);
-@@ -430,6 +529,9 @@
+@@ -634,5 +634,8 @@
  	new->sp			= secpath_get(old->sp);
  #endif
  	memcpy(new->cb, old->cb, sizeof(old->cb));
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
 +	skb_copy_stored_cb(new, old);
 +#endif
- 	new->csum_start		= old->csum_start;
- 	new->csum_offset	= old->csum_offset;
+ 	new->csum		= old->csum;
  	new->local_df		= old->local_df;
 @@ -2356,6 +2458,13 @@
  						0,
@@ -1042,9 +1041,9 @@ diff -urN build_i386_untangle_686.orig/net/core/skbuff.c build_i386_untangle_686
 diff -urN build_i386_untangle_686.orig/net/netfilter/Kconfig build_i386_untangle_686/net/netfilter/Kconfig
 --- build_i386_untangle_686.orig/net/netfilter/Kconfig	2010-11-23 09:50:53.000000000 -0800
 +++ build_i386_untangle_686/net/netfilter/Kconfig	2010-11-23 09:52:10.000000000 -0800
-@@ -342,6 +342,18 @@
- 
- 	  To compile it as a module, choose M here.  If unsure, say N.
+@@ -404,6 +404,18 @@
+ 	  For more information on the LEDs available on your system, see
+ 	  Documentation/leds-class.txt
  
 +config NETFILTER_XT_TARGET_IMQ
 +        tristate '"IMQ" target support'
@@ -1060,18 +1059,18 @@ diff -urN build_i386_untangle_686.orig/net/netfilter/Kconfig build_i386_untangle
 +
  config NETFILTER_XT_TARGET_MARK
  	tristate '"MARK" target support'
- 	depends on NETFILTER_XTABLES
+ 	default m if NETFILTER_ADVANCED=n
 diff -urN build_i386_untangle_686.orig/net/netfilter/Makefile build_i386_untangle_686/net/netfilter/Makefile
 --- build_i386_untangle_686.orig/net/netfilter/Makefile	2010-11-23 09:50:53.000000000 -0800
 +++ build_i386_untangle_686/net/netfilter/Makefile	2010-11-23 09:52:10.000000000 -0800
-@@ -42,6 +42,7 @@
+@@ -45,6 +45,7 @@
  obj-$(CONFIG_NETFILTER_XT_TARGET_CONNMARK) += xt_CONNMARK.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_CONNSECMARK) += xt_CONNSECMARK.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_DSCP) += xt_DSCP.o
 +obj-$(CONFIG_NETFILTER_XT_TARGET_IMQ) += xt_IMQ.o
+ obj-$(CONFIG_NETFILTER_XT_TARGET_HL) += xt_HL.o
+ obj-$(CONFIG_NETFILTER_XT_TARGET_LED) += xt_LED.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_MARK) += xt_MARK.o
- obj-$(CONFIG_NETFILTER_XT_TARGET_NFLOG) += xt_NFLOG.o
- obj-$(CONFIG_NETFILTER_XT_TARGET_NFQUEUE) += xt_NFQUEUE.o
 diff -urN build_i386_untangle_686.orig/net/netfilter/nf_queue.c build_i386_untangle_686/net/netfilter/nf_queue.c
 --- build_i386_untangle_686.orig/net/netfilter/nf_queue.c	2010-11-23 09:50:53.000000000 -0800
 +++ build_i386_untangle_686/net/netfilter/nf_queue.c	2010-11-23 09:52:10.000000000 -0800

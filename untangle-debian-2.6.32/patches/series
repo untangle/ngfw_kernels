@@ -7,4 +7,4 @@
 013-iptable_tune.patch
 014-nfqueue-untangle-mode.patch
 020-imq-debian.patch
-030-ipsec.patch
+#030-ipsec.patch

@@ -250,11 +250,11 @@ index 530549d..a338aa5 100644
 ++ features/all/untangle/007-bridge-mac-ageing-fix.patch featureset=untangle
 ++ features/all/untangle/009-extensions.patch featureset=untangle
 ++ features/all/untangle/010-icmp_frag.patch featureset=untangle
-++ features/all/untangle/011-nonlocal_binding.patch featureset=untangle
++#+ features/all/untangle/011-nonlocal_binding.patch featureset=untangle
 ++ features/all/untangle/013-iptable_tune.patch featureset=untangle
 ++ features/all/untangle/014-nfqueue-untangle-mode.patch featureset=untangle
-++ features/all/untangle/020-imq-debian.patch featureset=untangle
-++ features/all/untangle/030-ipsec.patch featureset=untangle
++#+ features/all/untangle/020-imq-debian.patch featureset=untangle
++#+ features/all/untangle/030-ipsec.patch featureset=untangle
 diff --git ./debian/templates/patch.apply.in ./debian/templates/patch.apply.in
 index dd35c65..8d366b9 100644
 --- ./debian/templates/patch.apply.in

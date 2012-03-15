@@ -25,10 +25,11 @@ Index: source_i386_untangle/net/ipv4/netfilter/Makefile
 ===================================================================
 --- source_i386_untangle.orig/net/ipv4/netfilter/Makefile	2008-07-13 14:51:29.000000000 -0700
 +++ source_i386_untangle/net/ipv4/netfilter/Makefile	2008-10-03 10:44:10.000000000 -0700
-@@ -49,6 +49,7 @@
+@@ -50,7 +50,8 @@
+ # matches
+ obj-$(CONFIG_IP_NF_MATCH_ADDRTYPE) += ipt_addrtype.o
+ obj-$(CONFIG_IP_NF_MATCH_AH) += ipt_ah.o
  obj-$(CONFIG_IP_NF_MATCH_ECN) += ipt_ecn.o
- obj-$(CONFIG_IP_NF_MATCH_RECENT) += ipt_recent.o
- obj-$(CONFIG_IP_NF_MATCH_TTL) += ipt_ttl.o
 +obj-$(CONFIG_IP_NF_MATCH_BITMARK) += ipt_bitmark.o
  
  # targets
@@ -148,9 +149,9 @@ Index: source_i386_untangle/net/ipv4/netfilter/Kconfig
 ===================================================================
 --- source_i386_untangle.orig/net/ipv4/netfilter/Kconfig	2008-07-13 14:51:29.000000000 -0700
 +++ source_i386_untangle/net/ipv4/netfilter/Kconfig	2008-10-03 10:44:10.000000000 -0700
-@@ -111,6 +111,16 @@
- 	  If you want to compile it as a module, say M here and read
- 	  <file:Documentation/kbuild/modules.txt>.  If unsure, say `N'.
+@@ -101,6 +101,16 @@
+ 	(e.g. when running oldconfig). It selects
+ 	CONFIG_NETFILTER_XT_MATCH_HL.
  
 +config IP_NF_MATCH_BITMARK
 +       tristate "netfilter BITMARK match support"
