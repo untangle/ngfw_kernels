@@ -1,28 +1,28 @@
-diff -urN build_i386_none_686.unt/include/linux/in.h build_i386_none_686/include/linux/in.h
---- build_i386_none_686.unt/include/linux/in.h	2010-07-23 15:58:04.000000000 -0700
-+++ build_i386_none_686/include/linux/in.h	2010-07-23 15:56:52.000000000 -0700
-@@ -75,6 +75,7 @@
- #define IP_IPSEC_POLICY	16
+diff -urN source_amd64_untangle/include/linux/in.h source_amd64_untangle.modified/include/linux/in.h
+--- source_amd64_untangle/include/linux/in.h	2012-03-22 13:31:30.000000000 -0700
++++ source_amd64_untangle.modified/include/linux/in.h	2012-03-22 13:32:48.000000000 -0700
+@@ -76,6 +76,7 @@
  #define IP_XFRM_POLICY	17
  #define IP_PASSSEC	18
-+#define IP_NONLOCAL	19
+ #define IP_TRANSPARENT	19
++#define IP_NONLOCAL	20
  
  /* BSD compatibility */
  #define IP_RECVRETOPTS	IP_RETOPTS
-diff -urN build_i386_none_686.unt/include/net/ip.h build_i386_none_686/include/net/ip.h
---- build_i386_none_686.unt/include/net/ip.h	2010-07-23 15:58:04.000000000 -0700
-+++ build_i386_none_686/include/net/ip.h	2010-07-23 15:56:52.000000000 -0700
-@@ -335,6 +335,7 @@
- 	IP_DEFRAG_CALL_RA_CHAIN,
+diff -urN source_amd64_untangle/include/net/ip.h source_amd64_untangle.modified/include/net/ip.h
+--- source_amd64_untangle/include/net/ip.h	2012-03-22 13:31:30.000000000 -0700
++++ source_amd64_untangle.modified/include/net/ip.h	2012-03-22 13:34:30.000000000 -0700
+@@ -354,6 +354,7 @@
  	IP_DEFRAG_CONNTRACK_IN,
  	IP_DEFRAG_CONNTRACK_OUT,
+ 	IP_DEFRAG_CONNTRACK_BRIDGE_IN,
 +	IP_DEFRAG_NONLOCAL,
  	IP_DEFRAG_VS_IN,
  	IP_DEFRAG_VS_OUT,
  	IP_DEFRAG_VS_FWD
-diff -urN build_i386_none_686.unt/include/net/route.h build_i386_none_686/include/net/route.h
---- build_i386_none_686.unt/include/net/route.h	2010-07-23 15:57:32.000000000 -0700
-+++ build_i386_none_686/include/net/route.h	2010-07-23 15:56:52.000000000 -0700
+diff -urN source_amd64_untangle/include/net/route.h source_amd64_untangle.modified/include/net/route.h
+--- source_amd64_untangle/include/net/route.h	2009-12-02 19:51:21.000000000 -0800
++++ source_amd64_untangle.modified/include/net/route.h	2012-03-22 13:32:09.000000000 -0700
 @@ -40,12 +40,19 @@
  #endif
  
@@ -44,10 +44,10 @@ diff -urN build_i386_none_686.unt/include/net/route.h build_i386_none_686/includ
  
  struct fib_nh;
  struct inet_peer;
-diff -urN build_i386_none_686.unt/include/net/tcp.h build_i386_none_686/include/net/tcp.h
---- build_i386_none_686.unt/include/net/tcp.h	2010-07-23 15:57:32.000000000 -0700
-+++ build_i386_none_686/include/net/tcp.h	2010-07-23 16:01:25.000000000 -0700
-@@ -279,6 +279,8 @@
+diff -urN source_amd64_untangle/include/net/tcp.h source_amd64_untangle.modified/include/net/tcp.h
+--- source_amd64_untangle/include/net/tcp.h	2012-03-22 13:31:20.000000000 -0700
++++ source_amd64_untangle.modified/include/net/tcp.h	2012-03-22 13:32:09.000000000 -0700
+@@ -302,6 +302,8 @@
  
  extern int			tcp_v4_rcv(struct sk_buff *skb);
  
@@ -56,19 +56,19 @@ diff -urN build_i386_none_686.unt/include/net/tcp.h build_i386_none_686/include/
  extern int			tcp_v4_remember_stamp(struct sock *sk);
  
  extern int		    	tcp_v4_tw_remember_stamp(struct inet_timewait_sock *tw);
-diff -urN build_i386_none_686.unt/net/ipv4/ip_sockglue.c build_i386_none_686/net/ipv4/ip_sockglue.c
---- build_i386_none_686.unt/net/ipv4/ip_sockglue.c	2010-07-23 15:58:04.000000000 -0700
-+++ build_i386_none_686/net/ipv4/ip_sockglue.c	2010-07-23 15:56:52.000000000 -0700
-@@ -466,7 +466,7 @@
- 			     (1<<IP_TTL) | (1<<IP_HDRINCL) |
+diff -urN source_amd64_untangle/net/ipv4/ip_sockglue.c source_amd64_untangle.modified/net/ipv4/ip_sockglue.c
+--- source_amd64_untangle/net/ipv4/ip_sockglue.c	2012-03-22 13:31:30.000000000 -0700
++++ source_amd64_untangle.modified/net/ipv4/ip_sockglue.c	2012-03-22 13:36:06.000000000 -0700
+@@ -495,7 +495,7 @@
  			     (1<<IP_MTU_DISCOVER) | (1<<IP_RECVERR) |
  			     (1<<IP_ROUTER_ALERT) | (1<<IP_FREEBIND) |
--			     (1<<IP_PASSSEC) | (1<<IP_RECVNFMARK))) ||
-+			     (1<<IP_PASSSEC) | (1<<IP_RECVNFMARK) | (1<<IP_NONLOCAL))) ||
+ 			     (1<<IP_PASSSEC) | (1<<IP_TRANSPARENT) |
+-                 (1<<IP_RECVNFMARK))) ||
++                 (1<<IP_RECVNFMARK) | (1<<IP_NONLOCAL))) ||
  	    optname == IP_MULTICAST_TTL ||
- 	    optname == IP_MULTICAST_LOOP) {
- 		if (optlen >= sizeof(int)) {
-@@ -615,6 +615,16 @@
+ 	    optname == IP_MULTICAST_ALL ||
+ 	    optname == IP_MULTICAST_LOOP ||
+@@ -652,6 +652,16 @@
  		if (!val)
  			skb_queue_purge(&sk->sk_error_queue);
  		break;
@@ -85,9 +85,9 @@ diff -urN build_i386_none_686.unt/net/ipv4/ip_sockglue.c build_i386_none_686/net
  	case IP_MULTICAST_TTL:
  		if (sk->sk_type == SOCK_STREAM)
  			goto e_inval;
-diff -urN build_i386_none_686.unt/net/ipv4/netfilter/ip_nonlocal.c build_i386_none_686/net/ipv4/netfilter/ip_nonlocal.c
---- build_i386_none_686.unt/net/ipv4/netfilter/ip_nonlocal.c	1969-12-31 16:00:00.000000000 -0800
-+++ build_i386_none_686/net/ipv4/netfilter/ip_nonlocal.c	2010-07-23 16:00:24.000000000 -0700
+diff -urN source_amd64_untangle/net/ipv4/netfilter/ip_nonlocal.c source_amd64_untangle.modified/net/ipv4/netfilter/ip_nonlocal.c
+--- source_amd64_untangle/net/ipv4/netfilter/ip_nonlocal.c	1969-12-31 16:00:00.000000000 -0800
++++ source_amd64_untangle.modified/net/ipv4/netfilter/ip_nonlocal.c	2012-03-22 13:32:09.000000000 -0700
 @@ -0,0 +1,100 @@
 +#include <linux/types.h>
 +#include <linux/ip.h>
@@ -189,10 +189,10 @@ diff -urN build_i386_none_686.unt/net/ipv4/netfilter/ip_nonlocal.c build_i386_no
 +module_exit(fini);
 +
 +
-diff -urN build_i386_none_686.unt/net/ipv4/netfilter/iptable_mangle.c build_i386_none_686/net/ipv4/netfilter/iptable_mangle.c
---- build_i386_none_686.unt/net/ipv4/netfilter/iptable_mangle.c	2010-07-23 15:57:28.000000000 -0700
-+++ build_i386_none_686/net/ipv4/netfilter/iptable_mangle.c	2010-07-23 15:56:52.000000000 -0700
-@@ -154,7 +154,7 @@
+diff -urN source_amd64_untangle/net/ipv4/netfilter/iptable_mangle.c source_amd64_untangle.modified/net/ipv4/netfilter/iptable_mangle.c
+--- source_amd64_untangle/net/ipv4/netfilter/iptable_mangle.c	2009-12-02 19:51:21.000000000 -0800
++++ source_amd64_untangle.modified/net/ipv4/netfilter/iptable_mangle.c	2012-03-22 13:32:09.000000000 -0700
+@@ -149,7 +149,7 @@
  
  		if (iph->saddr != saddr ||
  		    iph->daddr != daddr ||
@@ -201,10 +201,10 @@ diff -urN build_i386_none_686.unt/net/ipv4/netfilter/iptable_mangle.c build_i386
  		    iph->tos != tos)
  			if (ip_route_me_harder(skb, RTN_UNSPEC))
  				ret = NF_DROP;
-diff -urN build_i386_none_686.unt/net/ipv4/netfilter/Kconfig build_i386_none_686/net/ipv4/netfilter/Kconfig
---- build_i386_none_686.unt/net/ipv4/netfilter/Kconfig	2010-07-23 15:58:07.000000000 -0700
-+++ build_i386_none_686/net/ipv4/netfilter/Kconfig	2010-07-23 15:56:52.000000000 -0700
-@@ -31,6 +31,13 @@
+diff -urN source_amd64_untangle/net/ipv4/netfilter/Kconfig source_amd64_untangle.modified/net/ipv4/netfilter/Kconfig
+--- source_amd64_untangle/net/ipv4/netfilter/Kconfig	2012-03-22 13:31:30.000000000 -0700
++++ source_amd64_untangle.modified/net/ipv4/netfilter/Kconfig	2012-03-22 13:32:09.000000000 -0700
+@@ -36,6 +36,13 @@
  
  	  If unsure, say Y.
  
@@ -218,9 +218,9 @@ diff -urN build_i386_none_686.unt/net/ipv4/netfilter/Kconfig build_i386_none_686
  config IP_NF_FRAG_ACCEPT
  	tristate "ICMP UDP Fragmentation Accept"
  	help
-diff -urN build_i386_none_686.unt/net/ipv4/netfilter/Makefile build_i386_none_686/net/ipv4/netfilter/Makefile
---- build_i386_none_686.unt/net/ipv4/netfilter/Makefile	2010-07-23 15:58:07.000000000 -0700
-+++ build_i386_none_686/net/ipv4/netfilter/Makefile	2010-07-23 15:56:52.000000000 -0700
+diff -urN source_amd64_untangle/net/ipv4/netfilter/Makefile source_amd64_untangle.modified/net/ipv4/netfilter/Makefile
+--- source_amd64_untangle/net/ipv4/netfilter/Makefile	2012-03-22 13:31:30.000000000 -0700
++++ source_amd64_untangle.modified/net/ipv4/netfilter/Makefile	2012-03-22 13:32:09.000000000 -0700
 @@ -16,6 +16,9 @@
  # icmp udp fragmentation accept
  obj-$(CONFIG_IP_NF_FRAG_ACCEPT) += ip_frag_accept.o
@@ -231,10 +231,10 @@ diff -urN build_i386_none_686.unt/net/ipv4/netfilter/Makefile build_i386_none_68
  # connection tracking
  obj-$(CONFIG_NF_CONNTRACK_IPV4) += nf_conntrack_ipv4.o
  
-diff -urN build_i386_none_686.unt/net/ipv4/raw.c build_i386_none_686/net/ipv4/raw.c
---- build_i386_none_686.unt/net/ipv4/raw.c	2010-07-23 15:58:04.000000000 -0700
-+++ build_i386_none_686/net/ipv4/raw.c	2010-07-23 15:56:52.000000000 -0700
-@@ -528,6 +528,9 @@
+diff -urN source_amd64_untangle/net/ipv4/raw.c source_amd64_untangle.modified/net/ipv4/raw.c
+--- source_amd64_untangle/net/ipv4/raw.c	2012-03-22 13:31:30.000000000 -0700
++++ source_amd64_untangle.modified/net/ipv4/raw.c	2012-03-22 13:32:09.000000000 -0700
+@@ -540,6 +540,9 @@
  	tos = RT_CONN_FLAGS(sk);
  	if (msg->msg_flags & MSG_DONTROUTE)
  		tos |= RTO_ONLINK;
@@ -244,10 +244,10 @@ diff -urN build_i386_none_686.unt/net/ipv4/raw.c build_i386_none_686/net/ipv4/ra
  
  	if (ipv4_is_multicast(daddr)) {
  		if (!ipc.oif)
-diff -urN build_i386_none_686.unt/net/ipv4/route.c build_i386_none_686/net/ipv4/route.c
---- build_i386_none_686.unt/net/ipv4/route.c	2010-07-23 15:57:28.000000000 -0700
-+++ build_i386_none_686/net/ipv4/route.c	2010-07-23 15:56:52.000000000 -0700
-@@ -1962,8 +1962,10 @@
+diff -urN source_amd64_untangle/net/ipv4/route.c source_amd64_untangle.modified/net/ipv4/route.c
+--- source_amd64_untangle/net/ipv4/route.c	2012-03-22 13:31:28.000000000 -0700
++++ source_amd64_untangle.modified/net/ipv4/route.c	2012-03-22 13:37:37.000000000 -0700
+@@ -2151,8 +2151,10 @@
  		goto local_input;
  	}
  
@@ -260,38 +260,35 @@ diff -urN build_i386_none_686.unt/net/ipv4/route.c build_i386_none_686/net/ipv4/
  	if (res.type != RTN_UNICAST)
  		goto martian_destination;
  
-@@ -2315,8 +2317,19 @@
- 
- 		/* It is equivalent to inet_addr_type(saddr) == RTN_LOCAL */
- 		dev_out = ip_dev_find(net, oldflp->fl4_src);
-+#ifdef CONFIG_IP_NF_NONLOCAL
-+		/* If address is not local, test for nonlocal flag;
-+		 * if address is local --- clear the flag.
-+		 */
-+		if (dev_out == NULL) {
-+		        if (!(oldflp->fl4_tos & RTO_TPROXY) || inet_addr_type(net,oldflp->fl4_src) != RTN_UNICAST)
-+			        goto out;
-+			flags |= RTCF_TPROXY;
-+		}
-+#else
- 		if (dev_out == NULL)
- 			goto out;
-+#endif
- 
- 		/* I removed check for oif == dev_out->oif here.
- 		   It was wrong for two reasons:
-@@ -2327,6 +2340,7 @@
+@@ -2516,12 +2518,24 @@
  		 */
  
  		if (oldflp->oif == 0
 +                    && dev_out
  		    && (ipv4_is_multicast(oldflp->fl4_dst) ||
  			oldflp->fl4_dst == htonl(0xFFFFFFFF))) {
+ 			/* It is equivalent to inet_addr_type(saddr) == RTN_LOCAL */
+ 			dev_out = ip_dev_find(net, oldflp->fl4_src);
++#ifdef CONFIG_IP_NF_NONLOCAL
++            /* If address is not local, test for nonlocal flag;
++             * if address is local --- clear the flag.
++             */
++            if (dev_out == NULL) {
++ 		        if (!(oldflp->fl4_tos & RTO_TPROXY) || inet_addr_type(net,oldflp->fl4_src) != RTN_UNICAST)
++ 			        goto out;
++                flags |= RTCF_TPROXY;
++            }
++#else
+ 			if (dev_out == NULL)
+ 				goto out;
++#endif
+ 
  			/* Special hack: user can direct multicasts
-diff -urN build_i386_none_686.unt/net/ipv4/tcp_ipv4.c build_i386_none_686/net/ipv4/tcp_ipv4.c
---- build_i386_none_686.unt/net/ipv4/tcp_ipv4.c	2010-07-23 15:58:04.000000000 -0700
-+++ build_i386_none_686/net/ipv4/tcp_ipv4.c	2010-07-23 16:01:12.000000000 -0700
-@@ -1736,6 +1736,105 @@
+ 			   and limited broadcast via necessary interface
+diff -urN source_amd64_untangle/net/ipv4/tcp_ipv4.c source_amd64_untangle.modified/net/ipv4/tcp_ipv4.c
+--- source_amd64_untangle/net/ipv4/tcp_ipv4.c	2012-03-22 13:31:30.000000000 -0700
++++ source_amd64_untangle.modified/net/ipv4/tcp_ipv4.c	2012-03-22 13:32:09.000000000 -0700
+@@ -1702,6 +1702,105 @@
  	goto discard_it;
  }
  
