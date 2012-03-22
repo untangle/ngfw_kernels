@@ -1,10 +1,9 @@
-Index: source_i386_untangle/include/linux/in.h
-===================================================================
---- source_i386_untangle.orig/include/linux/in.h	2008-07-13 14:51:29.000000000 -0700
-+++ source_i386_untangle/include/linux/in.h	2008-10-03 14:22:17.000000000 -0700
-@@ -79,6 +79,12 @@
- /* BSD compatibility */
- #define IP_RECVRETOPTS	IP_RETOPTS
+diff -urN source/include/linux/in.h source.modified/include/linux/in.h
+--- source/include/linux/in.h	2009-12-02 19:51:21.000000000 -0800
++++ source.modified/include/linux/in.h	2012-03-22 12:37:07.000000000 -0700
+@@ -84,6 +84,12 @@
+ #define IP_ORIGDSTADDR       20
+ #define IP_RECVORIGDSTADDR   IP_ORIGDSTADDR
  
 +/* Extensions */
 +#define IP_SADDR	20
@@ -15,7 +14,7 @@ Index: source_i386_untangle/include/linux/in.h
  /* IP_MTU_DISCOVER values */
  #define IP_PMTUDISC_DONT		0	/* Never send DF frames */
  #define IP_PMTUDISC_WANT		1	/* Use per route hints	*/
-@@ -189,6 +195,10 @@
+@@ -195,6 +201,10 @@
  };
  #define sin_zero	__pad		/* for BSD UNIX comp. -FvK	*/
  
@@ -26,10 +25,9 @@ Index: source_i386_untangle/include/linux/in.h
  
  /*
   * Definitions of the bits in an Internet address integer.
-Index: source_i386_untangle/include/linux/udp.h
-===================================================================
---- source_i386_untangle.orig/include/linux/udp.h	2008-07-13 14:51:29.000000000 -0700
-+++ source_i386_untangle/include/linux/udp.h	2008-10-03 11:41:24.000000000 -0700
+diff -urN source/include/linux/udp.h source.modified/include/linux/udp.h
+--- source/include/linux/udp.h	2009-12-02 19:51:21.000000000 -0800
++++ source.modified/include/linux/udp.h	2012-03-22 12:37:07.000000000 -0700
 @@ -30,6 +30,15 @@
  #define UDP_CORK	1	/* Never send partially complete segments */
  #define UDP_ENCAP	100	/* Set the socket to accept encapsulated packets */
@@ -46,11 +44,10 @@ Index: source_i386_untangle/include/linux/udp.h
  /* UDP encapsulation types */
  #define UDP_ENCAP_ESPINUDP_NON_IKE	1 /* draft-ietf-ipsec-nat-t-ike-00/01 */
  #define UDP_ENCAP_ESPINUDP	2 /* draft-ietf-ipsec-udp-encaps-06 */
-Index: source_i386_untangle/include/net/ip.h
-===================================================================
---- source_i386_untangle.orig/include/net/ip.h	2008-07-13 14:51:29.000000000 -0700
-+++ source_i386_untangle/include/net/ip.h	2008-10-03 11:41:24.000000000 -0700
-@@ -37,6 +37,10 @@
+diff -urN source/include/net/ip.h source.modified/include/net/ip.h
+--- source/include/net/ip.h	2012-03-22 12:34:35.000000000 -0700
++++ source.modified/include/net/ip.h	2012-03-22 12:40:04.000000000 -0700
+@@ -38,6 +38,10 @@
  	struct ip_options	opt;		/* Compiled IP options		*/
  	unsigned char		flags;
  
@@ -61,7 +58,7 @@ Index: source_i386_untangle/include/net/ip.h
  #define IPSKB_FORWARDED		1
  #define IPSKB_XFRM_TUNNEL_SIZE	2
  #define IPSKB_XFRM_TRANSFORMED	4
-@@ -54,6 +58,12 @@
+@@ -55,6 +59,13 @@
  	__be32			addr;
  	int			oif;
  	struct ip_options	*opt;
@@ -71,14 +68,14 @@ Index: source_i386_untangle/include/net/ip.h
 +    u8 pkt_ip_tos;
 +    u16 pkt_udp_sport;
 +    u32 nfmark;
++
+ 	union skb_shared_tx	shtx;
  };
  
- #define IPCB(skb) ((struct inet_skb_parm*)((skb)->cb))
-Index: source_i386_untangle/include/net/sock.h
-===================================================================
---- source_i386_untangle.orig/include/net/sock.h	2008-07-13 14:51:29.000000000 -0700
-+++ source_i386_untangle/include/net/sock.h	2008-10-03 14:30:08.000000000 -0700
-@@ -247,6 +247,7 @@
+diff -urN source/include/net/sock.h source.modified/include/net/sock.h
+--- source/include/net/sock.h	2012-03-22 12:34:40.000000000 -0700
++++ source.modified/include/net/sock.h	2012-03-22 12:37:07.000000000 -0700
+@@ -267,6 +267,7 @@
  	int			sk_rcvlowat;
  	unsigned long 		sk_flags;
  	unsigned long	        sk_lingertime;
@@ -86,8 +83,8 @@ Index: source_i386_untangle/include/net/sock.h
  	struct sk_buff_head	sk_error_queue;
  	struct proto		*sk_prot_creator;
  	rwlock_t		sk_callback_lock;
-@@ -272,6 +273,12 @@
- 	void			*sk_security;
+@@ -294,6 +295,12 @@
+ #endif
  	__u32			sk_mark;
  	/* XXX 4 bytes hole on 64 bit */
 +
@@ -99,32 +96,30 @@ Index: source_i386_untangle/include/net/sock.h
  	void			(*sk_state_change)(struct sock *sk);
  	void			(*sk_data_ready)(struct sock *sk, int bytes);
  	void			(*sk_write_space)(struct sock *sk);
-Index: source_i386_untangle/net/ipv4/icmp.c
-===================================================================
---- source_i386_untangle.orig/net/ipv4/icmp.c	2008-07-13 14:51:29.000000000 -0700
-+++ source_i386_untangle/net/ipv4/icmp.c	2008-10-03 11:45:11.000000000 -0700
-@@ -372,6 +372,8 @@
- 	if (icmp_xmit_lock(sk))
+diff -urN source/net/ipv4/icmp.c source.modified/net/ipv4/icmp.c
+--- source/net/ipv4/icmp.c	2009-12-02 19:51:21.000000000 -0800
++++ source.modified/net/ipv4/icmp.c	2012-03-22 12:37:07.000000000 -0700
+@@ -370,6 +370,8 @@
  		return;
+ 	inet = inet_sk(sk);
  
 +	memset(&ipc, 0, sizeof(ipc));
 +
  	icmp_param->data.icmph.checksum = 0;
  
  	inet->tos = ip_hdr(skb)->tos;
-@@ -532,6 +534,7 @@
+@@ -531,6 +533,7 @@
  	icmp_param.skb	  = skb_in;
  	icmp_param.offset = skb_network_offset(skb_in);
  	inet_sk(sk)->tos = tos;
 +	memset(&ipc, 0, sizeof(ipc));
  	ipc.addr = iph->saddr;
  	ipc.opt = &icmp_param.replyopts;
- 
-Index: source_i386_untangle/net/ipv4/ip_output.c
-===================================================================
---- source_i386_untangle.orig/net/ipv4/ip_output.c	2008-07-13 14:51:29.000000000 -0700
-+++ source_i386_untangle/net/ipv4/ip_output.c	2008-10-03 14:33:08.000000000 -0700
-@@ -168,7 +168,7 @@
+ 	ipc.shtx.flags = 0;
+diff -urN source/net/ipv4/ip_output.c source.modified/net/ipv4/ip_output.c
+--- source/net/ipv4/ip_output.c	2012-03-22 12:34:44.000000000 -0700
++++ source.modified/net/ipv4/ip_output.c	2012-03-22 12:41:20.000000000 -0700
+@@ -166,7 +166,7 @@
  	}
  
  	skb->priority = sk->sk_priority;
@@ -142,7 +137,7 @@ Index: source_i386_untangle/net/ipv4/ip_output.c
  
  	return ip_local_out(skb);
  
-@@ -951,6 +951,17 @@
+@@ -971,6 +971,17 @@
  						 fragheaderlen);
  			data += fragheaderlen;
  
@@ -160,17 +155,17 @@ Index: source_i386_untangle/net/ipv4/ip_output.c
  			if (fraggap) {
  				skb->csum = skb_copy_and_csum_bits(
  					skb_prev, maxfraglen,
-@@ -1270,15 +1281,19 @@
+@@ -1291,15 +1302,19 @@
  		ip_options_build(skb, opt, inet->cork.addr, rt, 0);
  	}
  	iph->tos = inet->tos;
 +	if (IPCB(skb)->pkt_ip_tos) 
-+	        iph->tos = IPCB(skb)->pkt_ip_tos;
++        iph->tos = IPCB(skb)->pkt_ip_tos;
  	iph->frag_off = df;
  	ip_select_ident(iph, &rt->u.dst, sk);
  	iph->ttl = ttl;
 +	if (IPCB(skb)->pkt_ip_ttl) 
-+	        iph->ttl = IPCB(skb)->pkt_ip_ttl;
++        iph->ttl = IPCB(skb)->pkt_ip_ttl;
  	iph->protocol = sk->sk_protocol;
  	iph->saddr = rt->rt_src;
  	iph->daddr = rt->rt_dst;
@@ -178,30 +173,29 @@ Index: source_i386_untangle/net/ipv4/ip_output.c
  	skb->priority = sk->sk_priority;
 -	skb->mark = sk->sk_mark;
 +	skb->mark |= sk->sk_mark;
- 	skb->dst = dst_clone(&rt->u.dst);
- 
- 	if (iph->protocol == IPPROTO_ICMP)
-@@ -1353,6 +1368,7 @@
+ 	/*
+ 	 * Steal rt from cork.dst to avoid a pair of atomic_inc/atomic_dec
+ 	 * on dst refcount
+@@ -1379,6 +1394,7 @@
  		return;
  
  	daddr = ipc.addr = rt->rt_src;
 +	memset(&ipc, 0, sizeof(ipc));
  	ipc.opt = NULL;
+ 	ipc.shtx.flags = 0;
  
- 	if (replyopts.opt.optlen) {
-Index: source_i386_untangle/net/ipv4/ip_sockglue.c
-===================================================================
---- source_i386_untangle.orig/net/ipv4/ip_sockglue.c	2008-07-13 14:51:29.000000000 -0700
-+++ source_i386_untangle/net/ipv4/ip_sockglue.c	2008-10-03 14:43:42.000000000 -0700
-@@ -50,6 +50,7 @@
- #define IP_CMSG_RECVOPTS	8
+diff -urN source/net/ipv4/ip_sockglue.c source.modified/net/ipv4/ip_sockglue.c
+--- source/net/ipv4/ip_sockglue.c	2009-12-02 19:51:21.000000000 -0800
++++ source.modified/net/ipv4/ip_sockglue.c	2012-03-22 12:46:35.000000000 -0700
+@@ -49,6 +49,7 @@
  #define IP_CMSG_RETOPTS		16
  #define IP_CMSG_PASSSEC		32
-+#define IP_CMSG_NFMARK		64 
+ #define IP_CMSG_ORIGDSTADDR     64
++#define IP_CMSG_NFMARK     128
  
  /*
   *	SOL_IP control messages.
-@@ -72,6 +73,12 @@
+@@ -71,6 +72,12 @@
  	put_cmsg(msg, SOL_IP, IP_PKTINFO, sizeof(info), &info);
  }
  
@@ -214,21 +208,19 @@ Index: source_i386_untangle/net/ipv4/ip_sockglue.c
  static void ip_cmsg_recv_ttl(struct msghdr *msg, struct sk_buff *skb)
  {
  	int ttl = ip_hdr(skb)->ttl;
-@@ -162,6 +169,13 @@
- 
+@@ -188,6 +195,11 @@
  	if (flags & 1)
- 		ip_cmsg_recv_security(msg, skb);
-+	if ((flags>>=1) == 0)
-+		return;
-+
-+	if (flags & 1) /* IP_CMSG_NFMARK */
-+		ip_cmsg_recv_nfmark(msg, skb);
-+	if ((flags>>=1) == 0)
-+		return;
- }
+ 		ip_cmsg_recv_dstaddr(msg, skb);
  
- int ip_cmsg_send(struct net *net, struct msghdr *msg, struct ipcm_cookie *ipc)
-@@ -191,7 +205,38 @@
++	if ((flags >>= 1) == 0)
++		return;
++	if (flags & 1)
++		ip_cmsg_recv_nfmark(msg, skb);
++    
+ }
+ EXPORT_SYMBOL(ip_cmsg_recv);
+ 
+@@ -219,7 +231,38 @@
  			ipc->addr = info->ipi_spec_dst.s_addr;
  			break;
  		}
@@ -267,18 +259,19 @@ Index: source_i386_untangle/net/ipv4/ip_sockglue.c
  			return -EINVAL;
  		}
  	}
-@@ -421,7 +466,7 @@
+@@ -451,7 +494,8 @@
  			     (1<<IP_TTL) | (1<<IP_HDRINCL) |
  			     (1<<IP_MTU_DISCOVER) | (1<<IP_RECVERR) |
  			     (1<<IP_ROUTER_ALERT) | (1<<IP_FREEBIND) |
--			     (1<<IP_PASSSEC))) ||
-+			     (1<<IP_PASSSEC) | (1<<IP_RECVNFMARK))) ||
+-			     (1<<IP_PASSSEC) | (1<<IP_TRANSPARENT))) ||
++			     (1<<IP_PASSSEC) | (1<<IP_TRANSPARENT) |
++                 (1<<IP_RECVNFMARK))) ||
  	    optname == IP_MULTICAST_TTL ||
- 	    optname == IP_MULTICAST_LOOP) {
- 		if (optlen >= sizeof(int)) {
-@@ -511,6 +556,30 @@
+ 	    optname == IP_MULTICAST_ALL ||
+ 	    optname == IP_MULTICAST_LOOP ||
+@@ -549,6 +593,30 @@
  		else
- 			inet->cmsg_flags &= ~IP_CMSG_PASSSEC;
+ 			inet->cmsg_flags &= ~IP_CMSG_ORIGDSTADDR;
  		break;
 +        case IP_RECVNFMARK:
 +            if (val)
@@ -307,9 +300,9 @@ Index: source_i386_untangle/net/ipv4/ip_sockglue.c
  	case IP_TOS:	/* This sets both TOS and Precedence */
  		if (sk->sk_type == SOCK_STREAM) {
  			val &= ~3;
-@@ -1014,6 +1083,26 @@
- 	case IP_PASSSEC:
- 		val = (inet->cmsg_flags & IP_CMSG_PASSSEC) != 0;
+@@ -1073,6 +1141,26 @@
+ 	case IP_RECVORIGDSTADDR:
+ 		val = (inet->cmsg_flags & IP_CMSG_ORIGDSTADDR) != 0;
  		break;
 +        case IP_SENDNFMARK:
 +        {
@@ -334,11 +327,10 @@ Index: source_i386_untangle/net/ipv4/ip_sockglue.c
  	case IP_TOS:
  		val = inet->tos;
  		break;
-Index: source_i386_untangle/net/ipv4/raw.c
-===================================================================
---- source_i386_untangle.orig/net/ipv4/raw.c	2008-07-13 14:51:29.000000000 -0700
-+++ source_i386_untangle/net/ipv4/raw.c	2008-10-03 11:41:24.000000000 -0700
-@@ -492,6 +492,8 @@
+diff -urN source/net/ipv4/raw.c source.modified/net/ipv4/raw.c
+--- source/net/ipv4/raw.c	2009-12-02 19:51:21.000000000 -0800
++++ source.modified/net/ipv4/raw.c	2012-03-22 12:37:07.000000000 -0700
+@@ -503,6 +503,8 @@
  		daddr = inet->daddr;
  	}
  
@@ -346,12 +338,11 @@ Index: source_i386_untangle/net/ipv4/raw.c
 +
  	ipc.addr = inet->saddr;
  	ipc.opt = NULL;
- 	ipc.oif = sk->sk_bound_dev_if;
-Index: source_i386_untangle/net/ipv4/tcp_input.c
-===================================================================
---- source_i386_untangle.orig/net/ipv4/tcp_input.c	2008-10-03 10:36:16.000000000 -0700
-+++ source_i386_untangle/net/ipv4/tcp_input.c	2008-10-03 11:41:24.000000000 -0700
-@@ -4981,6 +4981,8 @@
+ 	ipc.shtx.flags = 0;
+diff -urN source/net/ipv4/tcp_input.c source.modified/net/ipv4/tcp_input.c
+--- source/net/ipv4/tcp_input.c	2012-03-22 12:34:41.000000000 -0700
++++ source.modified/net/ipv4/tcp_input.c	2012-03-22 12:37:07.000000000 -0700
+@@ -5431,6 +5431,8 @@
  		 */
  		tp->rcv_nxt = TCP_SKB_CB(skb)->seq + 1;
  		tp->rcv_wup = TCP_SKB_CB(skb)->seq + 1;
@@ -360,11 +351,10 @@ Index: source_i386_untangle/net/ipv4/tcp_input.c
  
  		/* RFC1323: The window in SYN & SYN/ACK segments is
  		 * never scaled.
-Index: source_i386_untangle/net/ipv4/tcp_ipv4.c
-===================================================================
---- source_i386_untangle.orig/net/ipv4/tcp_ipv4.c	2008-07-13 14:51:29.000000000 -0700
-+++ source_i386_untangle/net/ipv4/tcp_ipv4.c	2008-10-03 14:38:28.000000000 -0700
-@@ -1416,6 +1416,8 @@
+diff -urN source/net/ipv4/tcp_ipv4.c source.modified/net/ipv4/tcp_ipv4.c
+--- source/net/ipv4/tcp_ipv4.c	2012-03-22 12:34:49.000000000 -0700
++++ source.modified/net/ipv4/tcp_ipv4.c	2012-03-22 12:37:07.000000000 -0700
+@@ -1375,6 +1375,8 @@
  	if (!newsk)
  		goto exit;
  
@@ -373,52 +363,23 @@ Index: source_i386_untangle/net/ipv4/tcp_ipv4.c
  	newsk->sk_gso_type = SKB_GSO_TCPV4;
  	sk_setup_caps(newsk, dst);
  
-Index: source_i386_untangle/net/ipv4/tcp_minisocks.c
-===================================================================
---- source_i386_untangle.orig/net/ipv4/tcp_minisocks.c	2008-07-13 14:51:29.000000000 -0700
-+++ source_i386_untangle/net/ipv4/tcp_minisocks.c	2008-10-03 11:41:24.000000000 -0700
+diff -urN source/net/ipv4/tcp_minisocks.c source.modified/net/ipv4/tcp_minisocks.c
+--- source/net/ipv4/tcp_minisocks.c	2009-12-02 19:51:21.000000000 -0800
++++ source.modified/net/ipv4/tcp_minisocks.c	2012-03-22 12:48:18.000000000 -0700
 @@ -397,6 +397,8 @@
- 		newtp->pred_flags = 0;
  		newtp->rcv_wup = newtp->copied_seq = newtp->rcv_nxt = treq->rcv_isn + 1;
  		newtp->snd_sml = newtp->snd_una = newtp->snd_nxt = treq->snt_isn + 1;
+ 		newtp->snd_up = treq->snt_isn + 1;
 +		newsk->sk_rcv_first = newtp->rcv_nxt;
 +		newsk->sk_snd_first = newtp->snd_nxt;
  
  		tcp_prequeue_init(newtp);
  
-Index: source_i386_untangle/net/ipv4/udp.c
-===================================================================
---- source_i386_untangle.orig/net/ipv4/udp.c	2008-10-03 10:36:17.000000000 -0700
-+++ source_i386_untangle/net/ipv4/udp.c	2008-10-03 14:48:11.000000000 -0700
-@@ -106,6 +106,26 @@
- #include <net/xfrm.h>
- #include "udp_impl.h"
- 
-+static void udp_cmsg_recv_hdr(struct msghdr *msg, struct sk_buff *skb)
-+{
-+    int size = ((ip_hdr(skb)->ihl) * 4) + sizeof (struct udphdr);
-+
-+    /* FIXME check for room */
-+
-+    put_cmsg(msg, SOL_UDP, UDP_RECVHDR, size, ip_hdr(skb));
-+}
-+
-+void udp_cmsg_recv(struct msghdr *msg, struct sk_buff *skb)
-+{
-+	struct inet_sock *inet = inet_sk(skb->sk);
-+	unsigned flags = inet->cmsg_flags;
-+    
-+    if (flags & UDP_CMSG_RECVHDR)
-+        udp_cmsg_recv_hdr(msg, skb);
-+
-+    ip_cmsg_recv(msg, skb);
-+}
-+
- /*
-  *	Snmp MIB for the UDP layer
-  */
-@@ -253,6 +273,32 @@
- 	return udp_lib_get_port(sk, snum, ipv4_rcv_saddr_equal);
+diff -urN source/net/ipv4/udp.c source.modified/net/ipv4/udp.c
+--- source/net/ipv4/udp.c	2012-03-22 12:34:45.000000000 -0700
++++ source.modified/net/ipv4/udp.c	2012-03-22 12:50:06.000000000 -0700
+@@ -273,6 +273,33 @@
+ 	return score;
  }
  
 +static int udp_cmsg_send(struct net *net, struct msghdr *msg, struct ipcm_cookie *ipc)
@@ -447,10 +408,38 @@ Index: source_i386_untangle/net/ipv4/udp.c
 +    return ip_cmsg_send(net,msg,ipc);
 +}
 +
++
  /* UDP is nearly always wildcards out the wazoo, it makes no sense to try
   * harder than this. -DaveM
   */
-@@ -543,7 +589,7 @@
+@@ -371,6 +398,26 @@
+ 	return s;
+ }
+ 
++static void udp_cmsg_recv_hdr(struct msghdr *msg, struct sk_buff *skb)
++{
++    int size = ((ip_hdr(skb)->ihl) * 4) + sizeof (struct udphdr);
++
++    /* FIXME check for room */
++
++    put_cmsg(msg, SOL_UDP, UDP_RECVHDR, size, ip_hdr(skb));
++}
++
++void udp_cmsg_recv(struct msghdr *msg, struct sk_buff *skb)
++{
++	struct inet_sock *inet = inet_sk(skb->sk);
++	unsigned flags = inet->cmsg_flags;
++    
++    if (flags & UDP_CMSG_RECVHDR)
++        udp_cmsg_recv_hdr(msg, skb);
++
++    ip_cmsg_recv(msg, skb);
++}
++
+ /*
+  * This routine is called by the ICMP module when it gets some
+  * sort of error condition.  If err < 0 then the socket should
+@@ -587,7 +634,7 @@
  	int free = 0;
  	int connected = 0;
  	__be32 daddr, faddr, saddr;
@@ -459,24 +448,24 @@ Index: source_i386_untangle/net/ipv4/udp.c
  	u8  tos;
  	int err, is_udplite = IS_UDPLITE(sk);
  	int corkreq = up->corkflag || msg->msg_flags&MSG_MORE;
-@@ -559,6 +605,7 @@
- 	if (msg->msg_flags&MSG_OOB)	/* Mirror BSD error message compatibility */
+@@ -603,6 +650,7 @@
+ 	if (msg->msg_flags & MSG_OOB) /* Mirror BSD error message compatibility */
  		return -EOPNOTSUPP;
  
 +	memset(&ipc, 0, sizeof(ipc));
  	ipc.opt = NULL;
+ 	ipc.shtx.flags = 0;
  
- 	if (up->pending) {
-@@ -608,7 +655,7 @@
- 
- 	ipc.oif = sk->sk_bound_dev_if;
+@@ -656,7 +704,7 @@
+ 	if (err)
+ 		return err;
  	if (msg->msg_controllen) {
 -		err = ip_cmsg_send(sock_net(sk), msg, &ipc);
 +		err = udp_cmsg_send(sock_net(sk), msg, &ipc); /* also calls ip_cmsg_send */
  		if (err)
  			return err;
  		if (ipc.opt)
-@@ -618,6 +665,11 @@
+@@ -666,6 +714,11 @@
  	if (!ipc.opt)
  		ipc.opt = inet->opt;
  
@@ -488,7 +477,7 @@ Index: source_i386_untangle/net/ipv4/udp.c
  	saddr = ipc.addr;
  	ipc.addr = faddr = daddr;
  
-@@ -628,6 +680,10 @@
+@@ -676,6 +729,10 @@
  		connected = 0;
  	}
  	tos = RT_TOS(inet->tos);
@@ -499,16 +488,16 @@ Index: source_i386_untangle/net/ipv4/udp.c
  	if (sock_flag(sk, SOCK_LOCALROUTE) ||
  	    (msg->msg_flags & MSG_DONTROUTE) ||
  	    (ipc.opt && ipc.opt->is_strictroute)) {
-@@ -654,7 +710,7 @@
- 						.tos = tos } },
+@@ -704,7 +761,7 @@
  				    .proto = sk->sk_protocol,
+ 				    .flags = inet_sk_flowi_flags(sk),
  				    .uli_u = { .ports =
 -					       { .sport = inet->sport,
 +					       { .sport = sport,
  						 .dport = dport } } };
- 		security_sk_classify_flow(sk, &fl);
- 		err = ip_route_output_flow(sock_net(sk), &rt, &fl, sk, 1);
-@@ -696,7 +752,7 @@
+ 		struct net *net = sock_net(sk);
+ 
+@@ -748,7 +805,7 @@
  	inet->cork.fl.fl4_dst = daddr;
  	inet->cork.fl.fl_ip_dport = dport;
  	inet->cork.fl.fl4_src = saddr;
@@ -517,7 +506,7 @@ Index: source_i386_untangle/net/ipv4/udp.c
  	up->pending = AF_INET;
  
  do_append_data:
-@@ -902,8 +958,9 @@
+@@ -991,8 +1048,9 @@
  		sin->sin_addr.s_addr = ip_hdr(skb)->saddr;
  		memset(sin->sin_zero, 0, sizeof(sin->sin_zero));
  	}
@@ -529,7 +518,7 @@ Index: source_i386_untangle/net/ipv4/udp.c
  
  	err = copied;
  	if (flags & MSG_TRUNC)
-@@ -1295,6 +1352,13 @@
+@@ -1420,6 +1478,13 @@
  		}
  		break;
  
@@ -543,7 +532,7 @@ Index: source_i386_untangle/net/ipv4/udp.c
  	case UDP_ENCAP:
  		switch (val) {
  		case 0:
-@@ -1388,6 +1452,10 @@
+@@ -1514,6 +1579,10 @@
  		val = up->corkflag;
  		break;
  
