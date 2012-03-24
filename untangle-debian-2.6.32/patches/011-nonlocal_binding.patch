@@ -5,7 +5,7 @@ diff -urN source_amd64_untangle/include/linux/in.h source_amd64_untangle.modifie
  #define IP_XFRM_POLICY	17
  #define IP_PASSSEC	18
  #define IP_TRANSPARENT	19
-+#define IP_NONLOCAL	20
++#define IP_NONLOCAL	30
  
  /* BSD compatibility */
  #define IP_RECVRETOPTS	IP_RETOPTS
@@ -354,7 +354,7 @@ diff -urN source_amd64_untangle/net/ipv4/tcp_ipv4.c source_amd64_untangle.modifi
 +         * If deliver flag - then deliver the packet - otherwise mark it as NOTRACK
 +         */
 +        if (deliver) {
-+            if (skb->dst == NULL) {
++            if (skb_dst(skb) == NULL) {
 +                if (ip_route_input(skb, iph->daddr, iph->saddr, iph->tos, skb->dev)) {
 +                    printk("ip_route_input failed\n");
 +                    goto out; 
