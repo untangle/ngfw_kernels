@@ -54,7 +54,7 @@ ${KOURPATCH}: untangle-debian.basediff patches/*
 	cp patches/* ${TEMPDIR}/${UPATCHSETLOC}
 	cp maintainer-scripts/* ${TEMPDIR}/${WORKDIR}/debian
 	if [ -n "${EXTRAPATCHES}" ]; then cp "${EXTRAPATCHES}" ${TEMPDIR}/${UPATCHSETLOC}; fi
-	-(cd ${TEMPDIR2}/${WORKDIR} ; diff -Ncr . ${TEMPDIR}/${WORKDIR}) > ${KOURDIFF}
+	-(cd ${TEMPDIR2}/${WORKDIR} ; diff -Ncr . ${TEMPDIR}/${WORKDIR}) | perl -pe 's|'${TEMPDIR}/${WORKDIR}/?'|./|g' > ${KOURDIFF}
 	cat untangle-debian.basediff >> ${KOURDIFF}
 	if [ -f untangle-debian.${REPOSITORY}diff ]; then cat untangle-debian.${REPOSITORY}diff >> ${KOURDIFF}; fi
 	gzip -c ${KOURDIFF} > ${KOURPATCH}
