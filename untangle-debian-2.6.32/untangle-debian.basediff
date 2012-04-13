@@ -2,7 +2,13 @@ diff --git ./debian/changelog ./debian/changelog
 index bcf2e3c..6f2f003 100644
 --- ./debian/changelog
 +++ ./debian/changelog
-@@ -1,3 +1,9 @@
+@@ -1,3 +1,15 @@
++linux-2.6 (2.6.32-41untangle2) stable; urgency=low
++
++  * Re-enable building Xen extensions
++
++ -- Sebastien Delafond <seb@untangle.com>  Thu, 29 Mar 2012 10:02:42 -0700
++
 +linux-2.6 (2.6.32-41untangle1) stable; urgency=low
 +
 +  * 2.6.32 from squeeze.
@@ -25,6 +31,40 @@ index e086612..92a709a 100644
   vserver
   xen
  flavours:
+diff --git ./debian/config/amd64/untangle+xen/config ./debian/config/amd64/untangle+xen/config
+new file mode 100644
+index 0000000..ac416b2
+--- /dev/null
++++ ./debian/config/amd64/untangle+xen/config
+@@ -0,0 +1,11 @@
++ CONFIG_XEN_DOM0=y
++ CONFIG_XEN_BACKEND=y
++ CONFIG_XEN_BLKDEV_BACKEND=y
++ CONFIG_XEN_BLKDEV_TAP=m
++ CONFIG_XEN_NETDEV_BACKEND=y
++ CONFIG_XEN_PCIDEV_BACKEND=y
++ CONFIG_XEN_PCIDEV_BACKEND_VPCI=y
++ # CONFIG_XEN_PCIDEV_BACKEND_PASS is not set
++ # CONFIG_XEN_PCIDEV_BACKEND_SLOT is not set
++ # CONFIG_XEN_PCIDEV_BE_DEBUG is not set
++ CONFIG_XEN_GNTDEV=y
+diff --git ./debian/config/i386/untangle+xen/config ./debian/config/i386/untangle+xen/config
+new file mode 100644
+index 0000000..ac416b2
+--- /dev/null
++++ ./debian/config/i386/untangle+xen/config
+@@ -0,0 +1,11 @@
++ CONFIG_XEN_DOM0=y
++ CONFIG_XEN_BACKEND=y
++ CONFIG_XEN_BLKDEV_BACKEND=y
++ CONFIG_XEN_BLKDEV_TAP=m
++ CONFIG_XEN_NETDEV_BACKEND=y
++ CONFIG_XEN_PCIDEV_BACKEND=y
++ CONFIG_XEN_PCIDEV_BACKEND_VPCI=y
++ # CONFIG_XEN_PCIDEV_BACKEND_PASS is not set
++ # CONFIG_XEN_PCIDEV_BACKEND_SLOT is not set
++ # CONFIG_XEN_PCIDEV_BE_DEBUG is not set
++ CONFIG_XEN_GNTDEV=y
 diff --git ./debian/config/amd64/untangle+xen/defines ./debian/config/amd64/untangle+xen/defines
 new file mode 100644
 index 0000000..ac416b2
