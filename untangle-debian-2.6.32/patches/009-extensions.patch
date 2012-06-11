@@ -6,7 +6,7 @@ diff -urN source/include/linux/in.h source.modified/include/linux/in.h
  #define IP_RECVORIGDSTADDR   IP_ORIGDSTADDR
  
 +/* Extensions */
-+#define IP_SADDR	20
++#define IP_SADDR	21
 +#define IP_RECVNFMARK	22
 +#define IP_SENDNFMARK	23
 +#define IP_FIRSTNFMARK	24
