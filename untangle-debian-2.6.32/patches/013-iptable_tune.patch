@@ -90,7 +90,7 @@ Index: build_amd64_untangle_amd64/net/ipv4/netfilter/iptable_tune.c
 +	 const struct net_device *out,
 +	 int (*okfn)(struct sk_buff *))
 +{
-+	return ipt_do_table(skb, hook, in, out, dev_net(in)->ipv4.iptable_tune);
++	return ipt_do_table(skb, hook, in, out, dev_net(out)->ipv4.iptable_tune);
 +}
 +
 +static unsigned int
