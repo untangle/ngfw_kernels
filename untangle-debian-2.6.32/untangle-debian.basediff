@@ -310,7 +310,7 @@ diff --git ./debian/patches/series/40-extra ./debian/patches/series/40-extra
 index 530549d..a338aa5 100644
 --- ./debian/patches/series/40-extra
 +++ ./debian/patches/series/40-extra
-@@ -69,3 +69,11 @@
+@@ -69,3 +69,12 @@
  + features/all/xen/xen-improvements-to-VIRQ_DEBUG-output.patch featureset=xen
  
  + features/all/xen/xen-blkback-don-t-fail-empty-barrier-requests.patch featureset=xen
@@ -321,6 +321,7 @@ index 530549d..a338aa5 100644
 ++ features/all/untangle/010-icmp_frag.patch featureset=untangle
 ++ features/all/untangle/011-nonlocal_binding.patch featureset=untangle
 ++ features/all/untangle/013-iptable_tune.patch featureset=untangle
+++ features/all/untangle/014-nfqueue-untangle-mode.patch featureset=untangle
 ++ features/all/untangle/020-imq-debian.patch featureset=untangle
 diff --git ./debian/templates/patch.apply.in ./debian/templates/patch.apply.in
 index dd35c65..8d366b9 100644

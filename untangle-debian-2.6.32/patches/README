@@ -22,6 +22,8 @@
 
 014-nfqueue-untangle-mode.patch
     Adds support for appending conntrack information to queued packets. This allows you to avoid a conntrack lookup for queued packets.
-
+    NOTE: Usage of this patch could be removed in favor of classd's handling of conntrack table.
+    The classd daemon subscribes to all conntrack table changes and manages its own list in memory and pairs queued packets with the in memory table.
+    
 020-imq-debian.patch
     This adds IMQ (intermediate queue device) which allows for ingress QoS filtering on WAN interfaces
