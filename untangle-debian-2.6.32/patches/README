@@ -20,5 +20,8 @@
 013-iptable_tune.patch
     This adds the "tune" table in netfilter which comes at the very end which is used for various tasks in our networking setup.
 
+014-nfqueue-untangle-mode.patch
+    Adds support for appending conntrack information to queued packets. This allows you to avoid a conntrack lookup for queued packets.
+
 020-imq-debian.patch
     This adds IMQ (intermediate queue device) which allows for ingress QoS filtering on WAN interfaces
