@@ -5,7 +5,7 @@ diff -urN source_amd64_untangle/include/linux/in.h source_amd64_untangle.modifie
  #define IP_XFRM_POLICY	17
  #define IP_PASSSEC	18
  #define IP_TRANSPARENT	19
-+#define IP_NONLOCAL	30
++#define IP_NONLOCAL	21
  
  /* BSD compatibility */
  #define IP_RECVRETOPTS	IP_RETOPTS
