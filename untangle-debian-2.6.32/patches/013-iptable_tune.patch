@@ -1,41 +1,30 @@
-Index: build_amd64_untangle_amd64/net/ipv4/netfilter/Kconfig
-===================================================================
---- build_amd64_untangle_amd64.orig/net/ipv4/netfilter/Kconfig	2008-10-15 14:11:23.000000000 -0700
-+++ build_amd64_untangle_amd64/net/ipv4/netfilter/Kconfig	2008-10-15 14:32:38.000000000 -0700
-@@ -373,2 +373,14 @@
- 	  If unsure, say N.
+diff -urN source.orig/include/linux/netfilter_ipv4.h source/include/linux/netfilter_ipv4.h
+--- source.orig/include/linux/netfilter_ipv4.h	2012-09-15 12:36:09.000000000 -0700
++++ source/include/linux/netfilter_ipv4.h	2012-09-15 12:37:36.000000000 -0700
+@@ -63,7 +63,8 @@
+ 	NF_IP_PRI_SECURITY = 50,
+ 	NF_IP_PRI_NAT_SRC = 100,
+ 	NF_IP_PRI_SELINUX_LAST = 225,
+-	NF_IP_PRI_CONNTRACK_CONFIRM = INT_MAX,
++	NF_IP_PRI_CONNTRACK_CONFIRM = INT_MAX - 10,
++	NF_IP_PRI_TUNE = INT_MAX - 5,
+ 	NF_IP_PRI_LAST = INT_MAX,
+ };
  
-+# tune + specific targets
-+config IP_NF_TUNE
-+	tristate  'tune table support (adds a chain after POSTROUTING nat)'
-+	depends on IP_NF_IPTABLES
-+	help
-+	  This option adds a `tune' table to iptables. This table is the very
-+	  last in the netfilter framework and hooks in at the POSTROUTING
-+	  chain.
-+	
-+	  If you want to compile it as a module, say M here and read
-+	  <file:Documentation/modules.txt>.  If unsure, say `N'.
-+
-
- endif # IP_NF_IPTABLES
-Index: build_amd64_untangle_amd64/net/ipv4/netfilter/Makefile
-===================================================================
---- build_amd64_untangle_amd64.orig/net/ipv4/netfilter/Makefile	2008-10-15 14:11:23.000000000 -0700
-+++ build_amd64_untangle_amd64/net/ipv4/netfilter/Makefile	2008-10-15 14:32:38.000000000 -0700
-@@ -48,7 +48,8 @@
- obj-$(CONFIG_IP_NF_MANGLE) += iptable_mangle.o
- obj-$(CONFIG_NF_NAT) += iptable_nat.o
- obj-$(CONFIG_IP_NF_RAW) += iptable_raw.o
-+obj-$(CONFIG_IP_NF_TUNE) += iptable_tune.o
- obj-$(CONFIG_IP_NF_SECURITY) += iptable_security.o
- 
- # matches
- obj-$(CONFIG_IP_NF_MATCH_ADDRTYPE) += ipt_addrtype.o
-Index: build_amd64_untangle_amd64/net/ipv4/netfilter/iptable_tune.c
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ build_amd64_untangle_amd64/net/ipv4/netfilter/iptable_tune.c	2008-10-15 14:35:41.000000000 -0700
+diff -urN source.orig/include/net/netns/ipv4.h source/include/net/netns/ipv4.h
+--- source.orig/include/net/netns/ipv4.h	2012-09-15 12:36:09.000000000 -0700
++++ source/include/net/netns/ipv4.h	2012-09-15 12:37:06.000000000 -0700
+@@ -36,6 +36,7 @@
+ 	struct xt_table		*iptable_filter;
+ 	struct xt_table		*iptable_mangle;
+ 	struct xt_table		*iptable_raw;
++	struct xt_table		*iptable_tune;
+ 	struct xt_table		*arptable_filter;
+ 	struct xt_table		*iptable_security;
+ 	struct xt_table		*nat_table;
+diff -urN source.orig/net/ipv4/netfilter/iptable_tune.c source/net/ipv4/netfilter/iptable_tune.c
+--- source.orig/net/ipv4/netfilter/iptable_tune.c	1969-12-31 16:00:00.000000000 -0800
++++ source/net/ipv4/netfilter/iptable_tune.c	2012-09-15 12:37:06.000000000 -0700
 @@ -0,0 +1,139 @@
 +/*
 + * 'tune' table, which is the last hooked in at POST_ROUTING and LOCAL_OUT .
@@ -176,27 +165,33 @@ Index: build_amd64_untangle_amd64/net/ipv4/netfilter/iptable_tune.c
 +module_init(iptable_tune_init);
 +module_exit(iptable_tune_fini);
 +MODULE_LICENSE("GPL");
-Index: build_amd64_untangle_amd64/include/net/netns/ipv4.h
-===================================================================
---- build_amd64_untangle_amd64.orig/include/net/netns/ipv4.h	2008-07-13 14:51:29.000000000 -0700
-+++ build_amd64_untangle_amd64/include/net/netns/ipv4.h	2008-10-15 14:32:38.000000000 -0700
-@@ -36,6 +36,7 @@
- 	struct xt_table		*iptable_filter;
- 	struct xt_table		*iptable_mangle;
- 	struct xt_table		*iptable_raw;
-+	struct xt_table		*iptable_tune;
- 	struct xt_table		*arptable_filter;
- 	struct xt_table		*iptable_security;
- 	struct xt_table		*nat_table;
-Index: build_amd64_untangle_amd64/include/linux/netfilter_ipv4.h
-===================================================================
---- build_amd64_untangle_amd64.orig/include/linux/netfilter_ipv4.h	2008-10-15 14:32:44.000000000 -0700
-+++ build_amd64_untangle_amd64/include/linux/netfilter_ipv4.h	2008-10-15 14:40:02.000000000 -0700
-@@ -64,6 +64,7 @@
- 	NF_IP_PRI_FILTER = 0,
- 	NF_IP_PRI_NAT_SRC = 100,
- 	NF_IP_PRI_SELINUX_LAST = 225,
-+	NF_IP_PRI_TUNE = INT_MAX - 5,
- 	NF_IP_PRI_CONNTRACK_CONFIRM = INT_MAX,
- 	NF_IP_PRI_LAST = INT_MAX,
- };
+diff -urN source.orig/net/ipv4/netfilter/Kconfig source/net/ipv4/netfilter/Kconfig
+--- source.orig/net/ipv4/netfilter/Kconfig	2012-09-15 12:36:08.000000000 -0700
++++ source/net/ipv4/netfilter/Kconfig	2012-09-15 12:37:06.000000000 -0700
+@@ -390,3 +390,15 @@
+ 
+ endmenu
+ 
++# tune + specific targets
++config IP_NF_TUNE
++	tristate  'tune table support (adds a chain after POSTROUTING nat)'
++	depends on IP_NF_IPTABLES
++	help
++	  This option adds a `tune' table to iptables. This table is the very
++	  last in the netfilter framework and hooks in at the POSTROUTING
++	  chain.
++	
++	  If you want to compile it as a module, say M here and read
++	  <file:Documentation/modules.txt>.  If unsure, say `N'.
++
+diff -urN source.orig/net/ipv4/netfilter/Makefile source/net/ipv4/netfilter/Makefile
+--- source.orig/net/ipv4/netfilter/Makefile	2012-09-15 12:36:08.000000000 -0700
++++ source/net/ipv4/netfilter/Makefile	2012-09-15 12:37:06.000000000 -0700
+@@ -45,6 +45,7 @@
+ obj-$(CONFIG_IP_NF_MANGLE) += iptable_mangle.o
+ obj-$(CONFIG_NF_NAT) += iptable_nat.o
+ obj-$(CONFIG_IP_NF_RAW) += iptable_raw.o
++obj-$(CONFIG_IP_NF_TUNE) += iptable_tune.o
+ obj-$(CONFIG_IP_NF_SECURITY) += iptable_security.o
+ 
+ # matches
