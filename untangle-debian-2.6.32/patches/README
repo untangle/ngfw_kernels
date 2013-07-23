@@ -14,9 +14,6 @@
 010-icmp_frag.patch
     This patch ensures that ICMP fragmentation needed packets correctly reach their non-locally bound socket so that ICMP MTU discovery works with sessions end-pointed on untangle.
 
-011-nonlocal_binding.patch
-    This patch implements non-local binding which is essential for creating "spoofed" TCP connections from the original client IP.
-
 013-iptable_tune.patch
     This adds the "tune" table in netfilter which comes at the very end which is used for various tasks in our networking setup.
 

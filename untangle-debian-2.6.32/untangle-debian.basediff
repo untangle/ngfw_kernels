@@ -222,7 +222,7 @@ new file mode 100644
 index 0000000..2b885d9
 --- /dev/null
 +++ ./debian/config/featureset-untangle/config
-@@ -0,0 +1,28 @@
+@@ -0,0 +1,26 @@
 +# CONFIG_HZ=100 is not set
 +CONFIG_HZ=1000
 +CONFIG_HZ_1000=y
@@ -231,7 +231,6 @@ index 0000000..2b885d9
 +# CONFIG_IEEE1394_ETH1394_ROM_ENTRY is not set
 +CONFIG_IP_NF_FRAG_ACCEPT=y
 +CONFIG_IP_NF_MATCH_BITMARK=m
-+CONFIG_IP_NF_NONLOCAL=y
 +CONFIG_IP_NF_TUNE=m
 +CONFIG_NETFILTER_NETLINK=y
 +CONFIG_NFNETLINK_COPY_UNTANGLE_MODE=y
@@ -246,7 +245,6 @@ index 0000000..2b885d9
 +# CONFIG_IMQ_BEHAVIOR_BA is not set
 +CONFIG_IMQ_BEHAVIOR_BB=y
 +CONFIG_NETFILTER_XT_TARGET_IMQ=y
-+# these required for tcp_ipv4 nonlocal
 +CONFIG_NF_CONNTRACK_IPV4=y
 +CONFIG_NF_CONNTRACK=y
 +CONFIG_NF_NAT=y
@@ -316,7 +314,7 @@ diff --git ./debian/patches/series/40-extra ./debian/patches/series/40-extra
 index 530549d..a338aa5 100644
 --- ./debian/patches/series/40-extra
 +++ ./debian/patches/series/40-extra
-@@ -69,3 +69,12 @@
+@@ -69,3 +69,11 @@
  + features/all/xen/xen-improvements-to-VIRQ_DEBUG-output.patch featureset=xen
  
  + features/all/xen/xen-blkback-don-t-fail-empty-barrier-requests.patch featureset=xen
@@ -325,7 +323,6 @@ index 530549d..a338aa5 100644
 ++ features/all/untangle/007-bridge-mac-ageing-fix.patch featureset=untangle
 ++ features/all/untangle/009-extensions.patch featureset=untangle
 ++ features/all/untangle/010-icmp_frag.patch featureset=untangle
-++ features/all/untangle/011-nonlocal_binding.patch featureset=untangle
 ++ features/all/untangle/013-iptable_tune.patch featureset=untangle
 ++ features/all/untangle/014-nfqueue-untangle-mode.patch featureset=untangle
 ++ features/all/untangle/020-imq-debian.patch featureset=untangle

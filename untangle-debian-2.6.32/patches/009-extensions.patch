@@ -1,3 +1,14 @@
+diff -urN build_i386_none_686.unt/include/net/route.h build_i386_none_686/include/net/route.h
+--- build_i386_none_686.unt/include/net/route.h	2010-07-23 15:57:32.000000000 -0700
++++ build_i386_none_686/include/net/route.h	2010-07-23 15:56:52.000000000 -0700
+@@ -40,6 +40,7 @@
+ #endif
+ 
+ #define RTO_ONLINK	0x01
++#define RTO_TPROXY   0x02	
+ 
+ #define RTO_CONN	0
+ /* RTO_CONN is not used (being alias for 0), but preserved not to break
 diff -urN source/include/linux/in.h source.modified/include/linux/in.h
 --- source/include/linux/in.h	2009-12-02 19:51:21.000000000 -0800
 +++ source.modified/include/linux/in.h	2012-03-22 12:37:07.000000000 -0700
