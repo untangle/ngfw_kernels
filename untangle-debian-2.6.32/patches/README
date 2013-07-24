@@ -14,13 +14,18 @@
 010-icmp_frag.patch
     This patch ensures that ICMP fragmentation needed packets correctly reach their non-locally bound socket so that ICMP MTU discovery works with sessions end-pointed on untangle.
 
-013-iptable_tune.patch
+013-iptables_tune.patch
     This adds the "tune" table in netfilter which comes at the very end which is used for various tasks in our networking setup.
 
 014-nfqueue-untangle-mode.patch
     Adds support for appending conntrack information to queued packets. This allows you to avoid a conntrack lookup for queued packets.
     NOTE: Usage of this patch could be removed in favor of classd's handling of conntrack table.
     The classd daemon subscribes to all conntrack table changes and manages its own list in memory and pairs queued packets with the in memory table.
-    
+
+015-iptables_socket.patch
+    This changes the "-m socket" iptables match to modify the packet with the socket's mark if a socket is found.
+    This is a total hack as an iptable match shouldn't modify the packet, but the issue is that there is no conntrack entry for packets returning to nonlocal sockets
+    So we have no way to restore the QoS/bandwidth control mark so TCP ingress QoS doesn't work without this hack.
+     
 020-imq-debian.patch
     This adds IMQ (intermediate queue device) which allows for ingress QoS filtering on WAN interfaces

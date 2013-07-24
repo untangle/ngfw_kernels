@@ -2,7 +2,13 @@ diff --git ./debian/changelog ./debian/changelog
 index bcf2e3c..6f2f003 100644
 --- ./debian/changelog
 +++ ./debian/changelog
-@@ -1,3 +1,33 @@
+@@ -1,3 +1,39 @@
++linux-2.6 (2.6.32-41untangle6) stable; urgency=low
++
++  * Latest fixes from dmorris
++
++ -- Sebastien Delafond <seb@untangle.com>  Tue, 23 Jul 2013 23:30:00 -0700
++
 +linux-2.6 (2.6.32-41untangle5) stable; urgency=low
 +
 +  * Latest fixes from dmorris
@@ -320,7 +326,7 @@ diff --git ./debian/patches/series/40-extra ./debian/patches/series/40-extra
 index 530549d..a338aa5 100644
 --- ./debian/patches/series/40-extra
 +++ ./debian/patches/series/40-extra
-@@ -69,3 +69,11 @@
+@@ -69,3 +69,12 @@
  + features/all/xen/xen-improvements-to-VIRQ_DEBUG-output.patch featureset=xen
  
  + features/all/xen/xen-blkback-don-t-fail-empty-barrier-requests.patch featureset=xen
@@ -329,8 +335,9 @@ index 530549d..a338aa5 100644
 ++ features/all/untangle/007-bridge-mac-ageing-fix.patch featureset=untangle
 ++ features/all/untangle/009-extensions.patch featureset=untangle
 ++ features/all/untangle/010-icmp_frag.patch featureset=untangle
-++ features/all/untangle/013-iptable_tune.patch featureset=untangle
+++ features/all/untangle/013-iptables_tune.patch featureset=untangle
 ++ features/all/untangle/014-nfqueue-untangle-mode.patch featureset=untangle
+++ features/all/untangle/015-iptables_socket.patch featureset=untangle
 ++ features/all/untangle/020-imq-debian.patch featureset=untangle
 diff --git ./debian/templates/patch.apply.in ./debian/templates/patch.apply.in
 index dd35c65..8d366b9 100644
