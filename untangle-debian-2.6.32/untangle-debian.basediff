@@ -2,6 +2,12 @@ diff --git ./debian/changelog ./debian/changelog
 index bcf2e3c..6f2f003 100644
 --- ./debian/changelog
 +++ ./debian/changelog
+@@ -1,3 +1,38 @@
++linux-2.6 (2.6.32-41untangle7) stable; urgency=low
++
++  * Support for armel
++
++ -- Sebastien Delafond <seb@untangle.com>  Fri, 06 Sep 2013 13:25:17 -0700
 @@ -1,3 +1,39 @@
 +linux-2.6 (2.6.32-41untangle6) stable; urgency=low
 +
@@ -42,6 +48,29 @@ index bcf2e3c..6f2f003 100644
  linux-2.6 (2.6.32-41) stable; urgency=low
  
    [ Ben Hutchings ]
+diff --git a/untangle-debian-2.6.32/linux-2.6-2.6.32/debian/config/armel/defines b/untangle-debian-2.6.32/linux-2.6-2.6.32/debian/config/armel/defines
+--- ./debian/config/armel/defines
++++ ./debian/config/armel/defines
+@@ -4,6 +4,8 @@ ignore-changes:
+  parport_pc_unregister_port
+ 
+ [base]
++featuresets:
++ untangle
+ flavours:
+  iop32x
+  ixp4xx
+diff --git a/untangle-debian-2.6.32/linux-2.6-2.6.32/debian/config/armel/untangle/defines b/untangle-debian-2.6.32/linux-2.6-2.6.32/debian/config/armel
+--- /dev/null
++++ ./debian/config/armel/untangle/defines
+@@ -0,0 +1,7 @@
++[base]
++flavours:
++ armel
++
++[armel_image]
++provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-armel
++
 diff --git ./debian/config/amd64/defines ./debian/config/amd64/defines
 index e086612..92a709a 100644
 --- ./debian/config/amd64/defines
