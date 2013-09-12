@@ -2,13 +2,13 @@ diff --git ./debian/changelog ./debian/changelog
 index bcf2e3c..6f2f003 100644
 --- ./debian/changelog
 +++ ./debian/changelog
-@@ -1,3 +1,38 @@
+@@ -1,3 +1,45 @@
 +linux-2.6 (2.6.32-41untangle7) stable; urgency=low
 +
 +  * Support for armel
 +
 + -- Sebastien Delafond <seb@untangle.com>  Fri, 06 Sep 2013 13:25:17 -0700
-@@ -1,3 +1,39 @@
++
 +linux-2.6 (2.6.32-41untangle6) stable; urgency=low
 +
 +  * Latest fixes from dmorris
