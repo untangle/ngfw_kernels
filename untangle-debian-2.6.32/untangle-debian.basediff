@@ -63,13 +63,9 @@ diff --git a/untangle-debian-2.6.32/linux-2.6-2.6.32/debian/config/armel/defines
 diff --git a/untangle-debian-2.6.32/linux-2.6-2.6.32/debian/config/armel/untangle/defines b/untangle-debian-2.6.32/linux-2.6-2.6.32/debian/config/armel
 --- /dev/null
 +++ ./debian/config/armel/untangle/defines
-@@ -0,0 +1,11 @@
+@@ -0,0 +1,7 @@
 +[base]
 +flavours:
-+ iop32x
-+ ixp4xx
-+ kirkwood
-+ orion5x
 + versatile
 +
 +[armel_image]
