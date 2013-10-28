@@ -11,9 +11,6 @@
     This provides extensions to cmsg so that special fields like TTL, TOS, NFMARK, and SADDR can be specified in cmsg ancilarry data options in recvfrom and sendmsg.
     This is used in libnetcap to send and receive UDP packets.
 
-010-icmp_frag.patch
-    This patch ensures that ICMP fragmentation needed packets correctly reach their non-locally bound socket so that ICMP MTU discovery works with sessions end-pointed on untangle.
-
 013-iptables_tune.patch
     This adds the "tune" table in netfilter which comes at the very end which is used for various tasks in our networking setup.
 

@@ -1,7 +1,6 @@
 006-bridgefib.patch
 007-bridge-mac-ageing-fix.patch
 009-extensions.patch
-010-icmp_frag.patch
 013-iptables_tune.patch
 014-nfqueue-untangle-mode.patch
 015-iptables_socket.patch
