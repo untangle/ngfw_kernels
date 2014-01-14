@@ -79,12 +79,17 @@ Index: source_i386_untangle/net/ipv4/fib_frontend.c
 ===================================================================
 --- source_i386_untangle.orig/net/ipv4/fib_frontend.c	2008-07-13 14:51:29.000000000 -0700
 +++ source_i386_untangle/net/ipv4/fib_frontend.c	2008-10-03 15:47:50.000000000 -0700
-@@ -449,6 +449,46 @@
+@@ -449,6 +449,51 @@
  	return 0;
  }
  
-+static int findev(struct net *net, unsigned int remote, char *p, u32 *nh_gw)
++static int findev(struct net *net, unsigned int remote, char *devname, u32 *nh_gw)
 +{
++	struct net_device *dev;
++	dev = __dev_get_by_name(net, devname);
++	if (!dev)
++		return -ENODEV;
++
 +	struct flowi fl = { .nl_u = { .ip4_u =
 +				      { .daddr = remote,
 +					.saddr = 0,
@@ -98,7 +103,7 @@ Index: source_i386_untangle/net/ipv4/fib_frontend.c
 +#endif
 +				      } },
 +			    .iif = init_net.loopback_dev->ifindex,
-+			    .oif = 0 };
++			    .oif = dev->ifindex };
 +	struct fib_result res;
 +	struct net_device *dev_out = NULL;
 +
@@ -117,7 +122,7 @@ Index: source_i386_untangle/net/ipv4/fib_frontend.c
 +	}
 +	dev_hold(dev_out);
 +	fib_res_put(&res);
-+	strcpy(p, dev_out->name);
++	strcpy(devname, dev_out->name);
 +       fl.oif = dev_out->ifindex;
 +	dev_put(dev_out);
 +	return fl.oif;

@@ -18,5 +18,5 @@ repeat.
 
 to get building working:
 sometimes the 'make kern' fails and often it hides the error message
-go into linux-2.6-2.6.32/debuild/build/build_amd64_untangle_amd64/
+go into linux-2.6-2.6.32/debian/build/build_amd64_untangle_amd64/
 and run 'make' and it will display the error messages that caused the fail if it failed during the kernel build
