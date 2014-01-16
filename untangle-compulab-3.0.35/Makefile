@@ -34,3 +34,6 @@ $(CONFIG_DEST): $(CONFIG_ORIG)
 kernel-package:
 	cd $(KERNEL_DIR) ; \
 	MAKEFLAGS= DEB_HOST_ARCH=armel CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) fakeroot make-kpkg --arch arm --cross-compile arm-linux-gnueabi- --initrd --revision=+untangle1 kernel_image kernel_headers # --append-to-version=-test1
+
+clean:
+	rm -fr $(KERNEL_DIR)
