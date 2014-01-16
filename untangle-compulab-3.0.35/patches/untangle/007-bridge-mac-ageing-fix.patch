@@ -1,0 +1,15 @@
+Index: linux-source-2.6.24/net/bridge/br_input.c
+===================================================================
+--- linux-source-2.6.24.orig/net/bridge/br_input.c	2007-12-18 14:09:50.000000000 +0000
++++ linux-source-2.6.24/net/bridge/br_input.c	2007-12-27 05:15:12.000000000 +0000
+@@ -131,6 +131,10 @@
+ 	if (!skb)
+ 		return NULL;
+ 
++	if (p->state == BR_STATE_LEARNING ||
++            p->state == BR_STATE_FORWARDING)
++		br_fdb_update(p->br, p, eth_hdr(skb)->h_source);
++
+ 	if (unlikely(is_link_local(dest))) {
+ 		/* Pause frames shouldn't be passed up by driver anyway */
+ 		if (skb->protocol == htons(ETH_P_PAUSE))

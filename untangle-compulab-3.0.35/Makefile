@@ -3,6 +3,7 @@ KERNEL_DIR := linux-3.0.35
 CONFIG_ORIG := linux-3.0.35-cm-fx6-3.config
 CONFIG_DEST := $(KERNEL_DIR)/.config
 CONCURRENCY_LEVEL := $(( 1 + $(grep -c '^processor\s:' /proc/cpuinfo) ))
+UNTANGLE_PATCH_SERIES := patches/untangle/series
 
 all: extract patch config kernel-package
 
@@ -19,7 +20,11 @@ patch-compulab: patches/compulab/*
 	  patch -d $(KERNEL_DIR) -f -p1 < $$patch ; \
 	done
 
-patch-untangle:
+patch-untangle: patches/untangle/*
+	while read patch ; do \
+	  echo "Applying $$patch" ; \
+	  patch -d $(KERNEL_DIR) -p1 < patches/untangle/$$patch ; \
+	done < $(UNTANGLE_PATCH_SERIES)
 
 config: $(CONFIG_DEST)
 
