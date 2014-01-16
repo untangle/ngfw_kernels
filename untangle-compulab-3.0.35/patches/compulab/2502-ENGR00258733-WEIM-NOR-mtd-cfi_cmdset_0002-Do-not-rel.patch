@@ -1,0 +1,41 @@
+From 08c45975f6bb5ad41494b77d88ea9a905b277646 Mon Sep 17 00:00:00 2001
+From: Huang Shijie <b32955@freescale.com>
+Date: Fri, 12 Apr 2013 15:33:11 +0800
+Subject: ENGR00258733 WEIM-NOR: mtd: cfi_cmdset_0002: Do not release the
+ mutex lock
+
+The NOR may suffers a write-buffer timeout during the bonnie++/ubifs stress
+test. This patch is just a workaround to fix this issue.
+
+With this patch, the read/write/erase will do in the synchronous way.
+
+Signed-off-by: Huang Shijie <b32955@freescale.com>
+---
+ drivers/mtd/chips/cfi_cmdset_0002.c |    4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/drivers/mtd/chips/cfi_cmdset_0002.c b/drivers/mtd/chips/cfi_cmdset_0002.c
+index a35416c..f3626b0 100644
+--- a/drivers/mtd/chips/cfi_cmdset_0002.c
++++ b/drivers/mtd/chips/cfi_cmdset_0002.c
+@@ -1040,17 +1040,13 @@ static void __xipram xip_udelay(struct map_info *map, struct flchip *chip,
+ 
+ #define UDELAY(map, chip, adr, usec)  \
+ do {  \
+-	mutex_unlock(&chip->mutex);  \
+ 	cfi_udelay(usec);  \
+-	mutex_lock(&chip->mutex);  \
+ } while (0)
+ 
+ #define INVALIDATE_CACHE_UDELAY(map, chip, adr, len, usec)  \
+ do {  \
+-	mutex_unlock(&chip->mutex);  \
+ 	INVALIDATE_CACHED_RANGE(map, adr, len);  \
+ 	cfi_udelay(usec);  \
+-	mutex_lock(&chip->mutex);  \
+ } while (0)
+ 
+ #endif
+-- 
+1.7.9.5
+

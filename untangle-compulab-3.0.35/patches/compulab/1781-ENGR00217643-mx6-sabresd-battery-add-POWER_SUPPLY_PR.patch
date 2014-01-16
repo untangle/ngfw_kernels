@@ -1,0 +1,43 @@
+From 4154c8e9a603d23d8a0b155464f4fb1f2ca691cc Mon Sep 17 00:00:00 2001
+From: Rong Dian <b38775@freescale.com>
+Date: Fri, 20 Jul 2012 13:37:09 +0800
+Subject: ENGR00217643 mx6 sabresd battery:add
+ POWER_SUPPLY_PROP_CAPACITY_LEVEL property
+
+this battery property provides battery capacity low/normal/full status
+
+Signed-off-by: Rong Dian <b38775@freescale.com>
+---
+ drivers/power/sabresd_battery.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/power/sabresd_battery.c b/drivers/power/sabresd_battery.c
+index dd83986..fcbbbc5 100755
+--- a/drivers/power/sabresd_battery.c
++++ b/drivers/power/sabresd_battery.c
+@@ -168,6 +168,7 @@ static enum power_supply_property max8903_battery_props[] = {
+ 	POWER_SUPPLY_PROP_VOLTAGE_MAX_DESIGN,
+ 	POWER_SUPPLY_PROP_VOLTAGE_MIN_DESIGN,
+ 	POWER_SUPPLY_PROP_HEALTH,
++	POWER_SUPPLY_PROP_CAPACITY_LEVEL,
+ };
+ 
+ extern u32 max11801_read_adc(void);
+@@ -350,6 +351,14 @@ static int max8903_battery_get_property(struct power_supply *bat,
+ 		if (di->fault)
+ 			val->intval = POWER_SUPPLY_HEALTH_UNSPEC_FAILURE;
+ 		break;
++	case POWER_SUPPLY_PROP_CAPACITY_LEVEL:
++		if (di->battery_status == POWER_SUPPLY_STATUS_FULL)
++			val->intval = POWER_SUPPLY_CAPACITY_LEVEL_FULL;
++		else if (di->percent <= 15)
++			val->intval = POWER_SUPPLY_CAPACITY_LEVEL_LOW;
++		else
++			val->intval = POWER_SUPPLY_CAPACITY_LEVEL_NORMAL;
++		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
+-- 
+1.7.9.5
+

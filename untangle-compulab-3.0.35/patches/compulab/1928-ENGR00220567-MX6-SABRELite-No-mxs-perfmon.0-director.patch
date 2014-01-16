@@ -1,0 +1,31 @@
+From 884c9588986016365f68b4ab2768aa1831f057a5 Mon Sep 17 00:00:00 2001
+From: Eric Sun <jian.sun@freescale.com>
+Date: Mon, 20 Aug 2012 14:05:59 +0800
+Subject: ENGR00220567 [MX6 SABRELite] No mxs-perfmon.0 directory
+
+The problem is caused because "mx6_sabrelite_board_init" don't add the
+corresponding device node. Problem resolved after add them.
+
+Signed-off-by: Eric Sun <jian.sun@freescale.com>
+---
+ arch/arm/mach-mx6/board-mx6q_sabrelite.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/mach-mx6/board-mx6q_sabrelite.c b/arch/arm/mach-mx6/board-mx6q_sabrelite.c
+index 3abb282..eff81ac 100644
+--- a/arch/arm/mach-mx6/board-mx6q_sabrelite.c
++++ b/arch/arm/mach-mx6/board-mx6q_sabrelite.c
+@@ -1234,6 +1234,10 @@ static void __init mx6_sabrelite_board_init(void)
+ 	clk_set_rate(clko2, rate);
+ 	clk_enable(clko2);
+ 	imx6q_add_busfreq();
++
++	imx6q_add_perfmon(0);
++	imx6q_add_perfmon(1);
++	imx6q_add_perfmon(2);
+ }
+ 
+ extern void __iomem *twd_base;
+-- 
+1.7.9.5
+

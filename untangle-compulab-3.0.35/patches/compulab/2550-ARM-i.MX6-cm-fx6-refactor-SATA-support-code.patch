@@ -1,0 +1,146 @@
+From d2c1fe7c8b43cc66a0567a52237e1582f88a25a1 Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Mon, 4 Mar 2013 17:06:21 +0200
+Subject: ARM: i.MX6: cm-fx6: refactor SATA support code
+
+Refactor SATA support code for cm-fx6.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6.c |   70 +++++++++++++++++++++-----------------
+ 1 file changed, 38 insertions(+), 32 deletions(-)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index 7531025..20b832e 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -103,7 +103,6 @@
+ #define MX6_ARM2_CAN1_STBY		IMX_GPIO_NR(7, 12)
+ #define MX6_ARM2_CAN1_EN		IMX_GPIO_NR(7, 13)
+ 
+-static struct clk *sata_clk;
+ static int spdif_en;
+ static int flexcan_en;
+ 
+@@ -641,26 +640,27 @@ static void __init cm_fx6_init_usb(void)
+ 	mx6_usb_dr_init();
+ }
+ 
++#if defined(CONFIG_SATA_AHCI_PLATFORM) || \
++	defined(CONFIG_SATA_AHCI_PLATFORM_MODULE)
++static struct clk *sata_clk;
+ 
+ /* HW Initialization, if return 0, initialization is successful. */
+-static int mx6_arm2_sata_init(struct device *dev, void __iomem *addr)
++static int cm_fx6_sata_init(struct device *dev, void __iomem *addr)
+ {
+ 	u32 tmpdata;
+-	int ret = 0;
++	int err;
+ 	struct clk *clk;
+ 
+-	/* Enable SATA PWR CTRL_0 of MAX7310 */
+-//	gpio_request(MX6_ARM2_MAX7310_1_BASE_ADDR, "SATA_PWR_EN");
+-//	gpio_direction_output(MX6_ARM2_MAX7310_1_BASE_ADDR, 1);
+-
+ 	sata_clk = clk_get(dev, "imx_sata_clk");
+ 	if (IS_ERR(sata_clk)) {
+-		dev_err(dev, "no sata clock.\n");
+-		return PTR_ERR(sata_clk);
++		err = PTR_ERR(sata_clk);
++		dev_err(dev, "no sata clock err: %d\n", err);
++		return err;
+ 	}
+-	ret = clk_enable(sata_clk);
+-	if (ret) {
+-		dev_err(dev, "can't enable sata clock.\n");
++
++	err = clk_enable(sata_clk);
++	if (err) {
++		dev_err(dev, "can't enable sata clock err: %d\n", err);
+ 		goto put_sata_clk;
+ 	}
+ 
+@@ -688,44 +688,51 @@ static int mx6_arm2_sata_init(struct device *dev, void __iomem *addr)
+ 	/* Get the AHB clock rate, and configure the TIMER1MS reg later */
+ 	clk = clk_get(NULL, "ahb");
+ 	if (IS_ERR(clk)) {
+-		dev_err(dev, "no ahb clock.\n");
+-		ret = PTR_ERR(clk);
++		err = PTR_ERR(clk);
++		dev_err(dev, "no ahb clock err: %d\n", err);
+ 		goto release_sata_clk;
+ 	}
++
+ 	tmpdata = clk_get_rate(clk) / 1000;
+ 	clk_put(clk);
+ 
+-	ret = sata_init(addr, tmpdata);
+-	if (ret == 0)
+-		return ret;
++	err = sata_init(addr, tmpdata);
++	if (!err)
++		return 0;
+ 
+ release_sata_clk:
+ 	clk_disable(sata_clk);
+ put_sata_clk:
+ 	clk_put(sata_clk);
+-	/* Disable SATA PWR CTRL_0 of MAX7310 */
+-//	gpio_request(MX6_ARM2_MAX7310_1_BASE_ADDR, "SATA_PWR_EN");
+-//	gpio_direction_output(MX6_ARM2_MAX7310_1_BASE_ADDR, 0);
+ 
+-	return ret;
++	return err;
+ }
+ 
+-static void mx6_arm2_sata_exit(struct device *dev)
++static void cm_fx6_sata_exit(struct device *dev)
+ {
+ 	clk_disable(sata_clk);
+ 	clk_put(sata_clk);
+-
+-	/* Disable SATA PWR CTRL_0 of MAX7310 */
+-//	gpio_request(MX6_ARM2_MAX7310_1_BASE_ADDR, "SATA_PWR_EN");
+-//	gpio_direction_output(MX6_ARM2_MAX7310_1_BASE_ADDR, 0);
+-
+ }
+ 
+-static struct ahci_platform_data mx6_arm2_sata_data = {
+-	.init	= mx6_arm2_sata_init,
+-	.exit	= mx6_arm2_sata_exit,
++static struct ahci_platform_data cm_fx6_sata_pdata = {
++	.init	= cm_fx6_sata_init,
++	.exit	= cm_fx6_sata_exit,
+ };
+ 
++static void __init cm_fx6_init_sata(void)
++{
++	struct platform_device * pdev;
++
++	if (cpu_is_mx6q()) {
++		pdev = imx6q_add_ahci(0, &cm_fx6_sata_pdata);
++		if (IS_ERR(pdev))
++			pr_err("%s: AHCI SATA register failed: %ld\n",
++			       __func__, PTR_ERR(pdev));
++	}
++}
++#else /* SATA_AHCI_PLATFORM */
++static inline void cm_fx6_init_sata(void) {}
++#endif /* SATA_AHCI_PLATFORM */
+ 
+ static void cm_fx6_hdmi_init(int ipu_id, int disp_id)
+ {
+@@ -1180,8 +1187,7 @@ static void __init cm_fx6_init(void)
+ 	imx6q_add_sdhci_usdhc_imx(2, &cm_fx6_sd3_data);
+ 	imx_add_viv_gpu(&imx6_gpu_data, &imx6_gpu_pdata);
+ 
+-	if (cpu_is_mx6q())
+-		imx6q_add_ahci(0, &mx6_arm2_sata_data);
++	cm_fx6_init_sata();
+ 
+ 	imx6q_add_vpu();
+ 	cm_fx6_init_usb();
+-- 
+1.7.9.5
+

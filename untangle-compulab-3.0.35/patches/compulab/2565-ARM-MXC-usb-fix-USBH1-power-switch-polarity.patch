@@ -1,0 +1,46 @@
+From b0662e80688579c19d7d173afc13097d9e933946 Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Sun, 17 Mar 2013 13:21:42 +0200
+Subject: ARM: MXC: usb: fix USBH1 power switch polarity
+
+Current default hardware settings are suitable for active low USB VBUS
+switches.
+sb-fx6 USB VBUS switch is active high.
+Adjust the USBH1 power polarity to comply with the sb-fx6 USB VBUS
+switch.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/plat-mxc/include/mach/regs-usbphy-mx6.h |    1 +
+ arch/arm/plat-mxc/usb_common.c                   |    3 +++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/arch/arm/plat-mxc/include/mach/regs-usbphy-mx6.h b/arch/arm/plat-mxc/include/mach/regs-usbphy-mx6.h
+index 473d16c..5b858fa 100644
+--- a/arch/arm/plat-mxc/include/mach/regs-usbphy-mx6.h
++++ b/arch/arm/plat-mxc/include/mach/regs-usbphy-mx6.h
+@@ -462,6 +462,7 @@
+ #define UCTRL_RESET		(1 << 11)	/* Force OTG UTMI PHY Reset */
+ #define UCTRL_OWIE		(1 << 10)	/* OTG wakeup intr request received */
+ #define UCTRL_PM		(1 << 9)	/* OTG Power Mask */
++#define UCTRL_PWR_POL		(1 << 9)	/* Power polarity */
+ #define UCTRL_OVER_CUR_POL	(1 << 8)	/* OTG Polarity of Overcurrent */
+ #define UCTRL_OVER_CUR_DIS	(1 << 7)	/* Disable OTG Overcurrent Detection */
+ /* bit 0 - bit 6 is reserved at mx6q */
+diff --git a/arch/arm/plat-mxc/usb_common.c b/arch/arm/plat-mxc/usb_common.c
+index f6acb8a..32ea1cb 100755
+--- a/arch/arm/plat-mxc/usb_common.c
++++ b/arch/arm/plat-mxc/usb_common.c
+@@ -569,6 +569,9 @@ int fsl_usb_host_init(struct platform_device *pdev)
+ 			else if (machine_is_mx6q_sabrelite())
+ 				USB_H1_CTRL |= UCTRL_OVER_CUR_POL;
+ 			USB_H1_CTRL |= UCTRL_OVER_CUR_DIS;
++
++			if (machine_is_cm_fx6())
++				USB_H1_CTRL |= UCTRL_PWR_POL;
+ 		}
+ #endif
+ 	}
+-- 
+1.7.9.5
+

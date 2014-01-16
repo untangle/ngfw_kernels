@@ -1,0 +1,29 @@
+From a8212214479f8bb16fc5c68ab79ea58884d74f47 Mon Sep 17 00:00:00 2001
+From: Liu Ying <Ying.Liu@freescale.com>
+Date: Mon, 2 Jul 2012 16:56:07 +0800
+Subject: ENGR00215531-2 V4L2:OV3640:Correct sensor data attribute
+
+This patch corrects sensor data struct by adding static
+attribute.
+
+Signed-off-by: Liu Ying <Ying.Liu@freescale.com>
+---
+ drivers/media/video/mxc/capture/ov3640.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/video/mxc/capture/ov3640.c b/drivers/media/video/mxc/capture/ov3640.c
+index 69a3ad4..ad5a94a 100644
+--- a/drivers/media/video/mxc/capture/ov3640.c
++++ b/drivers/media/video/mxc/capture/ov3640.c
+@@ -72,7 +72,7 @@ struct ov3640_mode_info {
+ /*!
+  * Maintains the information on the current state of the sesor.
+  */
+-struct sensor_data ov3640_data;
++static struct sensor_data ov3640_data;
+ 
+ static struct reg_value ov3640_setting_15fps_QXGA_2048_1536[] = {
+ #if 0
+-- 
+1.7.9.5
+

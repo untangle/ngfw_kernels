@@ -1,0 +1,171 @@
+From 54eaafb0d0279e8891745a975a4687335a34356b Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Wed, 27 Feb 2013 17:16:46 +0200
+Subject: ARM: i.MX6: cm-fx6: refactor SPI bus 0 handling
+
+Prepare for another SPI bus and its devices registration, by
+refactoring the board specific SPI code in a flexible way to handle
+multiple SPI busses and devices.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6-dl.h |    6 ++--
+ arch/arm/mach-mx6/board-cm-fx6-q.h  |    6 ++--
+ arch/arm/mach-mx6/board-cm-fx6.c    |   64 +++++++++++++++++++++++++----------
+ 3 files changed, 50 insertions(+), 26 deletions(-)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-dl.h b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+index b81e3cb..58ad714 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-dl.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+@@ -74,13 +74,11 @@ static iomux_v3_cfg_t cm_fx6_dl_pads[] = {
+ 	MX6DL_PAD_SD3_DAT4__GPIO_7_1,
+ 
+ 	/* eCSPI1 */
+-	MX6DL_PAD_EIM_EB2__ECSPI1_SS0,
+ 	MX6DL_PAD_EIM_D16__ECSPI1_SCLK,
+ 	MX6DL_PAD_EIM_D17__ECSPI1_MISO,
+ 	MX6DL_PAD_EIM_D18__ECSPI1_MOSI,
+-	MX6DL_PAD_EIM_D19__ECSPI1_SS1,
+-	MX6DL_PAD_EIM_EB2__GPIO_2_30,	/*SS0*/
+-	MX6DL_PAD_EIM_D19__GPIO_3_19,	/*SS1*/
++	MX6DL_PAD_EIM_EB2__GPIO_2_30,	/* SS0 */
++	MX6DL_PAD_EIM_D19__GPIO_3_19,	/* SS1 */
+ 
+ 	/* I2C1 */
+ 	MX6DL_PAD_EIM_D21__I2C1_SCL,
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-q.h b/arch/arm/mach-mx6/board-cm-fx6-q.h
+index 7a828f7..0ab9823 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-q.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-q.h
+@@ -74,13 +74,11 @@ static iomux_v3_cfg_t cm_fx6_q_common_pads[] = {
+ 	MX6Q_PAD_SD3_DAT4__GPIO_7_1,
+ 
+ 	/* eCSPI1 */
+-	MX6Q_PAD_EIM_EB2__ECSPI1_SS0,
+ 	MX6Q_PAD_EIM_D16__ECSPI1_SCLK,
+ 	MX6Q_PAD_EIM_D17__ECSPI1_MISO,
+ 	MX6Q_PAD_EIM_D18__ECSPI1_MOSI,
+-	MX6Q_PAD_EIM_D19__ECSPI1_SS1,
+-	MX6Q_PAD_EIM_EB2__GPIO_2_30,	/*SS0*/
+-	MX6Q_PAD_EIM_D19__GPIO_3_19,	/*SS1*/
++	MX6Q_PAD_EIM_EB2__GPIO_2_30,	/* SS0 */
++	MX6Q_PAD_EIM_D19__GPIO_3_19,	/* SS1 */
+ 
+ 	/* I2C1 */
+ 	MX6Q_PAD_EIM_D21__I2C1_SCL,
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index 52c9aa6..802b04b 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -294,14 +294,15 @@ static struct fec_platform_data cm_fx6_fec_data = {
+ 	.phy			= PHY_INTERFACE_MODE_RGMII,
+ };
+ 
+-static int cm_fx6_spi_cs[] = {
+-	CM_FX6_ECSPI1_CS0,
+-	CM_FX6_ECSPI1_CS1,
++#if defined(CONFIG_SPI_IMX) || defined(CONFIG_SPI_IMX_MODULE)
++static int cm_fx6_spi0_cs[] = {
++	CM_FX6_ECSPI1_CS0,	/* CS0 */
++	CM_FX6_ECSPI1_CS1,	/* CS1 */
+ };
+ 
+-static const struct spi_imx_master cm_fx6_spi_data = {
+-	.chipselect     = cm_fx6_spi_cs,
+-	.num_chipselect = ARRAY_SIZE(cm_fx6_spi_cs),
++static const struct spi_imx_master cm_fx6_spi0_data = {
++	.chipselect	= cm_fx6_spi0_cs,
++	.num_chipselect	= ARRAY_SIZE(cm_fx6_spi0_cs),
+ };
+ 
+ #if defined(CONFIG_MTD_M25P80) || defined(CONFIG_MTD_M25P80_MODULE)
+@@ -357,6 +358,7 @@ static struct platform_device ads7846_reg_pdev = {
+ 		.platform_data = &ads7846_reg_config,
+ 	},
+ };
++
+ static struct ads7846_platform_data ads7846_config = {
+ 	.x_max			= 0x0fff,
+ 	.y_max			= 0x0fff,
+@@ -368,9 +370,21 @@ static struct ads7846_platform_data ads7846_config = {
+ 	.gpio_pendown		= CM_FX6_TSPENDOWN,
+ 	.keep_vref_on		= 1,
+ };
+-#endif
+ 
+-static struct spi_board_info cm_fx6_spi0_board_info[] = {
++static void __init ads7846_init(void)
++{
++	int err;
++
++	err = platform_device_register(&ads7846_reg_pdev);
++	if (err)
++		pr_err("%s: ADS7846 regulator register failed: %d\n",
++		       __func__, err);
++}
++#else /* CONFIG_TOUCHSCREEN_ADS7846 */
++static inline void ads7846_init(void) {}
++#endif /* CONFIG_TOUCHSCREEN_ADS7846 */
++
++static struct spi_board_info cm_fx6_spi0_board_info[] __initdata = {
+ #if defined(CONFIG_MTD_M25P80) || defined(CONFIG_MTD_M25P80_MODULE)
+ 	{
+ 		.modalias	= "m25p80",
+@@ -393,18 +407,35 @@ static struct spi_board_info cm_fx6_spi0_board_info[] = {
+ #endif
+ };
+ 
+-static void cm_fx6_spi_devices_init(void)
++static void __init spi_register_bus_binfo(int busnum,
++					  const struct spi_imx_master *spidata,
++					  struct spi_board_info *info,
++					  int info_size)
+ {
+ 	int err;
++	struct platform_device * pdev;
+ 
+-	err = platform_device_register(&ads7846_reg_pdev);
++	pdev = imx6q_add_ecspi(busnum, spidata);
++	if (IS_ERR(pdev))
++		pr_err("%s: SPI bus %d register failed: %ld\n",
++		       __func__, busnum, PTR_ERR(pdev));
++
++	err = spi_register_board_info(info, info_size);
+ 	if (err)
+-		pr_err("%s: ADS7846 regulator register failed: %d\n",
+-		       __func__, err);
++		pr_err("%s: SPI bus %d board info register failed: %d\n",
++		       __func__, busnum, err);
++}
+ 
+-	spi_register_board_info(cm_fx6_spi0_board_info,
+-				ARRAY_SIZE(cm_fx6_spi0_board_info));
++static void __init cm_fx6_spi_init(void)
++{
++	ads7846_init();
++	spi_register_bus_binfo(0, &cm_fx6_spi0_data,
++			       cm_fx6_spi0_board_info,
++			       ARRAY_SIZE(cm_fx6_spi0_board_info));
+ }
++#else /* CONFIG_SPI_IMX */
++static inline void cm_fx6_spi_init(void) {}
++#endif /* CONFIG_SPI_IMX */
+ 
+ static struct imxi2c_platform_data cm_fx6_i2c0_data = {
+ 	.bitrate = 100000,
+@@ -986,10 +1017,7 @@ static void __init cm_fx6_init(void)
+ 	}
+ 
+ 	cm_fx6_init_led();
+-
+-	/* SPI */
+-	imx6q_add_ecspi(0, &cm_fx6_spi_data);
+-	cm_fx6_spi_devices_init();
++	cm_fx6_spi_init();
+ 
+ 	imx6q_add_mxc_hdmi(&hdmi_data);
+ 
+-- 
+1.7.9.5
+

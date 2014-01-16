@@ -1,0 +1,36 @@
+From 169a3b5b9c1bdc57df3dcf2c316294ec7e2a85f5 Mon Sep 17 00:00:00 2001
+From: Lionel Xu <Lionel.Xu@freescale.com>
+Date: Mon, 24 Oct 2011 12:34:26 +0800
+Subject: ENGR00156869 ESAI: Support 8-channel playbacking and 6-channel
+ recording
+
+To make cpu_dai esai support 8/6 channel playback/recording.
+
+Signed-off-by: Lionel Xu <Lionel.Xu@freescale.com>
+---
+ sound/soc/imx/imx-esai.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/imx/imx-esai.c b/sound/soc/imx/imx-esai.c
+index a3c5c44..d3cf553 100644
+--- a/sound/soc/imx/imx-esai.c
++++ b/sound/soc/imx/imx-esai.c
+@@ -554,13 +554,13 @@ static struct snd_soc_dai_driver imx_esai_dai = {
+ 	 .resume = imx_esai_resume,
+ 	 .playback = {
+ 		      .channels_min = 1,
+-		      .channels_max = 6,
++		      .channels_max = 12,
+ 		      .rates = IMX_ESAI_RATES,
+ 		      .formats = IMX_ESAI_FORMATS,
+ 		      },
+ 	 .capture = {
+ 		     .channels_min = 1,
+-		     .channels_max = 4,
++		     .channels_max = 8,
+ 		     .rates = IMX_ESAI_RATES,
+ 		     .formats = IMX_ESAI_FORMATS,
+ 		     },
+-- 
+1.7.9.5
+

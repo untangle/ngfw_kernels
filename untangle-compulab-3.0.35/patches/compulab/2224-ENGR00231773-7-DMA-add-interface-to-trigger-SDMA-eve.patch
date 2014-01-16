@@ -1,0 +1,27 @@
+From ed19912c57c7313a63490f4f4d89ec4c19dedd1b Mon Sep 17 00:00:00 2001
+From: Chen Liangjun <b36089@freescale.com>
+Date: Mon, 29 Oct 2012 15:38:26 +0800
+Subject: ENGR00231773-7 DMA: add interface to trigger SDMA event pending bit
+
+Add interface in header file to call sdma event pending trigger
+function.
+
+Signed-off-by: Chen Liangjun <b36089@freescale.com>
+---
+ arch/arm/plat-mxc/include/mach/dma.h |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/plat-mxc/include/mach/dma.h b/arch/arm/plat-mxc/include/mach/dma.h
+index 3fccb3b..af2edb8 100644
+--- a/arch/arm/plat-mxc/include/mach/dma.h
++++ b/arch/arm/plat-mxc/include/mach/dma.h
+@@ -101,5 +101,6 @@ static inline int mxs_dma_is_apbx(struct dma_chan *chan)
+ 	return !strcmp(dev_name(chan->device->dev), "mxs-dma-apbx");
+ }
+ 
++void sdma_set_event_pending(struct dma_chan *chan);
+ 
+ #endif
+-- 
+1.7.9.5
+

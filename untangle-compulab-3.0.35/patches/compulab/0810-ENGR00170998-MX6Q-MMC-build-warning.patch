@@ -1,0 +1,42 @@
+From c5b56b448ee691e4428b53fde94037f91c656961 Mon Sep 17 00:00:00 2001
+From: Tony Lin <tony.lin@freescale.com>
+Date: Wed, 28 Dec 2011 10:34:17 +0800
+Subject: ENGR00170998 [MX6Q MMC]build warning
+
+fix following build warning:
+
+drivers/mmc/host/sdhci.c: In function 'sdhci_clk_worker':
+drivers/mmc/host/sdhci.c:53: warning: unused variable 'flags'
+drivers/mmc/host/sdhci.c: In function 'sdhci_resume_host':
+drivers/mmc/host/sdhci.c:1751:
+warning: 'ret' may be used uninitialized in this function
+
+Signed-off-by: Tony Lin <tony.lin@freescale.com>
+---
+ drivers/mmc/host/sdhci.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/mmc/host/sdhci.c b/drivers/mmc/host/sdhci.c
+index b3703d3..b11f727 100755
+--- a/drivers/mmc/host/sdhci.c
++++ b/drivers/mmc/host/sdhci.c
+@@ -53,7 +53,6 @@ static void sdhci_tuning_timer(unsigned long data);
+ 
+ static void sdhci_clk_worker(struct work_struct *work)
+ {
+-	unsigned long flags;
+ 	struct sdhci_host *host =
+ 		container_of(work, struct sdhci_host, clk_worker.work);
+ 
+@@ -2323,7 +2322,7 @@ int sdhci_resume_host(struct sdhci_host *host)
+ 	int ret;
+ 
+ 	if (host->vmmc) {
+-		int ret = regulator_enable(host->vmmc);
++		ret = regulator_enable(host->vmmc);
+ 		if (ret)
+ 			goto out;
+ 	}
+-- 
+1.7.9.5
+

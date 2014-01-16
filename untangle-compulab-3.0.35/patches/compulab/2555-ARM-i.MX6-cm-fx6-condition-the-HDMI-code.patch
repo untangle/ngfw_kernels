@@ -1,0 +1,50 @@
+From 8c673f373aa21a02c70fb6f4d33a9e74a1ace2f2 Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Wed, 6 Mar 2013 14:10:59 +0200
+Subject: ARM: i.MX6: cm-fx6: condition the HDMI code
+
+Use the CONFIG_FB_MXC_HDMI define to condition the HDMI code
+compilation.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index d1c7777..5f68d46 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -548,9 +548,11 @@ static struct i2c_board_info cm_fx6_i2c0_board_info[] __initdata = {
+ };
+ 
+ static struct i2c_board_info cm_fx6_i2c1_board_info[] __initdata = {
++#if defined(CONFIG_FB_MXC_HDMI) || defined(CONFIG_FB_MXC_HDMI_MODULE)
+ 	{
+ 		I2C_BOARD_INFO("mxc_hdmi_i2c", 0x50),
+ 	},
++#endif
+ };
+ 
+ #if defined(CONFIG_EEPROM_AT24) || defined(CONFIG_EEPROM_AT24_MODULE)
+@@ -779,6 +781,7 @@ static void __init cm_fx6_init_sata(void)
+ static inline void cm_fx6_init_sata(void) {}
+ #endif /* SATA_AHCI_PLATFORM */
+ 
++#if defined(CONFIG_FB_MXC_HDMI) || defined(CONFIG_FB_MXC_HDMI_MODULE)
+ static void cm_fx6_hdmi_init(int ipu_id, int disp_id)
+ {
+ 	int hdmi_mux_setting;
+@@ -830,6 +833,9 @@ static void __init cm_fx6_init_hdmi(void)
+ 		pr_err("%s: HDMI register failed: %ld\n",
+ 		       __func__, PTR_ERR(pdev));
+ }
++#else /* CONFIG_FB_MXC_HDMI */
++static inline void cm_fx6_init_hdmi(void) {}
++#endif /* CONFIG_FB_MXC_HDMI */
+ 
+ static struct ipuv3_fb_platform_data cm_fx6_fb_data[] = {
+ 	{
+-- 
+1.7.9.5
+

@@ -1,0 +1,60 @@
+From 41c78b68c0c76a04eaf4eb147f0329cd3e3d6e43 Mon Sep 17 00:00:00 2001
+From: Valentin Raevsky <valentin@compulab.co.il>
+Date: Wed, 22 May 2013 15:08:18 +0300
+Subject: ARM: i.MX6: cm-fx6: uart: add uart5 board support
+
+Add uart5 board support.
+Configure:
+	UART5_TXD function on the KEY_COL1 pin
+	UART5_RXD function on the KEY_ROW1 pin
+---
+ arch/arm/mach-mx6/board-cm-fx6-dl.h |    3 +++
+ arch/arm/mach-mx6/board-cm-fx6-q.h  |    5 +++++
+ arch/arm/mach-mx6/board-cm-fx6.c    |    1 +
+ 3 files changed, 9 insertions(+)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-dl.h b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+index 7543a53..44e69d8 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-dl.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+@@ -22,6 +22,9 @@ static iomux_v3_cfg_t cm_fx6_dl_pads[] = {
+ 	/* UART4 for debug */
+ 	MX6DL_PAD_KEY_COL0__UART4_TXD,
+ 	MX6DL_PAD_KEY_ROW0__UART4_RXD,
++	/* UART5 */
++	MX6DL_PAD_KEY_COL1__UART5_TXD,
++	MX6DL_PAD_KEY_ROW1__UART5_RXD,
+ 	/* Green LED */
+ 	MX6DL_PAD_EIM_EB3__GPIO_2_31,
+ 	/* ADS7846 PENDOWN */
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-q.h b/arch/arm/mach-mx6/board-cm-fx6-q.h
+index febee9e..160ad21 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-q.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-q.h
+@@ -22,6 +22,11 @@ static iomux_v3_cfg_t cm_fx6_q_common_pads[] = {
+ 	/* UART4 for debug */
+ 	MX6Q_PAD_KEY_COL0__UART4_TXD,
+ 	MX6Q_PAD_KEY_ROW0__UART4_RXD,
++
++	/* UART5 */
++	MX6Q_PAD_KEY_COL1__UART5_TXD,
++	MX6Q_PAD_KEY_ROW1__UART5_RXD,
++
+ 	/* Green LED */
+ 	MX6Q_PAD_EIM_EB3__GPIO_2_31,
+ 	/* ADS7846 PENDOWN */
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index 1fa9dbe..7f9a357 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -292,6 +292,7 @@ static inline void cm_fx6_init_uart(void)
+ {
+ 	imx6q_add_imx_uart(3, NULL);
+ 	imx6q_add_imx_uart(1, &cm_fx6_uart1_data);
++	imx6q_add_imx_uart(4, NULL);
+ }
+ 
+ #define BMCR_PDOWN 0x0800 /* PHY Powerdown */
+-- 
+1.7.9.5
+

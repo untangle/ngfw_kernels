@@ -1,0 +1,111 @@
+From adf0ce365865cfd456edc6507710cf139cf79087 Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Wed, 24 Apr 2013 15:42:14 +0300
+Subject: ARM: i.MX6: cm-fx6: add USB OTG support
+
+The USB OTG support was derived from mx6q_arm2 board and has to be
+adjusted to work on cm-fx6 with sb-fx6.
+Make necessary adjustments for the USB OTG port to wotk properly.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6-dl.h |    7 ++++---
+ arch/arm/mach-mx6/board-cm-fx6-q.h  |    5 +++--
+ arch/arm/mach-mx6/board-cm-fx6.c    |   14 +++++++-------
+ 3 files changed, 14 insertions(+), 12 deletions(-)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-dl.h b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+index fd06dc2..7543a53 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-dl.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+@@ -141,11 +141,12 @@ static iomux_v3_cfg_t cm_fx6_dl_pads[] = {
+ 	/* PWM1 */
+ 	MX6DL_PAD_GPIO_9__PWM1_PWMO,
+ 
+-	/* USBOTG ID pin */
+-	MX6DL_PAD_GPIO_1__USBOTG_ID,
+-
+ 	/* Audio codec: external clock */
+ 	MX6DL_PAD_GPIO_5__CCM_CLKO,
++
++	/* USBOTG: PWR, ID */
++	MX6DL_PAD_EIM_D22__GPIO_3_22,
++	MX6DL_PAD_ENET_RX_ER__ANATOP_USBOTG_ID,
+ };
+ 
+ static iomux_v3_cfg_t cm_fx6_dl_spdif_pads[] = {
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-q.h b/arch/arm/mach-mx6/board-cm-fx6-q.h
+index 2e09ee4..febee9e 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-q.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-q.h
+@@ -135,8 +135,9 @@ static iomux_v3_cfg_t cm_fx6_q_common_pads[] = {
+ 	/* PWM1 */
+ 	MX6Q_PAD_GPIO_9__PWM1_PWMO,
+ 
+-	/* USBOTG ID pin */
+-	MX6Q_PAD_GPIO_1__USBOTG_ID,
++	/* USBOTG: PWR, ID */
++	MX6Q_PAD_EIM_D22__GPIO_3_22,
++	MX6Q_PAD_ENET_RX_ER__ANATOP_USBOTG_ID,
+ 
+ 	/* SATA PWR */
+ 	MX6Q_PAD_ENET_TX_EN__GPIO_1_28,	/* SATA_PWREN */
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index 596d840..eaaa122 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -105,13 +105,13 @@
+ 
+ #define SB_FX6_HX8520_PENDOWN		IMX_GPIO_NR(1, 4)
+ #define SB_FX6_ETH_RST			IMX_GPIO_NR(1, 26)
++#define SB_FX6_USB_OTG_PWR		IMX_GPIO_NR(3, 22)
+ #define SB_FX6_SD3_WP			IMX_GPIO_NR(7, 0)
+ #define SB_FX6_SD3_CD			IMX_GPIO_NR(7, 1)
+ #define SB_FX6_GPIO_EXT_BASE		IMX_GPIO_NR(8, 0)
+ #define SB_FX6_PCIE_MUX_PWR		IMX_GPIO_NR(8, 4)
+ #define SB_FX6_LCD_RST			IMX_GPIO_NR(8, 11)
+ 
+-#define MX6_ARM2_USB_OTG_PWR		IMX_GPIO_NR(3, 22)
+ #define MX6_ARM2_CAN2_EN		IMX_GPIO_NR(5, 24)
+ #define MX6_ARM2_CAN1_STBY		IMX_GPIO_NR(7, 12)
+ #define MX6_ARM2_CAN1_EN		IMX_GPIO_NR(7, 13)
+@@ -770,12 +770,12 @@ static void __init cm_fx6_i2c_init(void)
+ static inline void cm_fx6_i2c_init(void) {}
+ #endif /* CONFIG_I2C_IMX */
+ 
+-static void imx6_arm2_usbotg_vbus(bool on)
++static void cm_fx6_usbotg_vbus(bool on)
+ {
+ 	if (on)
+-		gpio_set_value(MX6_ARM2_USB_OTG_PWR, 1);
++		gpio_set_value(SB_FX6_USB_OTG_PWR, 1);
+ 	else
+-		gpio_set_value(MX6_ARM2_USB_OTG_PWR, 0);
++		gpio_set_value(SB_FX6_USB_OTG_PWR, 0);
+ }
+ 
+ static void __init cm_fx6_usb_hub_reset(void)
+@@ -803,7 +803,7 @@ static void __init cm_fx6_init_usb(void)
+ 	/* disable external charger detect,
+ 	 * or it will affect signal quality at dp.
+ 	 */
+-	ret = gpio_request_one(MX6_ARM2_USB_OTG_PWR,
++	ret = gpio_request_one(SB_FX6_USB_OTG_PWR,
+ 			       GPIOF_OUT_INIT_LOW, "usb-pwr");
+ 	if (ret)
+ 		pr_err("%s: USB_OTG_PWR gpio request failed: %d\n",
+@@ -811,9 +811,9 @@ static void __init cm_fx6_init_usb(void)
+ 
+ 	cm_fx6_usb_hub_reset();
+ 
+-	mxc_iomux_set_gpr_register(1, 13, 1, 1);
++	mxc_iomux_set_gpr_register(1, 13, 1, 0);
+ 
+-	mx6_set_otghost_vbus_func(imx6_arm2_usbotg_vbus);
++	mx6_set_otghost_vbus_func(cm_fx6_usbotg_vbus);
+ 	mx6_usb_dr_init();
+ }
+ 
+-- 
+1.7.9.5
+

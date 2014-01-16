@@ -1,0 +1,30 @@
+From 9a29229fa1d5265dd9fc881c5963df3a6112042a Mon Sep 17 00:00:00 2001
+From: Michael Minnick <michael.minnick@freescale.com>
+Date: Tue, 16 Oct 2012 18:07:20 -0500
+Subject: ENGR00227965 EPDC: Init sequence leaves EDPC clocks on
+
+A small logic bug prevents the init sequence from properly turning
+off the clocks. This leads to the clocks being always on
+if the first update does not complete due to the screen being blanked.
+
+Signed-off-by: Michael Minnick <michael.minnick@freescale.com>
+---
+ drivers/video/mxc/mxc_epdc_fb.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/video/mxc/mxc_epdc_fb.c b/drivers/video/mxc/mxc_epdc_fb.c
+index 727c6eb..2df4404 100644
+--- a/drivers/video/mxc/mxc_epdc_fb.c
++++ b/drivers/video/mxc/mxc_epdc_fb.c
+@@ -1166,6 +1166,8 @@ static void epdc_init_sequence(struct mxc_epdc_fb_data *fb_data)
+ 	fb_data->in_init = true;
+ 	epdc_powerup(fb_data);
+ 	draw_mode0(fb_data);
++	/* Force power down event */
++	fb_data->powering_down = true;
+ 	epdc_powerdown(fb_data);
+ 	fb_data->updates_active = false;
+ }
+-- 
+1.7.9.5
+

@@ -1,0 +1,39 @@
+From 8745c09484a485f932e6c28ebb2bcf3ff0afee95 Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Wed, 6 Mar 2013 14:14:46 +0200
+Subject: ARM: i.MX6: cm-fx6: condition the display support
+
+Use the CONFIG_FB_MXC_SYNC_PANEL define to condition the compilation of
+the display support for cm-fx6.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index 2f65ffe..37ea6eb 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -781,6 +781,8 @@ static void __init cm_fx6_init_sata(void)
+ static inline void cm_fx6_init_sata(void) {}
+ #endif /* SATA_AHCI_PLATFORM */
+ 
++#if defined(CONFIG_FB_MXC_SYNC_PANEL) || \
++	defined(CONFIG_FB_MXC_SYNC_PANEL_MODULE)
+ #if defined(CONFIG_FB_MXC_HDMI) || defined(CONFIG_FB_MXC_HDMI_MODULE)
+ static void cm_fx6_hdmi_init(int ipu_id, int disp_id)
+ {
+@@ -906,6 +908,9 @@ static void __init cm_fx6_init_display(void)
+ 		pr_err("%s: lcd interface register failed: %ld\n",
+ 		       __func__, PTR_ERR(pdev));
+ }
++#else /* CONFIG_FB_MXC_SYNC_PANEL */
++static inline void cm_fx6_init_display(void) {}
++#endif /* CONFIG_FB_MXC_SYNC_PANEL */
+ 
+ #if defined(CONFIG_BACKLIGHT_PWM) || defined(CONFIG_BACKLIGHT_PWM_MODULE)
+ static struct platform_pwm_backlight_data sb_fx6_pwm_backlight_data = {
+-- 
+1.7.9.5
+

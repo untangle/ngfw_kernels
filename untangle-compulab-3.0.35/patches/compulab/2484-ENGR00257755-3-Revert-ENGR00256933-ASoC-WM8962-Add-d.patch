@@ -1,0 +1,33 @@
+From 1a363289df722c3a201b019591ce3b814ffc5981 Mon Sep 17 00:00:00 2001
+From: Nicolin Chen <b42378@freescale.com>
+Date: Tue, 9 Apr 2013 09:12:31 +0800
+Subject: ENGR00257755-3 Revert "ENGR00256933 ASoC: WM8962: Add delay after
+ FLL-enable"
+
+This reverts commit 739325483d12276b80b34d7916e6cdb6d8774900.
+
+We already reverted FLL-enable code in set_fll(), so we don't need delay any
+more.
+
+Acked-by: Wang Shengjiu <b02247@freescale.com>
+Signed-off-by: Nicolin Chen <b42378@freescale.com>
+---
+ sound/soc/codecs/wm8962.c |    2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/sound/soc/codecs/wm8962.c b/sound/soc/codecs/wm8962.c
+index 4d0c69a..9acae30 100644
+--- a/sound/soc/codecs/wm8962.c
++++ b/sound/soc/codecs/wm8962.c
+@@ -3483,8 +3483,6 @@ static int wm8962_set_fll(struct snd_soc_codec *codec, int fll_id, int source,
+ 			    WM8962_FLL_FRAC | WM8962_FLL_REFCLK_SRC_MASK |
+ 			    WM8962_FLL_ENA, fll1);
+ 
+-	fll1 |= WM8962_FLL_ENA;
+-
+ 	dev_dbg(codec->dev, "FLL configured for %dHz->%dHz\n", Fref, Fout);
+ 
+ 	ret = 0;
+-- 
+1.7.9.5
+

@@ -1,0 +1,428 @@
+From e2233897d072227885eaebf80716d3f94b8242b2 Mon Sep 17 00:00:00 2001
+From: Jason Liu <r64343@freescale.com>
+Date: Sun, 7 Apr 2013 09:10:25 +0800
+Subject: ENGR00257658 Revert "ENGR00256893-1 MX6Q/DL-Fix Ethernet performance
+ issue
+
+This reverts commit 067c8dcfa79a169d86809272569fe734c4222c79.
+
+i.mx6dl/dq sabreauto/sabresd board will boot up failed
+randomly with this patch-set, thus revert it. [Jason]
+
+Signed-off-by: Jason Liu <r64343@freescale.com>
+---
+ arch/arm/configs/imx6_defconfig             |    1 -
+ arch/arm/mach-mx6/Kconfig                   |    7 -------
+ arch/arm/mach-mx6/board-mx6q_arm2.c         |   17 +----------------
+ arch/arm/mach-mx6/board-mx6q_arm2.h         |    6 +-----
+ arch/arm/mach-mx6/board-mx6q_sabreauto.c    |   18 +-----------------
+ arch/arm/mach-mx6/board-mx6q_sabreauto.h    |    4 ----
+ arch/arm/mach-mx6/board-mx6q_sabrelite.c    |   17 -----------------
+ arch/arm/mach-mx6/board-mx6q_sabresd.c      |   16 ----------------
+ arch/arm/mach-mx6/board-mx6q_sabresd.h      |    4 ----
+ arch/arm/mach-mx6/clock.c                   |   22 ++--------------------
+ arch/arm/mach-mx6/system.c                  |    3 +--
+ arch/arm/plat-mxc/include/mach/iomux-mx6q.h |   21 ++++-----------------
+ 12 files changed, 10 insertions(+), 126 deletions(-)
+
+diff --git a/arch/arm/configs/imx6_defconfig b/arch/arm/configs/imx6_defconfig
+index 5ad4a00..fc897ed 100644
+--- a/arch/arm/configs/imx6_defconfig
++++ b/arch/arm/configs/imx6_defconfig
+@@ -331,7 +331,6 @@ CONFIG_ARCH_MXC_AUDMUX_V2=y
+ CONFIG_IRAM_ALLOC=y
+ CONFIG_CLK_DEBUG=y
+ CONFIG_DMA_ZONE_SIZE=184
+-#CONFIG_MX6_ENET_IRQ_TO_GPIO is not set
+ 
+ #
+ # System MMU
+diff --git a/arch/arm/mach-mx6/Kconfig b/arch/arm/mach-mx6/Kconfig
+index df954b40..59d8ab3 100644
+--- a/arch/arm/mach-mx6/Kconfig
++++ b/arch/arm/mach-mx6/Kconfig
+@@ -319,11 +319,4 @@ config MACH_IMX_BLUETOOTH_RFKILL
+        ---help---
+ 	Say Y to get the standard rfkill interface of Bluetooth
+ 
+-config MX6_ENET_IRQ_TO_GPIO
+-	bool "Route ENET interrupts to GPIO"
+-	default n
+-	help
+-	   Enabling this will direct all the ENET interrupts to a board specific GPIO.
+-	   This will allow the system to enter WAIT mode when ENET is active.
+-
+ endif
+diff --git a/arch/arm/mach-mx6/board-mx6q_arm2.c b/arch/arm/mach-mx6/board-mx6q_arm2.c
+index 97b601de..1e42f4f 100644
+--- a/arch/arm/mach-mx6/board-mx6q_arm2.c
++++ b/arch/arm/mach-mx6/board-mx6q_arm2.c
+@@ -155,12 +155,6 @@
+ 
+ #define MX6_ARM2_CAN2_STBY		MX6_ARM2_IO_EXP_GPIO2(1)
+ 
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-#define MX6_ENET_IRQ		IMX_GPIO_NR(1, 6)
+-#define IOMUX_OBSRV_MUX1_OFFSET	0x3c
+-#define OBSRV_MUX1_MASK			0x3f
+-#define OBSRV_MUX1_ENET_IRQ		0x9
+-#endif
+ 
+ #define BMCR_PDOWN			0x0800 /* PHY Powerdown */
+ 
+@@ -393,9 +387,6 @@ static struct fec_platform_data fec_data __initdata = {
+ 	.init			= mx6_arm2_fec_phy_init,
+ 	.power_hibernate	= mx6_arm2_fec_power_hibernate,
+ 	.phy			= PHY_INTERFACE_MODE_RGMII,
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-	.gpio_irq = MX6_ENET_IRQ,
+-#endif
+ };
+ 
+ static int mx6_arm2_spi_cs[] = {
+@@ -2182,14 +2173,8 @@ static void __init mx6_arm2_init(void)
+ 
+ 	imx6q_add_anatop_thermal_imx(1, &mx6_arm2_anatop_thermal_data);
+ 
+-	if (!esai_record) {
++	if (!esai_record)
+ 		imx6_init_fec(fec_data);
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-	/* Make sure the IOMUX_OBSRV_MUX1 is set to ENET_IRQ. */
+-	mxc_iomux_set_specialbits_register(IOMUX_OBSRV_MUX1_OFFSET,
+-		OBSRV_MUX1_ENET_IRQ, OBSRV_MUX1_MASK);
+-#endif
+-	}
+ 
+ 	imx6q_add_pm_imx(0, &mx6_arm2_pm_data);
+ 	imx6q_add_sdhci_usdhc_imx(3, &mx6_arm2_sd4_data);
+diff --git a/arch/arm/mach-mx6/board-mx6q_arm2.h b/arch/arm/mach-mx6/board-mx6q_arm2.h
+index 2a6a205..8295c6e 100644
+--- a/arch/arm/mach-mx6/board-mx6q_arm2.h
++++ b/arch/arm/mach-mx6/board-mx6q_arm2.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (C) 2012, 2013 Freescale Semiconductor, Inc. All Rights Reserved.
++ * Copyright (C) 2012-2013 Freescale Semiconductor, Inc. All Rights Reserved.
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+@@ -183,14 +183,10 @@ static iomux_v3_cfg_t mx6q_arm2_pads[] = {
+ 	/* USBOTG ID pin */
+ 	MX6Q_PAD_GPIO_1__USBOTG_ID,
+ 
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-	MX6Q_PAD_GPIO_6__OBSERVE_MUX_OBSRV_INT_OUT1,
+-#else
+ 	/* MLB150 */
+ 	MX6Q_PAD_GPIO_3__MLB_MLBCLK,
+ 	MX6Q_PAD_GPIO_6__MLB_MLBSIG,
+ 	MX6Q_PAD_GPIO_2__MLB_MLBDAT,
+-#endif
+ };
+ 
+ static iomux_v3_cfg_t mx6q_arm2_i2c3_pads[] = {
+diff --git a/arch/arm/mach-mx6/board-mx6q_sabreauto.c b/arch/arm/mach-mx6/board-mx6q_sabreauto.c
+index fb590f5..134b94a 100644
+--- a/arch/arm/mach-mx6/board-mx6q_sabreauto.c
++++ b/arch/arm/mach-mx6/board-mx6q_sabreauto.c
+@@ -114,13 +114,6 @@
+ #define SABREAUTO_MAX7310_2_BASE_ADDR	IMX_GPIO_NR(8, 8)
+ #define SABREAUTO_MAX7310_3_BASE_ADDR	IMX_GPIO_NR(8, 16)
+ 
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-#define MX6_ENET_IRQ		IMX_GPIO_NR(1, 6)
+-#define IOMUX_OBSRV_MUX1_OFFSET	0x3c
+-#define OBSRV_MUX1_MASK			0x3f
+-#define OBSRV_MUX1_ENET_IRQ		0x9
+-#endif
+-
+ #define SABREAUTO_IO_EXP_GPIO1(x)	(SABREAUTO_MAX7310_1_BASE_ADDR + (x))
+ #define SABREAUTO_IO_EXP_GPIO2(x)	(SABREAUTO_MAX7310_2_BASE_ADDR + (x))
+ #define SABREAUTO_IO_EXP_GPIO3(x)	(SABREAUTO_MAX7310_3_BASE_ADDR + (x))
+@@ -411,9 +404,6 @@ static struct fec_platform_data fec_data __initdata = {
+ 	.init			= mx6q_sabreauto_fec_phy_init,
+ 	.power_hibernate	= mx6q_sabreauto_fec_power_hibernate,
+ 	.phy			= PHY_INTERFACE_MODE_RGMII,
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-	.gpio_irq = MX6_ENET_IRQ,
+-#endif
+ };
+ 
+ static int mx6q_sabreauto_spi_cs[] = {
+@@ -1677,15 +1667,9 @@ static void __init mx6_board_init(void)
+ 
+ 	imx6q_add_anatop_thermal_imx(1, &mx6q_sabreauto_anatop_thermal_data);
+ 
+-	if (!can0_enable) {
++	if (!can0_enable)
+ 		imx6_init_fec(fec_data);
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-		/* Make sure the IOMUX_OBSRV_MUX1 is set to ENET_IRQ. */
+-		mxc_iomux_set_specialbits_register(IOMUX_OBSRV_MUX1_OFFSET,
+-			OBSRV_MUX1_ENET_IRQ, OBSRV_MUX1_MASK);
+-#endif
+ 
+-	}
+ 	imx6q_add_pm_imx(0, &mx6q_sabreauto_pm_data);
+ 
+ 	imx6q_add_sdhci_usdhc_imx(2, &mx6q_sabreauto_sd3_data);
+diff --git a/arch/arm/mach-mx6/board-mx6q_sabreauto.h b/arch/arm/mach-mx6/board-mx6q_sabreauto.h
+index e4d62f1..41d0c56 100644
+--- a/arch/arm/mach-mx6/board-mx6q_sabreauto.h
++++ b/arch/arm/mach-mx6/board-mx6q_sabreauto.h
+@@ -208,14 +208,10 @@ static iomux_v3_cfg_t mx6q_sabreauto_pads[] = {
+ 	/* HDMI */
+ 	MX6Q_PAD_EIM_A25__HDMI_TX_CEC_LINE,
+ 
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-	MX6Q_PAD_GPIO_6__OBSERVE_MUX_OBSRV_INT_OUT1,
+-#else
+ 	/* MLB150 */
+ 	MX6Q_PAD_ENET_TXD1__MLB_MLBCLK,
+ 	MX6Q_PAD_GPIO_6__MLB_MLBSIG,
+ 	MX6Q_PAD_GPIO_2__MLB_MLBDAT,
+-#endif
+ };
+ 
+ static iomux_v3_cfg_t mx6q_sabreauto_can0_pads[] = {
+diff --git a/arch/arm/mach-mx6/board-mx6q_sabrelite.c b/arch/arm/mach-mx6/board-mx6q_sabrelite.c
+index e1075fe..a0f19d2 100644
+--- a/arch/arm/mach-mx6/board-mx6q_sabrelite.c
++++ b/arch/arm/mach-mx6/board-mx6q_sabrelite.c
+@@ -93,13 +93,6 @@
+ #define MX6Q_SABRELITE_CSI0_RST		IMX_GPIO_NR(1, 8)
+ #define MX6Q_SABRELITE_CSI0_PWN		IMX_GPIO_NR(1, 6)
+ 
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-#define MX6_ENET_IRQ		IMX_GPIO_NR(1, 6)
+-#define IOMUX_OBSRV_MUX1_OFFSET	0x3c
+-#define OBSRV_MUX1_MASK			0x3f
+-#define OBSRV_MUX1_ENET_IRQ		0x9
+-#endif
+-
+ #define MX6Q_SABRELITE_SD3_WP_PADCFG	(PAD_CTL_PKE | PAD_CTL_PUE |	\
+ 		PAD_CTL_PUS_22K_UP | PAD_CTL_SPEED_MED |	\
+ 		PAD_CTL_DSE_40ohm | PAD_CTL_HYS)
+@@ -328,9 +321,7 @@ static iomux_v3_cfg_t mx6q_sabrelite_csi0_sensor_pads[] = {
+ 	MX6Q_PAD_CSI0_MCLK__IPU1_CSI0_HSYNC,
+ 	MX6Q_PAD_CSI0_PIXCLK__IPU1_CSI0_PIXCLK,
+ 	MX6Q_PAD_CSI0_VSYNC__IPU1_CSI0_VSYNC,
+-#ifndef CONFIG_MX6_ENET_IRQ_TO_GPIO
+ 	MX6Q_PAD_GPIO_6__GPIO_1_6,		/* J5 - Camera GP */
+-#endif
+ 	MX6Q_PAD_GPIO_8__GPIO_1_8,		/* J5 - Camera Reset */
+ 	MX6Q_PAD_SD1_DAT0__GPIO_1_16,		/* J5 - Camera GP */
+ 	MX6Q_PAD_NANDF_D5__GPIO_2_5,		/* J16 - MIPI GP */
+@@ -476,9 +467,6 @@ static int mx6q_sabrelite_fec_phy_init(struct phy_device *phydev)
+ static struct fec_platform_data fec_data __initdata = {
+ 	.init = mx6q_sabrelite_fec_phy_init,
+ 	.phy = PHY_INTERFACE_MODE_RGMII,
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-	.gpio_irq = MX6_ENET_IRQ,
+-#endif
+ };
+ 
+ static int mx6q_sabrelite_spi_cs[] = {
+@@ -1211,11 +1199,6 @@ static void __init mx6_sabrelite_board_init(void)
+ 
+ 	imx6q_add_anatop_thermal_imx(1, &mx6q_sabrelite_anatop_thermal_data);
+ 	imx6_init_fec(fec_data);
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-	/* Make sure the IOMUX_OBSRV_MUX1 is set to ENET_IRQ. */
+-	mxc_iomux_set_specialbits_register(IOMUX_OBSRV_MUX1_OFFSET,
+-		OBSRV_MUX1_ENET_IRQ, OBSRV_MUX1_MASK);
+-#endif
+ 	imx6q_add_pm_imx(0, &mx6q_sabrelite_pm_data);
+ 	imx6q_add_sdhci_usdhc_imx(3, &mx6q_sabrelite_sd4_data);
+ 	imx6q_add_sdhci_usdhc_imx(2, &mx6q_sabrelite_sd3_data);
+diff --git a/arch/arm/mach-mx6/board-mx6q_sabresd.c b/arch/arm/mach-mx6/board-mx6q_sabresd.c
+index ac9b8f8..a7edf4c 100644
+--- a/arch/arm/mach-mx6/board-mx6q_sabresd.c
++++ b/arch/arm/mach-mx6/board-mx6q_sabresd.c
+@@ -198,13 +198,6 @@
+ #define SABRESD_ELAN_RST	IMX_GPIO_NR(3, 8)
+ #define SABRESD_ELAN_INT	IMX_GPIO_NR(3, 28)
+ 
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-#define MX6_ENET_IRQ		IMX_GPIO_NR(1, 6)
+-#define IOMUX_OBSRV_MUX1_OFFSET	0x3c
+-#define OBSRV_MUX1_MASK			0x3f
+-#define OBSRV_MUX1_ENET_IRQ		0x9
+-#endif
+-
+ static struct clk *sata_clk;
+ static struct clk *clko;
+ static int mma8451_position = 1;
+@@ -298,9 +291,6 @@ static int mx6q_sabresd_fec_phy_init(struct phy_device *phydev)
+ static struct fec_platform_data fec_data __initdata = {
+ 	.init = mx6q_sabresd_fec_phy_init,
+ 	.phy = PHY_INTERFACE_MODE_RGMII,
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-	.gpio_irq = MX6_ENET_IRQ,
+-#endif
+ };
+ 
+ static int mx6q_sabresd_spi_cs[] = {
+@@ -1790,12 +1780,6 @@ static void __init mx6_sabresd_board_init(void)
+ 
+ 	imx6q_add_anatop_thermal_imx(1, &mx6q_sabresd_anatop_thermal_data);
+ 	imx6_init_fec(fec_data);
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-	/* Make sure the IOMUX_OBSRV_MUX1 is set to ENET_IRQ. */
+-	mxc_iomux_set_specialbits_register(IOMUX_OBSRV_MUX1_OFFSET,
+-		OBSRV_MUX1_ENET_IRQ, OBSRV_MUX1_MASK);
+-#endif
+-
+ 	imx6q_add_pm_imx(0, &mx6q_sabresd_pm_data);
+ 
+ 	/* Move sd4 to first because sd4 connect to emmc.
+diff --git a/arch/arm/mach-mx6/board-mx6q_sabresd.h b/arch/arm/mach-mx6/board-mx6q_sabresd.h
+index b2bb8c9..73ee909 100644
+--- a/arch/arm/mach-mx6/board-mx6q_sabresd.h
++++ b/arch/arm/mach-mx6/board-mx6q_sabresd.h
+@@ -132,13 +132,9 @@ static iomux_v3_cfg_t mx6q_sabresd_pads[] = {
+ 	MX6Q_PAD_KEY_COL3__I2C2_SCL,
+ 	MX6Q_PAD_KEY_ROW3__I2C2_SDA,
+ 
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-	MX6Q_PAD_GPIO_6__OBSERVE_MUX_OBSRV_INT_OUT1,
+-#else
+ 	/* I2C3 */
+ 	MX6Q_PAD_GPIO_3__I2C3_SCL,	/* GPIO1[3] */
+ 	MX6Q_PAD_GPIO_6__I2C3_SDA,
+-#endif
+ 
+ 	/* DISPLAY */
+ 	MX6Q_PAD_DI0_DISP_CLK__IPU1_DI0_DISP_CLK,
+diff --git a/arch/arm/mach-mx6/clock.c b/arch/arm/mach-mx6/clock.c
+index ef39c7b..8354428 100644
+--- a/arch/arm/mach-mx6/clock.c
++++ b/arch/arm/mach-mx6/clock.c
+@@ -50,7 +50,6 @@ extern int lp_med_freq;
+ extern int wait_mode_arm_podf;
+ extern int lp_audio_freq;
+ extern int cur_arm_podf;
+-extern bool enet_is_active;
+ 
+ void __iomem *apll_base;
+ 
+@@ -3724,23 +3723,6 @@ static unsigned long _clk_enet_get_rate(struct clk *clk)
+ 	return 500000000 / div;
+ }
+ 
+-static int _clk_enet_enable(struct clk *clk)
+-{
+-#ifndef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-	enet_is_active = true;
+-#endif
+-	_clk_enable(clk);
+-	return 0;
+-}
+-
+-static void _clk_enet_disable(struct clk *clk)
+-{
+-	_clk_disable(clk);
+-#ifndef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-	enet_is_active = false;
+-#endif
+-}
+-
+ static struct clk enet_clk[] = {
+ 	{
+ 	__INIT_CLK_DEBUG(enet_clk)
+@@ -3748,8 +3730,8 @@ static struct clk enet_clk[] = {
+ 	 .parent = &pll8_enet_main_clk,
+ 	 .enable_reg = MXC_CCM_CCGR1,
+ 	 .enable_shift = MXC_CCM_CCGRx_CG5_OFFSET,
+-	 .enable = _clk_enet_enable,
+-	 .disable = _clk_enet_disable,
++	 .enable = _clk_enable,
++	 .disable = _clk_disable,
+ 	 .set_rate = _clk_enet_set_rate,
+ 	 .get_rate = _clk_enet_get_rate,
+ 	.secondary = &enet_clk[1],
+diff --git a/arch/arm/mach-mx6/system.c b/arch/arm/mach-mx6/system.c
+index c9f520a..f6ffa29 100644
+--- a/arch/arm/mach-mx6/system.c
++++ b/arch/arm/mach-mx6/system.c
+@@ -57,7 +57,6 @@ volatile unsigned int num_cpu_idle;
+ volatile unsigned int num_cpu_idle_lock = 0x0;
+ int wait_mode_arm_podf;
+ int cur_arm_podf;
+-bool enet_is_active;
+ void arch_idle_with_workaround(int cpu);
+ 
+ extern void *mx6sl_wfi_iram_base;
+@@ -407,7 +406,7 @@ void arch_idle_multi_core(void)
+ 
+ void arch_idle(void)
+ {
+-	if (enable_wait_mode && !enet_is_active) {
++	if (enable_wait_mode) {
+ 		mxc_cpu_lp_set(WAIT_UNCLOCKED_POWER_OFF);
+ 		if (mem_clk_on_in_wait) {
+ 			u32 reg;
+diff --git a/arch/arm/plat-mxc/include/mach/iomux-mx6q.h b/arch/arm/plat-mxc/include/mach/iomux-mx6q.h
+index 557fc43..4cc8ad9 100644
+--- a/arch/arm/plat-mxc/include/mach/iomux-mx6q.h
++++ b/arch/arm/plat-mxc/include/mach/iomux-mx6q.h
+@@ -97,9 +97,6 @@
+ 		PAD_CTL_SPEED_MED | PAD_CTL_PKE	| PAD_CTL_PUE | 	\
+ 		PAD_CTL_PUS_100K_UP)
+ 
+-#define ENET_IRQ_PAD_CTRL (PAD_CTL_SRE_FAST | PAD_CTL_DSE_40ohm | \
+-		PAD_CTL_SPEED_MED)
+-
+ #define _MX6Q_PAD_SD2_DAT1__USDHC2_DAT1				\
+ 		IOMUX_PAD(0x0360, 0x004C, 0, 0x0000, 0, 0)
+ #define _MX6Q_PAD_SD2_DAT1__ECSPI5_SS0				\
+@@ -2332,13 +2329,8 @@
+ 
+ #define _MX6Q_PAD_GPIO_6__ESAI1_SCKT			\
+ 		IOMUX_PAD(0x0600, 0x0230, 0, 0x0870, 1, 0)
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-#define _MX6Q_PAD_GPIO_6__OBSERVE_MUX_OBSRV_INT_OUT1		\
+-		IOMUX_PAD(0x0600, 0x0230, 1 | IOMUX_CONFIG_SION, 0x0000, 0, 0)
+-#else
+ #define _MX6Q_PAD_GPIO_6__OBSERVE_MUX_OBSRV_INT_OUT1		\
+ 		IOMUX_PAD(0x0600, 0x0230, 1, 0x0000, 0, 0)
+-#endif
+ #define _MX6Q_PAD_GPIO_6__I2C3_SDA			\
+ 		IOMUX_PAD(0x0600, 0x0230, 2 | IOMUX_CONFIG_SION, 0x08AC, 1, 0)
+ #define _MX6Q_PAD_GPIO_6__CCM_CCM_OUT_0			\
+@@ -5940,27 +5932,22 @@
+ #define  MX6Q_PAD_GPIO_3__MLB_MLBCLK		\
+ 		(_MX6Q_PAD_GPIO_3__MLB_MLBCLK | MUX_PAD_CTRL(MX6Q_MLB150_PAD_CTRL))
+ 
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-#define  MX6Q_PAD_GPIO_6__OBSERVE_MUX_OBSRV_INT_OUT1		\
+-		(_MX6Q_PAD_GPIO_6__OBSERVE_MUX_OBSRV_INT_OUT1 | MUX_PAD_CTRL(ENET_IRQ_PAD_CTRL))
+-#else
+-#define  MX6Q_PAD_GPIO_6__OBSERVE_MUX_OBSRV_INT_OUT1		\
+-		(_MX6Q_PAD_GPIO_6__OBSERVE_MUX_OBSRV_INT_OUT1 | MUX_PAD_CTRL(NO_PAD_CTRL))
+ #define  MX6Q_PAD_GPIO_6__ESAI1_SCKT		\
+ 		(_MX6Q_PAD_GPIO_6__ESAI1_SCKT | MUX_PAD_CTRL(NO_PAD_CTRL))
+-#define  MX6Q_PAD_GPIO_6__GPIO_1_6		\
+-		(_MX6Q_PAD_GPIO_6__GPIO_1_6 | MUX_PAD_CTRL(NO_PAD_CTRL))
++#define  MX6Q_PAD_GPIO_6__OBSERVE_MUX_OBSRV_INT_OUT1		\
++		(_MX6Q_PAD_GPIO_6__OBSERVE_MUX_OBSRV_INT_OUT1 | MUX_PAD_CTRL(NO_PAD_CTRL))
+ #define  MX6Q_PAD_GPIO_6__I2C3_SDA		\
+ 		(_MX6Q_PAD_GPIO_6__I2C3_SDA | MUX_PAD_CTRL(NO_PAD_CTRL))
+ #define  MX6Q_PAD_GPIO_6__CCM_CCM_OUT_0		\
+ 		(_MX6Q_PAD_GPIO_6__CCM_CCM_OUT_0 | MUX_PAD_CTRL(NO_PAD_CTRL))
+ #define  MX6Q_PAD_GPIO_6__CSU_CSU_INT_DEB		\
+ 		(_MX6Q_PAD_GPIO_6__CSU_CSU_INT_DEB | MUX_PAD_CTRL(NO_PAD_CTRL))
++#define  MX6Q_PAD_GPIO_6__GPIO_1_6		\
++		(_MX6Q_PAD_GPIO_6__GPIO_1_6 | MUX_PAD_CTRL(NO_PAD_CTRL))
+ #define  MX6Q_PAD_GPIO_6__USDHC2_LCTL		\
+ 		(_MX6Q_PAD_GPIO_6__USDHC2_LCTL | MUX_PAD_CTRL(MX6Q_USDHC_PAD_CTRL))
+ #define  MX6Q_PAD_GPIO_6__MLB_MLBSIG		\
+ 		(_MX6Q_PAD_GPIO_6__MLB_MLBSIG | MUX_PAD_CTRL(MX6Q_MLB150_PAD_CTRL))
+-#endif
+ 
+ #define  MX6Q_PAD_GPIO_2__ESAI1_FST		\
+ 		(_MX6Q_PAD_GPIO_2__ESAI1_FST | MUX_PAD_CTRL(NO_PAD_CTRL))
+-- 
+1.7.9.5
+

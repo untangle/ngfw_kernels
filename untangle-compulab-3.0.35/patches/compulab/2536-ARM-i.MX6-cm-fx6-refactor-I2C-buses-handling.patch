@@ -1,0 +1,125 @@
+From f3e3de0f495a262503df4df78b8beed23f30893e Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Thu, 28 Feb 2013 11:15:27 +0200
+Subject: ARM: i.MX6: cm-fx6: refactor I2C buses handling
+
+Refactor the I2C bus and board info handling, so all the information
+will be in the same place. This allows convinient viewing/adding/etc. of
+the I2C devices on different boards (e.g. modules, base boards,
+touchscreens).
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6.c |   64 ++++++++++++++++++++++++++++++++------
+ 1 file changed, 54 insertions(+), 10 deletions(-)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index aad3c5b..5cc62fa 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -470,6 +470,7 @@ static void __init cm_fx6_spi_init(void)
+ static inline void cm_fx6_spi_init(void) {}
+ #endif /* CONFIG_SPI_IMX */
+ 
++#if defined(CONFIG_I2C_IMX) || defined(CONFIG_I2C_IMX_MODULE)
+ static struct imxi2c_platform_data cm_fx6_i2c0_data = {
+ 	.bitrate = 100000,
+ };
+@@ -482,24 +483,76 @@ static struct imxi2c_platform_data cm_fx6_i2c2_data = {
+ 	.bitrate = 400000,
+ };
+ 
++#if defined(CONFIG_EEPROM_AT24) || defined(CONFIG_EEPROM_AT24_MODULE)
++static struct at24_platform_data sb_fx6_eeprom_pdata = {
++        .byte_len       = 256,
++        .page_size      = 16,
++};
++#endif
++
++static struct i2c_board_info cm_fx6_i2c0_board_info[] __initdata = {
++#if defined(CONFIG_EEPROM_AT24) || defined(CONFIG_EEPROM_AT24_MODULE)
++	{
++		I2C_BOARD_INFO("at24", 0x54),
++		.platform_data = &sb_fx6_eeprom_pdata,
++	},
++#endif
++};
++
+ static struct i2c_board_info cm_fx6_i2c1_board_info[] __initdata = {
+ 	{
+ 		I2C_BOARD_INFO("mxc_hdmi_i2c", 0x50),
+ 	},
+ };
+ 
++#if defined(CONFIG_EEPROM_AT24) || defined(CONFIG_EEPROM_AT24_MODULE)
+ static struct at24_platform_data cm_fx6_eeprom_pdata = {
+         .byte_len       = 256,
+         .page_size      = 16,
+ };
++#endif
+ 
+ static struct i2c_board_info cm_fx6_i2c2_board_info[] __initdata = {
++#if defined(CONFIG_EEPROM_AT24) || defined(CONFIG_EEPROM_AT24_MODULE)
+ 	{
+ 		I2C_BOARD_INFO("at24", 0x50),
+ 		.platform_data = &cm_fx6_eeprom_pdata,
+ 	},
++#endif
+ };
+ 
++static void __init i2c_register_bus_binfo(int busnum,
++					  struct imxi2c_platform_data *i2cdata,
++					  struct i2c_board_info *info,
++					  int info_size)
++{
++	int err;
++	struct platform_device * pdev;
++
++	pdev = imx6q_add_imx_i2c(busnum, i2cdata);
++	if (IS_ERR(pdev))
++		pr_err("%s: I2C bus %d register failed: %ld\n",
++		       __func__, busnum, PTR_ERR(pdev));
++
++	err = i2c_register_board_info(busnum, info, info_size);
++	if (err)
++		pr_err("%s: I2C bus %d board info register failed: %d\n",
++		       __func__, busnum, err);
++}
++
++static void __init cm_fx6_i2c_init(void)
++{
++	i2c_register_bus_binfo(0, &cm_fx6_i2c0_data, cm_fx6_i2c0_board_info,
++			       ARRAY_SIZE(cm_fx6_i2c0_board_info));
++	i2c_register_bus_binfo(1, &cm_fx6_i2c1_data, cm_fx6_i2c1_board_info,
++			       ARRAY_SIZE(cm_fx6_i2c1_board_info));
++	i2c_register_bus_binfo(2, &cm_fx6_i2c2_data, cm_fx6_i2c2_board_info,
++			       ARRAY_SIZE(cm_fx6_i2c2_board_info));
++}
++#else /* CONFIG_I2C_IMX */
++static inline void cm_fx6_i2c_init(void) {}
++#endif /* CONFIG_I2C_IMX */
++
+ static void imx6_arm2_usbotg_vbus(bool on)
+ {
+ 	if (on)
+@@ -1039,16 +1092,7 @@ static void __init cm_fx6_init(void)
+ 
+ 	imx6q_add_imx_caam();
+ 
+-	imx6q_add_imx_i2c(0, &cm_fx6_i2c0_data);
+-	imx6q_add_imx_i2c(1, &cm_fx6_i2c1_data);
+-	i2c_register_board_info(1, cm_fx6_i2c1_board_info,
+-			ARRAY_SIZE(cm_fx6_i2c1_board_info));
+-	if (!spdif_en) {
+-		imx6q_add_imx_i2c(2, &cm_fx6_i2c2_data);
+-		i2c_register_board_info(2, cm_fx6_i2c2_board_info,
+-				ARRAY_SIZE(cm_fx6_i2c2_board_info));
+-	}
+-
++	cm_fx6_i2c_init();
+ 	cm_fx6_init_led();
+ 	cm_fx6_spi_init();
+ 
+-- 
+1.7.9.5
+

@@ -1,0 +1,63 @@
+From c19c2ba243229de1072dc468f698a56a4fb45973 Mon Sep 17 00:00:00 2001
+From: Dmitry Lifshitz <lifshitz@compulab.co.il>
+Date: Thu, 7 Mar 2013 10:41:29 +0200
+Subject: lcd: add DataImage SCF0403 LCD suspend/resume callbacks
+
+Add driver suspend/resume callbacks.
+
+Signed-off-by: Dmitry Lifshitz <lifshitz@compulab.co.il>
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ drivers/video/backlight/scf0403.c |   22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/drivers/video/backlight/scf0403.c b/drivers/video/backlight/scf0403.c
+index 140f620..ed6dcc9 100644
+--- a/drivers/video/backlight/scf0403.c
++++ b/drivers/video/backlight/scf0403.c
+@@ -25,6 +25,7 @@
+ #include <linux/spi/spi.h>
+ #include <linux/spi/scf0403.h>
+ 
++
+ #define param(x) ((x) | 0x100)
+ 
+ struct scf0403_priv {
+@@ -357,6 +358,25 @@ static int __devexit scf0403_remove(struct spi_device *spi)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM
++static int scf0403_suspend(struct spi_device *spi, pm_message_t state)
++{
++	struct scf0403_priv *priv = dev_get_drvdata(&spi->dev);
++
++	return scf0403_lcd_power_set(priv->ld, FB_BLANK_POWERDOWN);
++}
++
++static int scf0403_resume(struct spi_device *spi)
++{
++	struct scf0403_priv *priv = dev_get_drvdata(&spi->dev);
++
++	return scf0403_lcd_power_set(priv->ld, FB_BLANK_UNBLANK);
++}
++#else
++#define scf0403_suspend  NULL
++#define scf0403_resume   NULL
++#endif
++
+ static void scf0403_shutdown(struct spi_device *spi)
+ {
+ 	struct scf0403_priv *priv = dev_get_drvdata(&spi->dev);
+@@ -374,6 +394,8 @@ static struct spi_driver scf0403_driver = {
+ 	.probe		= scf0403_probe,
+ 	.remove		= __devexit_p(scf0403_remove),
+ 	.shutdown	= scf0403_shutdown,
++	.suspend        = scf0403_suspend,
++	.resume         = scf0403_resume,
+ };
+ 
+ static __init int scf0403_init(void)
+-- 
+1.7.9.5
+

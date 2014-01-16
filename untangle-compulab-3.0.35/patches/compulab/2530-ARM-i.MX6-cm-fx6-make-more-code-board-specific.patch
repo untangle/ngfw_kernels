@@ -1,0 +1,151 @@
+From b7b1d7dd279a606a28a12aaa08ea56d38989d297 Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Tue, 26 Feb 2013 19:30:01 +0200
+Subject: ARM: i.MX6: cm-fx6: make more code board specific
+
+Rename multiple functions and structures to be cm-fx6 specific.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6.c |   44 +++++++++++++++++++-------------------
+ 1 file changed, 22 insertions(+), 22 deletions(-)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index 58badd1..54c0262 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -170,7 +170,7 @@ static int plt_sd_pad_change(unsigned int index, int clock)
+ 	}
+ }
+ 
+-static const struct esdhc_platform_data mx6_arm2_sd3_data __initconst = {
++static const struct esdhc_platform_data cm_fx6_sd3_data = {
+ 	.cd_type		= ESDHC_CD_GPIO,
+ 	.cd_gpio		= SB_FX6_SD3_CD,
+ 	.wp_gpio		= SB_FX6_SD3_WP,
+@@ -179,7 +179,7 @@ static const struct esdhc_platform_data mx6_arm2_sd3_data __initconst = {
+ 	.platform_pad_change	= plt_sd_pad_change,
+ };
+ 
+-static int gpmi_nand_platform_init(void)
++static int cm_fx6_gpmi_nand_init(void)
+ {
+ 	iomux_v3_cfg_t *nand_pads = NULL;
+ 	u32 nand_pads_cnt;
+@@ -196,8 +196,8 @@ static int gpmi_nand_platform_init(void)
+ 	return mxc_iomux_v3_setup_multiple_pads(nand_pads, nand_pads_cnt);
+ }
+ 
+-static struct gpmi_nand_platform_data mx6_gpmi_nand_platform_data = {
+-	.platform_init           = gpmi_nand_platform_init,
++static struct gpmi_nand_platform_data cm_fx6_gpmi_nand_pdata = {
++	.platform_init           = cm_fx6_gpmi_nand_init,
+ 	.min_prop_delay_in_ns    = 5,
+ 	.max_prop_delay_in_ns    = 9,
+ 	.max_chip_count          = 1,
+@@ -205,27 +205,27 @@ static struct gpmi_nand_platform_data mx6_gpmi_nand_platform_data = {
+ 	.enable_ddr              = 0,
+ };
+ 
+-static int __init board_support_onfi_nand(char *p)
++static int __init cm_fx6_enable_onfi_nand_support(char *p)
+ {
+-	mx6_gpmi_nand_platform_data.enable_ddr = 1;
++	cm_fx6_gpmi_nand_pdata.enable_ddr = 1;
+ 	return 0;
+ }
+-early_param("onfi_support", board_support_onfi_nand);
++early_param("onfi_support", cm_fx6_enable_onfi_nand_support);
+ 
+ static const struct anatop_thermal_platform_data cm_fx6_anatop_thermal_data = {
+ 	.name = "anatop_thermal",
+ };
+ 
+-static const struct imxuart_platform_data mx6_arm2_uart1_data __initconst = {
++static const struct imxuart_platform_data cm_fx6_uart1_data __initconst = {
+ 	.flags      = IMXUART_HAVE_RTSCTS | IMXUART_USE_DCEDTE | IMXUART_SDMA,
+ 	.dma_req_rx = MX6Q_DMA_REQ_UART2_RX,
+ 	.dma_req_tx = MX6Q_DMA_REQ_UART2_TX,
+ };
+ 
+-static inline void mx6_arm2_init_uart(void)
++static inline void cm_fx6_init_uart(void)
+ {
+ 	imx6q_add_imx_uart(3, NULL);
+-	imx6q_add_imx_uart(1, &mx6_arm2_uart1_data);
++	imx6q_add_imx_uart(1, &cm_fx6_uart1_data);
+ }
+ 
+ #define BMCR_PDOWN 0x0800 /* PHY Powerdown */
+@@ -390,19 +390,19 @@ static void cm_fx6_spi_devices_init(void)
+ 				ARRAY_SIZE(cm_fx6_spi0_board_info));
+ }
+ 
+-static struct imxi2c_platform_data mx6_arm2_i2c0_data = {
++static struct imxi2c_platform_data cm_fx6_i2c0_data = {
+ 	.bitrate = 100000,
+ };
+ 
+-static struct imxi2c_platform_data mx6_arm2_i2c1_data = {
++static struct imxi2c_platform_data cm_fx6_i2c1_data = {
+ 	.bitrate = 100000,
+ };
+ 
+-static struct imxi2c_platform_data mx6_arm2_i2c2_data = {
++static struct imxi2c_platform_data cm_fx6_i2c2_data = {
+ 	.bitrate = 400000,
+ };
+ 
+-static struct i2c_board_info mxc_i2c1_board_info[] __initdata = {
++static struct i2c_board_info cm_fx6_i2c1_board_info[] __initdata = {
+ 	{
+ 		I2C_BOARD_INFO("mxc_hdmi_i2c", 0x50),
+ 	},
+@@ -932,7 +932,7 @@ static void __init cm_fx6_init(void)
+ 	gp_reg_id = arm2_dvfscore_data.reg_id;
+ 	soc_reg_id = arm2_dvfscore_data.soc_id;
+ 	pu_reg_id = arm2_dvfscore_data.pu_id;
+-	mx6_arm2_init_uart();
++	cm_fx6_init_uart();
+ 
+ 	imx6q_add_mxc_hdmi_core(&hdmi_core_data);
+ 
+@@ -959,12 +959,12 @@ static void __init cm_fx6_init(void)
+ 
+ 	imx6q_add_imx_caam();
+ 
+-	imx6q_add_imx_i2c(0, &mx6_arm2_i2c0_data);
+-	imx6q_add_imx_i2c(1, &mx6_arm2_i2c1_data);
+-	i2c_register_board_info(1, mxc_i2c1_board_info,
+-			ARRAY_SIZE(mxc_i2c1_board_info));
++	imx6q_add_imx_i2c(0, &cm_fx6_i2c0_data);
++	imx6q_add_imx_i2c(1, &cm_fx6_i2c1_data);
++	i2c_register_board_info(1, cm_fx6_i2c1_board_info,
++			ARRAY_SIZE(cm_fx6_i2c1_board_info));
+ 	if (!spdif_en) {
+-		imx6q_add_imx_i2c(2, &mx6_arm2_i2c2_data);
++		imx6q_add_imx_i2c(2, &cm_fx6_i2c2_data);
+ 		i2c_register_board_info(2, cm_fx6_i2c2_board_info,
+ 				ARRAY_SIZE(cm_fx6_i2c2_board_info));
+ 	}
+@@ -982,7 +982,7 @@ static void __init cm_fx6_init(void)
+ 	imx6_init_fec(cm_fx6_fec_data);
+ 
+ 	imx6q_add_pm_imx(0, &mx6_arm2_pm_data);
+-	imx6q_add_sdhci_usdhc_imx(2, &mx6_arm2_sd3_data);
++	imx6q_add_sdhci_usdhc_imx(2, &cm_fx6_sd3_data);
+ 	imx_add_viv_gpu(&imx6_gpu_data, &imx6_gpu_pdata);
+ 
+ 	if (cpu_is_mx6q())
+@@ -1003,7 +1003,7 @@ static void __init cm_fx6_init(void)
+ 	imx6q_add_viim();
+ 	imx6q_add_imx2_wdt(0, NULL);
+ 	imx6q_add_dma();
+-	imx6q_add_gpmi(&mx6_gpmi_nand_platform_data);
++	imx6q_add_gpmi(&cm_fx6_gpmi_nand_pdata);
+ 
+ 	imx6q_add_dvfs_core(&arm2_dvfscore_data);
+ 
+-- 
+1.7.9.5
+

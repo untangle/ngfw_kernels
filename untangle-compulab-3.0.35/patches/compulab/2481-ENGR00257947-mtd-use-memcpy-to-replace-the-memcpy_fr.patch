@@ -1,0 +1,75 @@
+From 455b0b9cd056412758838693f1767f11837c9f88 Mon Sep 17 00:00:00 2001
+From: Huang Shijie <b32955@freescale.com>
+Date: Mon, 8 Apr 2013 16:56:46 +0800
+Subject: ENGR00257947 mtd: use memcpy to replace the memcpy_fromio
+
+During the read of NOR, the kernel actually calls the inline_map_copy_from()
+to read the data out. And inline_map_copy_from() will use the memcpy_fromio()
+to do the real job.
+
+The memcpy_fromio macro maps _memcpy_fromio() in the current code.
+But the _memcpy_fromio() will use readb() to do the copy work one byte
+by one byte. This makes the read performance of NOR very slow(about 2~3MB/s).
+
+A similiar discussion could be found in:
+http://lists.infradead.org/pipermail/linux-arm-kernel/2009-November/003860.html
+
+This patch replace the memcpy_fromio with memcpy which is optimized by the
+kernel.
+
+The following is the result from mtd_speedtest with M29W256GL7AN6E:
+=================================================
+mtd_speedtest: MTD device: 2
+mtd_speedtest: not NAND flash, assume page size is 512 bytes.
+mtd_speedtest: MTD device size 4194304, eraseblock size 131072, page size 512,
+		count of eraseblocks 32, pages per eraseblock 256, OOB size 0
+mtd_speedtest: testing eraseblock write speed
+mtd_speedtest: eraseblock write speed is 845 KiB/s
+mtd_speedtest: testing eraseblock read speed
+mtd_speedtest: eraseblock read speed is 19504 KiB/s
+mtd_speedtest: testing page write speed
+mtd_speedtest: page write speed is 845 KiB/s
+mtd_speedtest: testing page read speed
+mtd_speedtest: page read speed is 19140 KiB/s
+mtd_speedtest: testing 2 page write speed
+mtd_speedtest: 2 page write speed is 846 KiB/s
+mtd_speedtest: testing 2 page read speed
+mtd_speedtest: 2 page read speed is 19320 KiB/s
+mtd_speedtest: Testing erase speed
+mtd_speedtest: erase speed is 233 KiB/s
+mtd_speedtest: Testing 2x multi-block erase speed
+mtd_speedtest: 2x multi-block erase speed is 225 KiB/s
+mtd_speedtest: Testing 4x multi-block erase speed
+mtd_speedtest: 4x multi-block erase speed is 224 KiB/s
+mtd_speedtest: Testing 8x multi-block erase speed
+mtd_speedtest: 8x multi-block erase speed is 225 KiB/s
+mtd_speedtest: Testing 16x multi-block erase speed
+mtd_speedtest: 16x multi-block erase speed is 225 KiB/s
+mtd_speedtest: Testing 32x multi-block erase speed
+mtd_speedtest: 32x multi-block erase speed is 225 KiB/s
+mtd_speedtest: Testing 64x multi-block erase speed
+mtd_speedtest: 64x multi-block erase speed is 224 KiB/s
+mtd_speedtest: finished
+=================================================
+
+Signed-off-by: Huang Shijie <b32955@freescale.com>
+---
+ include/linux/mtd/map.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/linux/mtd/map.h b/include/linux/mtd/map.h
+index a9e6ba4..418fd87 100644
+--- a/include/linux/mtd/map.h
++++ b/include/linux/mtd/map.h
+@@ -432,7 +432,7 @@ static inline void inline_map_copy_from(struct map_info *map, void *to, unsigned
+ 	if (map->cached)
+ 		memcpy(to, (char *)map->cached + from, len);
+ 	else
+-		memcpy_fromio(to, map->virt + from, len);
++		memcpy(to, map->virt + from, len);
+ }
+ 
+ static inline void inline_map_copy_to(struct map_info *map, unsigned long to, const void *from, ssize_t len)
+-- 
+1.7.9.5
+

@@ -1,0 +1,26 @@
+From 56d25fd41055775df19575d722012a51d115f937 Mon Sep 17 00:00:00 2001
+From: Valentin Raevsky <valentin@compulab.co.il>
+Date: Mon, 3 Jun 2013 15:05:02 +0300
+Subject: ARM: i.MX6: cm-fx6: defconfig: save the defaults with RCU_FAST_NO_HZ
+ enabled
+
+This change fixes the issue that led to a hang when 'mdev' issued mount/umount of a block device.
+---
+ arch/arm/configs/cm_fx6_defconfig |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/configs/cm_fx6_defconfig b/arch/arm/configs/cm_fx6_defconfig
+index 7676a3b..3a4063c 100644
+--- a/arch/arm/configs/cm_fx6_defconfig
++++ b/arch/arm/configs/cm_fx6_defconfig
+@@ -1,6 +1,7 @@
+ CONFIG_EXPERIMENTAL=y
+ CONFIG_LOCALVERSION="-cm-fx6-2"
+ CONFIG_SYSVIPC=y
++CONFIG_RCU_FAST_NO_HZ=y
+ CONFIG_IKCONFIG=y
+ CONFIG_IKCONFIG_PROC=y
+ CONFIG_BLK_DEV_INITRD=y
+-- 
+1.7.9.5
+

@@ -1,0 +1,49 @@
+From e88b60b3f5e30788e53c544881a074c19b5e9966 Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Mon, 4 Mar 2013 16:34:12 +0200
+Subject: ARM: i.MX6: cm-fx6: remove incorrect HDMI muxing
+
+Remove HDMI mux leftovers from mx6_arm2 board.
+Those are incorrect for cm-fx6.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6-dl.h |    5 -----
+ arch/arm/mach-mx6/board-cm-fx6-q.h  |    5 -----
+ 2 files changed, 10 deletions(-)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-dl.h b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+index b802051..f92bcd5 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-dl.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+@@ -141,11 +141,6 @@ static iomux_v3_cfg_t cm_fx6_dl_pads[] = {
+ 	/* PWM1 */
+ 	MX6DL_PAD_GPIO_9__PWM1_PWMO,
+ 
+-	/* HDMI */
+-	MX6DL_PAD_EIM_A25__HDMI_TX_CEC_LINE,
+-	MX6DL_PAD_SD1_DAT1__HDMI_TX_OPHYDTB_0,
+-	MX6DL_PAD_SD1_DAT0__HDMI_TX_OPHYDTB_1,
+-
+ 	/* USBOTG ID pin */
+ 	MX6DL_PAD_GPIO_1__USBOTG_ID,
+ };
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-q.h b/arch/arm/mach-mx6/board-cm-fx6-q.h
+index 2b7cbde..dc1ea15 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-q.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-q.h
+@@ -141,11 +141,6 @@ static iomux_v3_cfg_t cm_fx6_q_common_pads[] = {
+ 	/* PWM1 */
+ 	MX6Q_PAD_GPIO_9__PWM1_PWMO,
+ 
+-	/* HDMI */
+-	MX6Q_PAD_EIM_A25__HDMI_TX_CEC_LINE,
+-	MX6Q_PAD_SD1_DAT1__HDMI_TX_OPHYDTB_0,
+-	MX6Q_PAD_SD1_DAT0__HDMI_TX_OPHYDTB_1,
+-
+ 	/* USBOTG ID pin */
+ 	MX6Q_PAD_GPIO_1__USBOTG_ID,
+ };
+-- 
+1.7.9.5
+

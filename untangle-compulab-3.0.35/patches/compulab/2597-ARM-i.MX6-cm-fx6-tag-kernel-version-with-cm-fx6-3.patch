@@ -1,0 +1,56 @@
+From baec377b2a9c4bc52d7ff80c7047a25b621d4735 Mon Sep 17 00:00:00 2001
+From: Valentin Raevsky <valentin@compulab.co.il>
+Date: Wed, 3 Jul 2013 14:48:01 +0300
+Subject: ARM: i.MX6: cm-fx6: tag kernel version with -cm-fx6-3
+
+Tag kernel vestion with -cm-fx6-3.
+Save the latest default configuration with:
+1) on denad governon
+2) Intel(R) 82575/82576 PCI-Express Gigabit Ethernet support
+3) LDB support
+---
+ arch/arm/configs/cm_fx6_defconfig |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/configs/cm_fx6_defconfig b/arch/arm/configs/cm_fx6_defconfig
+index 3a4063c..3d43ac2 100644
+--- a/arch/arm/configs/cm_fx6_defconfig
++++ b/arch/arm/configs/cm_fx6_defconfig
+@@ -1,5 +1,5 @@
+ CONFIG_EXPERIMENTAL=y
+-CONFIG_LOCALVERSION="-cm-fx6-2"
++CONFIG_LOCALVERSION="-cm-fx6-3"
+ CONFIG_SYSVIPC=y
+ CONFIG_RCU_FAST_NO_HZ=y
+ CONFIG_IKCONFIG=y
+@@ -43,9 +43,9 @@ CONFIG_ZBOOT_ROM_BSS=0x0
+ CONFIG_CMDLINE="console=ttymxc3,115200 root=/dev/mmcblk0p1 rootwait"
+ CONFIG_AUTO_ZRELADDR=y
+ CONFIG_CPU_FREQ=y
++CONFIG_CPU_FREQ_DEFAULT_GOV_ONDEMAND=y
+ CONFIG_CPU_FREQ_GOV_POWERSAVE=y
+ CONFIG_CPU_FREQ_GOV_USERSPACE=y
+-CONFIG_CPU_FREQ_GOV_ONDEMAND=y
+ CONFIG_CPU_FREQ_GOV_INTERACTIVE=y
+ CONFIG_CPU_FREQ_GOV_CONSERVATIVE=y
+ CONFIG_CPU_FREQ_IMX=y
+@@ -117,7 +117,7 @@ CONFIG_MICREL_PHY=y
+ CONFIG_NET_ETHERNET=y
+ CONFIG_SMSC911X=y
+ CONFIG_FEC_NAPI=y
+-# CONFIG_NETDEV_1000 is not set
++CONFIG_IGB=m
+ # CONFIG_NETDEV_10000 is not set
+ CONFIG_ATH_COMMON=m
+ CONFIG_ATH6KL=m
+@@ -181,6 +181,7 @@ CONFIG_LCD_SCF0403=y
+ # CONFIG_BACKLIGHT_GENERIC is not set
+ CONFIG_BACKLIGHT_PWM=m
+ CONFIG_DISPLAY_SUPPORT=y
++CONFIG_FB_MXC_LDB=y
+ CONFIG_FB_MXC_HDMI=y
+ CONFIG_FRAMEBUFFER_CONSOLE=y
+ CONFIG_FRAMEBUFFER_CONSOLE_DETECT_PRIMARY=y
+-- 
+1.7.9.5
+

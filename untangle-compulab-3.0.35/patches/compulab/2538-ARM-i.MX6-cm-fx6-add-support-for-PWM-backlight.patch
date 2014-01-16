@@ -1,0 +1,95 @@
+From 6066384bbb30c744938b38263a12793cfb1c2fce Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Thu, 28 Feb 2013 15:53:10 +0200
+Subject: ARM: i.MX6: cm-fx6: add support for PWM backlight
+
+sb-fx6 features a PWM compliant backlight driver for LCD.
+Add support for the sb-fx6 PWM backlight.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6-dl.h |    2 ++
+ arch/arm/mach-mx6/board-cm-fx6-q.h  |    2 ++
+ arch/arm/mach-mx6/board-cm-fx6.c    |   30 ++++++++++++++++++++++++------
+ 3 files changed, 28 insertions(+), 6 deletions(-)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-dl.h b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+index e06608f..00ff4cd 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-dl.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+@@ -30,6 +30,8 @@ static iomux_v3_cfg_t cm_fx6_dl_pads[] = {
+ 	MX6DL_PAD_SD3_RST__GPIO_7_8,
+ 	/* USBH1 VBUS control */
+ 	MX6DL_PAD_GPIO_0__USBOH3_USBH1_PWR,
++	/* LCD PWM back light */
++	MX6DL_PAD_SD4_DAT1__PWM3_PWMO,
+ 
+ 	/* ENET */
+ 	MX6DL_PAD_ENET_MDIO__ENET_MDIO,
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-q.h b/arch/arm/mach-mx6/board-cm-fx6-q.h
+index 6ca3b55..4a61464 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-q.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-q.h
+@@ -30,6 +30,8 @@ static iomux_v3_cfg_t cm_fx6_q_common_pads[] = {
+ 	MX6Q_PAD_SD3_RST__GPIO_7_8,
+ 	/* USBH1 VBUS control */
+ 	MX6Q_PAD_GPIO_0__USBOH3_USBH1_PWR,
++	/* LCD PWM back light */
++	MX6Q_PAD_SD4_DAT1__PWM3_PWMO,
+ 
+ 	/* ENET */
+ 	MX6Q_PAD_ENET_MDIO__ENET_MDIO,
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index de5792d..75d5575 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -814,13 +814,32 @@ static struct imx_ipuv3_platform_data ipu_data[] = {
+ 	},
+ };
+ 
+-static struct platform_pwm_backlight_data mx6_arm2_pwm_backlight_data = {
+-	.pwm_id		= 0,
++#if defined(CONFIG_BACKLIGHT_PWM) || defined(CONFIG_BACKLIGHT_PWM_MODULE)
++static struct platform_pwm_backlight_data sb_fx6_pwm_backlight_data = {
++	.pwm_id		= 2,
+ 	.max_brightness	= 255,
+-	.dft_brightness	= 128,
+-	.pwm_period_ns	= 50000,
++	.dft_brightness	= 255,
++	.pwm_period_ns	= 100000,
+ };
+ 
++static void __init cm_fx6_pwm_init(void)
++{
++	struct platform_device * pdev;
++
++	pdev = imx6q_add_mxc_pwm(2);
++	if (IS_ERR(pdev))
++		pr_err("%s: PWM 2 register failed: %ld\n",
++		       __func__, PTR_ERR(pdev));
++
++	pdev = imx6q_add_mxc_pwm_backlight(2, &sb_fx6_pwm_backlight_data);
++	if (IS_ERR(pdev))
++		pr_err("%s: backlight on PWM 2 register failed: %ld\n",
++		       __func__, PTR_ERR(pdev));
++}
++#else /* CONFIG_BACKLIGHT_PWM */
++static inline void cm_fx6_pwm_init() {}
++#endif /* CONFIG_BACKLIGHT_PWM */
++
+ static struct gpio mx6_flexcan_gpios[] = {
+ 	{ MX6_ARM2_CAN1_EN, GPIOF_OUT_INIT_LOW, "flexcan1-en" },
+ 	{ MX6_ARM2_CAN1_STBY, GPIOF_OUT_INIT_LOW, "flexcan1-stby" },
+@@ -1142,8 +1161,7 @@ static void __init cm_fx6_init(void)
+ 
+ 	imx6q_add_dvfs_core(&arm2_dvfscore_data);
+ 
+-	imx6q_add_mxc_pwm(0);
+-	imx6q_add_mxc_pwm_backlight(0, &mx6_arm2_pwm_backlight_data);
++	cm_fx6_pwm_init();
+ 
+ 	if (spdif_en) {
+ 		mxc_spdif_data.spdif_core_clk = clk_get_sys("mxc_spdif.0", NULL);
+-- 
+1.7.9.5
+

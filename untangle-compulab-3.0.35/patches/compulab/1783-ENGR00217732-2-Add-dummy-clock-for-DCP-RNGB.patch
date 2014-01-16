@@ -1,0 +1,28 @@
+From 9fb156d6538c15e73150a87b47a6854635125da3 Mon Sep 17 00:00:00 2001
+From: Terry Lv <r65388@freescale.com>
+Date: Fri, 20 Jul 2012 13:55:58 +0800
+Subject: ENGR00217732-2: Add dummy clock for DCP/RNGB.
+
+Add dummy clock for DCP/RNGB.
+
+Signed-off-by: Terry Lv <r65388@freescale.com>
+---
+ arch/arm/mach-mx6/clock_mx6sl.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm/mach-mx6/clock_mx6sl.c b/arch/arm/mach-mx6/clock_mx6sl.c
+index 42621f7..577a522 100755
+--- a/arch/arm/mach-mx6/clock_mx6sl.c
++++ b/arch/arm/mach-mx6/clock_mx6sl.c
+@@ -3910,6 +3910,8 @@ static struct clk_lookup lookups[] = {
+ 	_REGISTER_CLOCK(NULL, "gpu2d_clk", gpu2d_core_clk),
+ 	_REGISTER_CLOCK(NULL, "gpu2d_axi_clk", gpu2d_axi_clk),
+ 	_REGISTER_CLOCK(NULL, "openvg_axi_clk", openvg_axi_clk),
++	_REGISTER_CLOCK(NULL, "rng_clk", dummy_clk),
++	_REGISTER_CLOCK(NULL, "dcp_clk", dummy_clk),
+ };
+ 
+ static void clk_tree_init(void)
+-- 
+1.7.9.5
+

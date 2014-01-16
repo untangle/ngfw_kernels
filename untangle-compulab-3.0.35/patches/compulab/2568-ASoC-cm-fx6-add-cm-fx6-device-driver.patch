@@ -1,0 +1,457 @@
+From 6e9d28090c1c7bc734629deff882c4d896193c0e Mon Sep 17 00:00:00 2001
+From: Andrey Gelman <andreyg@compulab.co.il>
+Date: Wed, 17 Apr 2013 11:22:42 +0300
+Subject: ASoC: cm-fx6: add cm-fx6 device driver
+
+    Add ASoC support for the CompuLab cm-fx6 module.
+---
+ sound/soc/imx/Kconfig  |    8 +
+ sound/soc/imx/Makefile |    8 +-
+ sound/soc/imx/cm-fx6.c |  382 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 395 insertions(+), 3 deletions(-)
+ create mode 100644 sound/soc/imx/cm-fx6.c
+
+diff --git a/sound/soc/imx/Kconfig b/sound/soc/imx/Kconfig
+index e30ebbe..dc15cff 100644
+--- a/sound/soc/imx/Kconfig
++++ b/sound/soc/imx/Kconfig
+@@ -86,6 +86,14 @@ config SND_SOC_IMX_CS42888
+ 	  Say Y if you want to add support for SoC audio on an i.MX board with
+ 	  a cs42888 codec
+ 
++config SND_SOC_CM_FX6
++	tristate "SoC Audio support for CM-FX6 boards"
++	select SND_MXC_SOC_MX2
++	select SND_SOC_WM8731
++	help
++	  Say Y if you want to add support for SoC audio on an i.MX board with
++	  a wm8731 codec
++
+ config SND_SOC_IMX_SI4763
+ 	tristate "SoC Audio support for IMX SI4763"
+ 	select SND_MXC_SOC_SSI
+diff --git a/sound/soc/imx/Makefile b/sound/soc/imx/Makefile
+index cc0a7d9..9721686 100644
+--- a/sound/soc/imx/Makefile
++++ b/sound/soc/imx/Makefile
+@@ -1,7 +1,7 @@
+ # i.MX Platform Support
+-snd-soc-imx-objs := imx-ssi.o imx-esai.o imx-hdmi-dai.o hdmi_pcm.o
++snd-soc-imx-objs := imx-ssi.o imx-esai.o
+ snd-soc-imx-fiq-objs := imx-pcm-fiq.o
+-snd-soc-imx-mx2-objs := imx-pcm-dma-mx2.o imx-hdmi-dma.o
++snd-soc-imx-mx2-objs := imx-pcm-dma-mx2.o
+ snd-soc-imx-spdif-dai-objs := imx-spdif-dai.o
+ 
+ obj-$(CONFIG_SND_IMX_SOC) += snd-soc-imx.o
+@@ -18,9 +18,10 @@ snd-soc-imx-wm8958-objs := imx-wm8958.o
+ snd-soc-imx-wm8962-objs := imx-wm8962.o
+ snd-soc-imx-sgtl5000-objs := imx-sgtl5000.o
+ snd-soc-imx-cs42888-objs := imx-cs42888.o
++snd-soc-cm-fx6-objs := cm-fx6.o
+ snd-soc-imx-spdif-objs := imx-spdif.o
+ snd-soc-imx-si4763-objs := imx-si4763.o
+-snd-soc-imx-hdmi-objs := imx-hdmi.o
++snd-soc-imx-hdmi-objs := imx-hdmi.o imx-hdmi-dai.o imx-hdmi-dma.o hdmi_pcm.o
+ 
+ obj-$(CONFIG_SND_SOC_EUKREA_TLV320) += snd-soc-eukrea-tlv320.o
+ obj-$(CONFIG_SND_SOC_PHYCORE_AC97) += snd-soc-phycore-ac97.o
+@@ -30,6 +31,7 @@ obj-$(CONFIG_SND_SOC_IMX_WM8958) += snd-soc-imx-wm8958.o
+ obj-$(CONFIG_SND_SOC_IMX_WM8962) += snd-soc-imx-wm8962.o
+ obj-$(CONFIG_SND_SOC_IMX_SGTL5000) += snd-soc-imx-sgtl5000.o
+ obj-$(CONFIG_SND_SOC_IMX_CS42888) += snd-soc-imx-cs42888.o
++obj-$(CONFIG_SND_SOC_CM_FX6) += snd-soc-cm-fx6.o
+ obj-$(CONFIG_SND_SOC_IMX_SPDIF) += snd-soc-imx-spdif.o
+ obj-$(CONFIG_SND_SOC_IMX_HDMI) += snd-soc-imx-hdmi.o
+ obj-$(CONFIG_SND_SOC_IMX_SI4763) += snd-soc-imx-si4763.o
+diff --git a/sound/soc/imx/cm-fx6.c b/sound/soc/imx/cm-fx6.c
+new file mode 100644
+index 0000000..45014db
+--- /dev/null
++++ b/sound/soc/imx/cm-fx6.c
+@@ -0,0 +1,382 @@
++/*
++ * ASoC driver for CM-FX6 module
++ *
++ * Copyright (C) 2013 - CompuLab, Ltd.
++ * Author: Andrey Gelman <andrey.gelman@compulab.co.il>
++ *
++ * Based on imx-wm8962.c by freescale
++ *
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
++ * 02110-1301 USA
++ *
++ */
++
++#include <linux/module.h>
++#include <linux/moduleparam.h>
++#include <linux/init.h>
++#include <linux/delay.h>
++#include <linux/pm.h>
++#include <linux/bitops.h>
++#include <linux/platform_device.h>
++#include <linux/i2c.h>
++#include <linux/err.h>
++#include <linux/irq.h>
++#include <linux/io.h>
++#include <linux/fsl_devices.h>
++#include <linux/slab.h>
++#include <linux/clk.h>
++#include <sound/core.h>
++#include <sound/pcm.h>
++#include <sound/pcm_params.h>
++#include <sound/soc.h>
++#include <sound/soc-dapm.h>
++#include <sound/initval.h>
++#include <sound/jack.h>
++#include <mach/dma.h>
++#include <mach/clock.h>
++#include <mach/audmux.h>
++#include <mach/gpio.h>
++#include <asm/mach-types.h>
++
++#include "imx-ssi.h"
++#include "../codecs/wm8731.h"
++
++
++
++static int __devinit imx_wm8731_probe(struct platform_device *pdev);
++static int __devinit imx_wm8731_remove(struct platform_device *pdev);
++static int imx_wm8731_init(struct snd_soc_pcm_runtime *rtd);
++static int imx_hifi_startup(struct snd_pcm_substream *substream);
++static void imx_hifi_shutdown(struct snd_pcm_substream *substream);
++static int imx_hifi_hw_params(struct snd_pcm_substream *substream, struct snd_pcm_hw_params *params);
++
++
++
++static struct platform_device *imx_snd_device;
++
++struct imx_priv {
++	int sysclk;	/* mclk */
++	struct platform_device *pdev;
++};
++static struct imx_priv card_priv;
++
++static struct snd_soc_ops imx_hifi_ops = {
++	.startup		= imx_hifi_startup,
++	.shutdown		= imx_hifi_shutdown,
++	.hw_params		= imx_hifi_hw_params,
++};
++
++static struct snd_soc_dai_link imx_dai[] = {
++	{
++		.name		= "HiFi",
++		.stream_name	= "HiFi",
++		.codec_dai_name	= "wm8731-hifi",
++		.codec_name	= "wm8731.2-001a",
++		.cpu_dai_name	= "imx-ssi.1",
++		.platform_name	= "imx-pcm-audio.1",
++		.init		= imx_wm8731_init,
++		.ops		= &imx_hifi_ops,
++	},
++};
++
++static struct snd_soc_card snd_soc_card_imx = {
++	.name		= "wm8731-audio",
++	.owner		= THIS_MODULE,
++	.dai_link	= imx_dai,
++	.num_links	= ARRAY_SIZE(imx_dai),
++};
++
++static struct platform_driver imx_wm8731_driver = {
++	.probe = imx_wm8731_probe,
++	.remove = imx_wm8731_remove,
++	.driver = {
++		.name = "imx-wm8731",
++		.owner = THIS_MODULE,
++	},
++};
++
++/* imx card dapm widgets */
++static const struct snd_soc_dapm_widget imx_dapm_widgets[] = {
++	SND_SOC_DAPM_HP("Headphone Jack",	NULL),
++	SND_SOC_DAPM_SPK("Ext Spk",		NULL),
++	SND_SOC_DAPM_LINE("Line Jack",		NULL),
++	SND_SOC_DAPM_MIC("Mic Jack",		NULL),
++};
++
++/* imx machine connections to the codec pins */
++static const struct snd_soc_dapm_route audio_map[] = {
++	{ "Headphone Jack",	NULL,	"LHPOUT" },
++	{ "Headphone Jack",	NULL,	"RHPOUT" },
++
++	{ "Ext Spk",		NULL,	"LOUT" },
++	{ "Ext Spk",		NULL,	"ROUT" },
++
++	{ "LLINEIN",		NULL,	"Line Jack" },
++	{ "RLINEIN",		NULL,	"Line Jack" },
++
++	{ "MICIN",		NULL,	"Mic Bias" },
++	{ "Mic Bias",		NULL,	"Mic Jack"},
++};
++
++static int imx_hifi_startup(struct snd_pcm_substream *substream)
++{
++	struct snd_soc_pcm_runtime *rtd = substream->private_data;
++	struct snd_soc_dai *codec_dai = rtd->codec_dai;
++	struct mxc_audio_platform_data *plat = card_priv.pdev->dev.platform_data;
++
++	if (!codec_dai->active)
++		plat->clock_enable(1);
++
++	return 0;
++}
++
++static void imx_hifi_shutdown(struct snd_pcm_substream *substream)
++{
++	struct snd_soc_pcm_runtime *rtd = substream->private_data;
++	struct snd_soc_dai *codec_dai = rtd->codec_dai;
++	struct mxc_audio_platform_data *plat = card_priv.pdev->dev.platform_data;
++
++	if (!codec_dai->active)
++		plat->clock_enable(0);
++}
++
++static int imx_hifi_hw_params(struct snd_pcm_substream *substream, struct snd_pcm_hw_params *params)
++{
++	struct snd_soc_pcm_runtime *rtd = substream->private_data;
++	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
++	struct snd_soc_dai *codec_dai = rtd->codec_dai;
++	u32 dai_format;
++	unsigned int channels;
++	unsigned int tx_mask, rx_mask;
++	unsigned int sampling_rate;
++	unsigned int pll_out;
++	int ret;
++
++
++	/* set i.MX active slot mask */
++	channels = params_channels(params);
++	switch (channels)
++	{
++	case 2:
++		tx_mask = 0xfffffffc;
++		rx_mask = 0xfffffffc;
++		break;
++	case 1:
++		tx_mask = 0xfffffffe;
++		rx_mask = 0xfffffffe;
++		break;
++	default:
++		return -EINVAL;
++	}
++	snd_soc_dai_set_tdm_slot(cpu_dai, tx_mask, rx_mask, 2, 32);
++
++
++	/* set cpu DAI configuration */
++	dai_format = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_IF |
++		SND_SOC_DAIFMT_CBM_CFM;
++
++	ret = snd_soc_dai_set_fmt(cpu_dai, dai_format);
++	if (ret < 0)
++		return ret;
++
++	ret = snd_soc_dai_set_sysclk(cpu_dai,
++				     IMX_SSP_SYS_CLK,
++				     0/*internally ignored*/,
++				     SND_SOC_CLOCK_OUT);
++	if (ret < 0) {
++		pr_err("Failed to set SSI clock: %d \n", ret);
++		return ret;
++	}
++
++
++	/* set codec DAI configuration */
++	dai_format = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
++		SND_SOC_DAIFMT_CBM_CFM;
++
++	ret = snd_soc_dai_set_fmt(codec_dai, dai_format);
++	if (ret < 0)
++		return ret;
++
++	sampling_rate = params_rate(params);
++#if 0
++	switch (sampling_rate) {
++	case 8000:
++	case 32000:
++	case 48000:
++	case 96000:
++		pll_out = 12288000;
++		break;
++	case 44100:
++	case 88200:
++		pll_out = 11289600;
++		break;
++	default:
++		pll_out = 0;
++	}
++#else
++	pll_out = card_priv.sysclk;
++#endif
++	ret = snd_soc_dai_set_sysclk(codec_dai,
++				     WM8731_SYSCLK_MCLK,
++				     pll_out,
++				     SND_SOC_CLOCK_IN);
++	if (ret < 0) {
++		pr_err("Failed to set codec master clock to %u: %d \n", pll_out, ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static int imx_wm8731_init(struct snd_soc_pcm_runtime *rtd)
++{
++	int ret = 0;
++	struct snd_soc_codec *codec = rtd->codec;
++
++	/* Add imx specific widgets */
++	ret = snd_soc_dapm_new_controls(&codec->dapm, imx_dapm_widgets,
++					ARRAY_SIZE(imx_dapm_widgets));
++	if (ret)
++		goto out_retcode;
++
++	/* Set up imx specific audio path audio_map */
++	ret = snd_soc_dapm_add_routes(&codec->dapm, audio_map, ARRAY_SIZE(audio_map));
++	if (ret)
++		goto out_retcode;
++
++	ret = snd_soc_dapm_enable_pin(&codec->dapm, "Headphone Jack");
++	if (ret)
++		goto out_retcode;
++
++	ret = snd_soc_dapm_nc_pin(&codec->dapm, "Ext Spk");
++	if (ret)
++		goto out_retcode;
++
++out_retcode:
++
++	if (ret)
++		pr_err("%s: failed with error code: %d \n", __FUNCTION__, ret);
++	else
++		pr_info("%s: success \n", __FUNCTION__);
++
++	return ret;
++}
++
++/**
++ * Configure AUDMUX interconnection between 
++ * _slave (~source) and _master (~dest)
++ */
++static int imx_audmux_config(int _slave, int _master)
++{
++	unsigned int ptcr, pdcr;
++	int slave = _slave - 1;
++	int master = _master - 1;
++
++
++	ptcr = MXC_AUDMUX_V2_PTCR_SYN;
++	ptcr |= MXC_AUDMUX_V2_PTCR_TFSDIR |
++		MXC_AUDMUX_V2_PTCR_TFSEL(master) |
++		MXC_AUDMUX_V2_PTCR_TCLKDIR |
++		MXC_AUDMUX_V2_PTCR_TCSEL(master);
++#if 0
++	if (_master == 4/* analog codec */) {
++		ptcr |= MXC_AUDMUX_V2_PTCR_RCLKDIR |
++			MXC_AUDMUX_V2_PTCR_RCSEL(8 | master);
++	}
++#endif
++	pdcr = MXC_AUDMUX_V2_PDCR_RXDSEL(master);
++	mxc_audmux_v2_configure_port(slave, ptcr, pdcr);
++
++
++	ptcr = MXC_AUDMUX_V2_PTCR_SYN;
++	pdcr = MXC_AUDMUX_V2_PDCR_RXDSEL(slave);
++	mxc_audmux_v2_configure_port(master, ptcr, pdcr);
++
++	return 0;
++}
++
++/*
++ * Register the snd_soc_pcm_link drivers
++ */
++static int __devinit imx_wm8731_probe(struct platform_device *pdev)
++{
++	struct mxc_audio_platform_data *plat = pdev->dev.platform_data;
++	int ret = 0;
++
++	card_priv.pdev = pdev;
++
++	imx_audmux_config(plat->src_port, plat->ext_port);
++
++	if (plat->init && plat->init()) {
++		return -EINVAL;
++	}
++	card_priv.sysclk = plat->sysclk;
++
++	return ret;
++}
++
++static int __devinit imx_wm8731_remove(struct platform_device *pdev)
++{
++	struct mxc_audio_platform_data *plat = pdev->dev.platform_data;
++
++	plat->clock_enable(0);
++
++	if (plat->finit)
++		plat->finit();
++
++	return 0;
++}
++
++static int __init imx_asoc_init(void)
++{
++	int ret;
++
++	ret = platform_driver_register(&imx_wm8731_driver);
++	if (ret < 0)
++		goto out_retcode;
++
++	imx_snd_device = platform_device_alloc("soc-audio", 6);
++	if (!imx_snd_device)
++		goto out_dev_alloc_error;
++
++	platform_set_drvdata(imx_snd_device, &snd_soc_card_imx);
++
++	ret = platform_device_add(imx_snd_device);
++	if (ret == 0)
++		goto out_retcode;
++
++	platform_device_put(imx_snd_device);
++
++out_dev_alloc_error:
++	platform_driver_unregister(&imx_wm8731_driver);
++
++out_retcode:
++	return ret;
++}
++
++static void __exit imx_asoc_exit(void)
++{
++	platform_driver_unregister(&imx_wm8731_driver);
++	platform_device_unregister(imx_snd_device);
++}
++
++module_init(imx_asoc_init);
++module_exit(imx_asoc_exit);
++
++/* Module information */
++MODULE_AUTHOR("Andrey Gelman <andrey.gelman@compulab.co.il>");
++MODULE_DESCRIPTION("ALSA SoC imx wm8731");
++MODULE_LICENSE("GPL");
++
+-- 
+1.7.9.5
+

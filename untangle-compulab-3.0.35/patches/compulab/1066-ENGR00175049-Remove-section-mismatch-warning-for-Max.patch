@@ -1,0 +1,29 @@
+From cad6beccba8be5c1b5237e7a48055f06ce6ccf80 Mon Sep 17 00:00:00 2001
+From: Danny Nold <dannynold@freescale.com>
+Date: Tue, 21 Feb 2012 14:16:08 -0600
+Subject: ENGR00175049 - Remove section mismatch warning for Max17135
+
+- Entire max17135_regulator_init function declared as __init, which
+should be safe, since it is only executed at driver init time.
+
+Signed-off-by: Danny Nold <dannynold@freescale.com>
+---
+ arch/arm/mach-mx6/board-mx6q_arm2.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-mx6/board-mx6q_arm2.c b/arch/arm/mach-mx6/board-mx6q_arm2.c
+index a038038..6cf998b 100644
+--- a/arch/arm/mach-mx6/board-mx6q_arm2.c
++++ b/arch/arm/mach-mx6/board-mx6q_arm2.c
+@@ -756,7 +756,7 @@ static struct max17135_platform_data max17135_pdata __initdata = {
+ 	.init = max17135_regulator_init,
+ };
+ 
+-static int max17135_regulator_init(struct max17135 *max17135)
++static int __init max17135_regulator_init(struct max17135 *max17135)
+ {
+ 	struct max17135_platform_data *pdata = &max17135_pdata;
+ 	int i, ret;
+-- 
+1.7.9.5
+

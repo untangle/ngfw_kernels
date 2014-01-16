@@ -1,0 +1,111 @@
+From 08784b3ea6ae45b43372dd56057828f8bd157395 Mon Sep 17 00:00:00 2001
+From: Ranjani Vaidyanathan <ra5478@freescale.com>
+Date: Mon, 1 Apr 2013 16:03:31 -0500
+Subject: ENGR00256893-2 MX6Q/DL-Fix Ethernet performance issue when WAIT mode
+ is active
+
+All of the interrupts from the ENET block are not routed to
+the GPC block. Hence ENET interrupts are not able to wake
+up the SOC when the system is in WAIT mode. And the ENET
+interrupt gets serviced only when another interrupt causes
+the SOC to exit WAIT mode. This impacts the ENET performance.
+
+To fix the issue two options:
+1. Route the ENET interrupt to a GPIO. Need to enable the
+CONFIG_MX6_ENET_IRQ_TO_GPIO in the config.
+This patch provides support for routing the ENET interrupt
+to GPIO_1_6. Routing to this GPIO requires no HW board mods.
+If the GPIO_1_6 is being used for some other peripheral,
+this patch can be followed to route the ENET interrupt to
+any other GPIO though a HW mode maybe required.
+2. If the GPIO mechanism cannot be used and is not enabled
+by the above mentioned config, the patch will disable entry
+to WAIT mode until ENET clock is active. When the ENET clock
+is disabled, WAIT mode will be automatically enetered.
+
+Signed-off-by: Ranjani Vaidyanathan <ra5478@freescale.com>
+---
+ drivers/net/fec.c   |   17 +++++++++++++++++
+ include/linux/fec.h |    5 ++++-
+ 2 files changed, 21 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/fec.c b/drivers/net/fec.c
+index 5f0e4e0..fc65bdc 100755
+--- a/drivers/net/fec.c
++++ b/drivers/net/fec.c
+@@ -27,6 +27,7 @@
+ #include <linux/string.h>
+ #include <linux/ptrace.h>
+ #include <linux/errno.h>
++#include <linux/gpio.h>
+ #include <linux/ioport.h>
+ #include <linux/slab.h>
+ #include <linux/interrupt.h>
+@@ -1866,6 +1867,17 @@ fec_probe(struct platform_device *pdev)
+ 	if (pdata)
+ 		fep->phy_interface = pdata->phy;
+ 
++#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
++	gpio_request(pdata->gpio_irq, "gpio_enet_irq");
++	gpio_direction_input(pdata->gpio_irq);
++
++	irq = gpio_to_irq(pdata->gpio_irq);
++	ret = request_irq(irq, fec_enet_interrupt,
++			IRQF_TRIGGER_RISING,
++			 pdev->name, ndev);
++	if (ret)
++		goto failed_irq;
++#else
+ 	/* This device has up to three irqs on some platforms */
+ 	for (i = 0; i < 3; i++) {
+ 		irq = platform_get_irq(pdev, i);
+@@ -1880,6 +1892,7 @@ fec_probe(struct platform_device *pdev)
+ 			goto failed_irq;
+ 		}
+ 	}
++#endif
+ 
+ 	fep->clk = clk_get(&pdev->dev, "fec_clk");
+ 	if (IS_ERR(fep->clk)) {
+@@ -1930,11 +1943,15 @@ failed_init:
+ 	clk_disable(fep->clk);
+ 	clk_put(fep->clk);
+ failed_clk:
++#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
++	free_irq(irq, ndev);
++#else
+ 	for (i = 0; i < 3; i++) {
+ 		irq = platform_get_irq(pdev, i);
+ 		if (irq > 0)
+ 			free_irq(irq, ndev);
+ 	}
++#endif
+ failed_irq:
+ 	iounmap(fep->hwp);
+ failed_ioremap:
+diff --git a/include/linux/fec.h b/include/linux/fec.h
+index 8f69cb5..a9d6594 100644
+--- a/include/linux/fec.h
++++ b/include/linux/fec.h
+@@ -3,7 +3,7 @@
+  * Copyright (c) 2009 Orex Computed Radiography
+  *   Baruch Siach <baruch@tkos.co.il>
+  *
+- * Copyright (C) 2010-2011 Freescale Semiconductor, Inc.
++ * Copyright (C) 2010-2013 Freescale Semiconductor, Inc.
+  *
+  * Header file for the FEC platform data
+  *
+@@ -21,6 +21,9 @@ struct fec_platform_data {
+ 	int (*power_hibernate) (struct phy_device *);
+ 	phy_interface_t phy;
+ 	unsigned char mac[ETH_ALEN];
++#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
++	unsigned int gpio_irq;
++#endif
+ };
+ 
+ #endif
+-- 
+1.7.9.5
+

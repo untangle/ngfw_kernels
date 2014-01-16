@@ -1,0 +1,110 @@
+From 1c850de5402cb52213a69fb1a570479c85043188 Mon Sep 17 00:00:00 2001
+From: Wayne Zou <b36644@freescale.com>
+Date: Fri, 19 Apr 2013 16:33:24 +0800
+Subject: ENGR00259593 IPU/V4L2 output: Fix video ouput to video16 can not
+ work
+
+Revert"ENGR00254931 IPUv3 Fb: Fix display twinkling issue during suspend/resume"
+
+This reverts commit 4bd475ba0603e10cdcab7e55f89599f7016cad25.
+
+That patch will lead to kernel crash when doing video playback on video16 with
+overlay on. The reason is that fb driver doesn't reallocate larger DMA buffer
+requested by V4L2 driver, while IPU hardware write to large DMA address.
+Other solution is needed for the original issue.
+
+kernel BUG at arch/arm/mm/dma-mapping.c:478!
+Unable to handle kernel NULL pointer dereference at virtual address 00000000
+pgd = 80004000
+[00000000] *pgd=00000000
+Internal error: Oops: 817 [#1] PREEMPT SMP
+Modules linked in: mxc_v4l2_capture ipu_csi_enc ipu_prp_enc ipu_fg_overlay_sdc
+ipu_bg_overlay_sdc ipu_still ov5640_camera_mipi ov5640_camera
+CPU: 0    Not tainted  (3.0.35-2506-g556681e #1)
+PC is at __bug+0x1c/0x28
+LR is at __bug+0x18/0x28
+pc : [<800442ac>]    lr : [<800442a8>]    psr: 20000113
+sp : 80a8fe88  ip : c09b2000  fp : 80aa3a70
+r10: 80a90080  r9 : 00000040  r8 : bffecec4
+r7 : 00000001  r6 : 00000002  r5 : 00000800  r4 : ce5c5e65
+r3 : 00000000  r2 : 00000104  r1 : 0bfcf000  r0 : 00000033
+Flags: nzCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment kernel
+Control: 10c53c7d  Table: 4a97404a  DAC: 00000015
+Process swapper (pid: 0, stack limit = 0x80a8e2f0)
+Stack: (0x80a8fe88 to 0x80a90000)
+fe80:                   80afde30 8004a464 00000880 ffdfd6b0 bffec000 802fa678
+fea0: bffec000 00000060 5e5c5e65 ce5c5e65 bffec250 80ad4c88 bffece4c 00000001
+fec0: bffecec4 00000040 0000012c 8c009480 8c009488 80a90080 ffff9527 80423f58
+fee0: 00000001 80a8e000 00000096 00000001 80a9004c 80a8e000 00000103 80af77e0
+ff00: 00000000 80a90040 00000003 8007a034 00000096 00000000 80a8e000 0000000a
+ff20: 80a94c4c 80a8e000 80039c00 80a8e000 00000096 00000000 80a8e000 00000000
+ff40: 00000000 8007a570 80aa3cc0 80041874 ffffffff f2a00100 00000096 00000002
+ff60: 00000001 80040a0c 80af9140 80000093 00000001 00000000 80a8e000 80af1ce4
+ff80: 80511044 80aa6e7c 1000406a 412fc09a 00000000 00000000 00000000 80a8ffb0
+ffa0: 8004f648 80041b04 40000013 ffffffff 80041ae0 80041d08 00000001 80aa3b3c
+ffc0: 80af1c40 8002f538 8c005160 80008868 800082f8 00000000 00000000 8002f538
+ffe0: 00000000 10c53c7d 80aa3a6c 8002f534 80aa6e74 10008040 00000000 00000000
+[<800442ac>] (__bug+0x1c/0x28) from [<8004a464>]
+		(___dma_single_dev_to_cpu+0x84/0x94)
+[<8004a464>] (___dma_single_dev_to_cpu+0x84/0x94) from [<802fa678>]
+		(fec_rx_poll+0x228/0x2c8)
+[<802fa678>] (fec_rx_poll+0x228/0x2c8) from [<80423f58>]
+		(net_rx_action+0xb0/0x17c)
+[<80423f58>] (net_rx_action+0xb0/0x17c) from [<8007a034>]
+		(__do_softirq+0xac/0x140)
+[<8007a034>] (__do_softirq+0xac/0x140) from [<8007a570>] (irq_exit+0x94/0x9c)
+[<8007a570>] (irq_exit+0x94/0x9c) from [<80041874>] (handle_IRQ+0x50/0xac)
+[<80041874>] (handle_IRQ+0x50/0xac) from [<80040a0c>] (__irq_svc+0x4c/0xe8)
+[<80040a0c>] (__irq_svc+0x4c/0xe8) from [<80041b04>] (default_idle+0x24/0x28)
+[<80041d08>] (cpu_idle+0xc8/0x108) from [<80008868>] (start_kernel+0x248/0x288)
+[<80008868>] (start_kernel+0x248/0x288) from [<10008040>] (0x10008040)
+
+Signed-off-by: Wayne Zou <b36644@freescale.com>
+---
+ drivers/video/mxc/mxc_ipuv3_fb.c |   15 ++-------------
+ 1 file changed, 2 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/video/mxc/mxc_ipuv3_fb.c b/drivers/video/mxc/mxc_ipuv3_fb.c
+index 0818a32..4c98d51 100644
+--- a/drivers/video/mxc/mxc_ipuv3_fb.c
++++ b/drivers/video/mxc/mxc_ipuv3_fb.c
+@@ -447,15 +447,9 @@ static int mxcfb_set_par(struct fb_info *fbi)
+ 	if (mxc_fbi->ovfbi)
+ 		mxc_fbi_fg = (struct mxcfb_info *)mxc_fbi->ovfbi->par;
+ 
+-	if (mxc_fbi->ovfbi && mxc_fbi_fg) {
+-		if (mxc_fbi_fg->cur_blank == FB_BLANK_UNBLANK) {
+-			dev_warn(fbi->device, "overlay is still on.\n");
+-			return 0;
+-		}
+-		if ((mxc_fbi_fg->next_blank == FB_BLANK_UNBLANK) &&
+-			mxcfb_need_to_set_par(mxc_fbi->ovfbi))
++	if (mxc_fbi->ovfbi && mxc_fbi_fg)
++		if (mxc_fbi_fg->next_blank == FB_BLANK_UNBLANK)
+ 			ovfbi_enable = true;
+-	}
+ 
+ 	if (!mxcfb_need_to_set_par(fbi))
+ 		return 0;
+@@ -479,7 +473,6 @@ static int mxcfb_set_par(struct fb_info *fbi)
+ 		ipu_disable_irq(mxc_fbi_fg->ipu, mxc_fbi_fg->ipu_ch_nf_irq);
+ 		ipu_disable_channel(mxc_fbi_fg->ipu, mxc_fbi_fg->ipu_ch, true);
+ 		ipu_uninit_channel(mxc_fbi_fg->ipu, mxc_fbi_fg->ipu_ch);
+-		mxc_fbi_fg->cur_blank = FB_BLANK_POWERDOWN;
+ 	}
+ 
+ 	ipu_clear_irq(mxc_fbi->ipu, mxc_fbi->ipu_ch_irq);
+@@ -663,10 +656,6 @@ static int mxcfb_set_par(struct fb_info *fbi)
+ 	}
+ 
+ 	mxc_fbi->cur_var = fbi->var;
+-	if (ovfbi_enable) {
+-		mxc_fbi_fg->cur_blank = FB_BLANK_UNBLANK;
+-		mxc_fbi_fg->cur_var = mxc_fbi->ovfbi->var;
+-	}
+ 
+ 	return retval;
+ }
+-- 
+1.7.9.5
+

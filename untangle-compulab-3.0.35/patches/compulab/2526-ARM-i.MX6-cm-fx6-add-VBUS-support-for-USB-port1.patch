@@ -1,0 +1,44 @@
+From 5d4fb29efc568485edf86cf5e0387684db453ccb Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Tue, 26 Feb 2013 18:31:23 +0200
+Subject: ARM: i.MX6: cm-fx6: add VBUS support for USB port1
+
+Setup the correct pin mux for VBUS on USB host port 1.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6-dl.h |    3 +++
+ arch/arm/mach-mx6/board-cm-fx6-q.h  |    3 +++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-dl.h b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+index f91839f..ce7d69b 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-dl.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+@@ -26,6 +26,9 @@ static iomux_v3_cfg_t cm_fx6_dl_pads[] = {
+ 	MX6DL_PAD_EIM_EB3__GPIO_2_31,
+ 	/* TSPENDOWN */
+ 	MX6DL_PAD_SD4_DAT7__GPIO_2_15,
++	/* USBH1 VBUS control */
++	MX6DL_PAD_GPIO_0__USBOH3_USBH1_PWR,
++
+ 	/* ENET */
+ 	MX6DL_PAD_ENET_MDIO__ENET_MDIO,
+ 	MX6DL_PAD_KEY_COL2__ENET_MDC,
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-q.h b/arch/arm/mach-mx6/board-cm-fx6-q.h
+index c32edb2..ceb3931 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-q.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-q.h
+@@ -26,6 +26,9 @@ static iomux_v3_cfg_t cm_fx6_q_common_pads[] = {
+ 	MX6Q_PAD_EIM_EB3__GPIO_2_31,
+ 	/* TSPENDOWN */
+ 	MX6Q_PAD_SD4_DAT7__GPIO_2_15,
++	/* USBH1 VBUS control */
++	MX6Q_PAD_GPIO_0__USBOH3_USBH1_PWR,
++
+ 	/* ENET */
+ 	MX6Q_PAD_ENET_MDIO__ENET_MDIO,
+ 	MX6Q_PAD_ENET_MDC__ENET_MDC,
+-- 
+1.7.9.5
+

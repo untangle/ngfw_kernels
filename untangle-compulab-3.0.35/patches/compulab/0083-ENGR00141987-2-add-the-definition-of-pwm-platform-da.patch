@@ -1,0 +1,32 @@
+From 2b8fa31ee0d6e4426d6e06780babe0733a1ea8cd Mon Sep 17 00:00:00 2001
+From: Yuxi Sun <b36102@freescale.com>
+Date: Wed, 13 Apr 2011 11:08:02 +0800
+Subject: ENGR00141987-2 add the definition of pwm platform data
+
+Add the definition of pwm platform data
+
+Signed-off-by: Sun Yuxi <b36102@freescale.com>
+---
+ include/linux/fsl_devices.h |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/include/linux/fsl_devices.h b/include/linux/fsl_devices.h
+index 7e41d6d..d28f9db 100644
+--- a/include/linux/fsl_devices.h
++++ b/include/linux/fsl_devices.h
+@@ -283,6 +283,12 @@ struct mxc_audio_platform_data {
+ 	void *priv;		/* used by board specific functions */
+ };
+ 
++struct mxc_pwm_platform_data {
++	int pwmo_invert;
++	void (*enable_pwm_pad) (void);
++	void (*disable_pwm_pad) (void);
++};
++
+ /* Returns non-zero if the current suspend operation would
+  * lead to a deep sleep (i.e. power removed from the core,
+  * instead of just the clock).
+-- 
+1.7.9.5
+

@@ -1,0 +1,29 @@
+From d114c4e11c611f9a98298e4c0533dea2112b0ae3 Mon Sep 17 00:00:00 2001
+From: Jason Liu <r64343@freescale.com>
+Date: Tue, 14 Feb 2012 17:20:20 +0800
+Subject: ENGR00174423-2: i.mx6: clock: code clean up in pfd_set_rate
+
+code clean up by removing the dead code in function pfd_set_rate
+
+Signed-off-by: Jason Liu <r64343@freescale.com>
+---
+ arch/arm/mach-mx6/clock.c |    3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/arch/arm/mach-mx6/clock.c b/arch/arm/mach-mx6/clock.c
+index 41eeebd..13026f9 100644
+--- a/arch/arm/mach-mx6/clock.c
++++ b/arch/arm/mach-mx6/clock.c
+@@ -344,9 +344,6 @@ static int pfd_set_rate(struct clk *clk, unsigned long rate)
+ 	__raw_writel(frac << clk->enable_shift,
+ 			(int)clk->enable_reg + 4);
+ 
+-	tmp = (u64)clk_get_rate(clk->parent) * 18;
+-	do_div(tmp, frac);
+-
+ 	if (apbh_dma_clk.usecount == 0)
+ 		apbh_dma_clk.disable(&apbh_dma_clk);
+ 	return 0;
+-- 
+1.7.9.5
+

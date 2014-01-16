@@ -1,0 +1,28 @@
+From 322f38f04696f5f5edce0b648db12c6eb98f8675 Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Sat, 2 Mar 2013 00:46:50 +0200
+Subject: ARM: i.MX6: cm-fx6: add missing linux/err.h
+
+cm-fx6 uses macros defined in linux/err.h.
+Add include for linux/err.h.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index 2e08cf9..8097c1c 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -27,6 +27,7 @@
+ #include <linux/init.h>
+ #include <linux/input.h>
+ #include <linux/clk.h>
++#include <linux/err.h>
+ #include <linux/platform_device.h>
+ #include <linux/fsl_devices.h>
+ #include <linux/spi/spi.h>
+-- 
+1.7.9.5
+

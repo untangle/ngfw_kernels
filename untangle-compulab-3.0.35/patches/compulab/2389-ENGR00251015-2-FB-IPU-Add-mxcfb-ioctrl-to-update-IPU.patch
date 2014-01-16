@@ -1,0 +1,42 @@
+From 5904baf7a5c64c85840e5223d6bb488814d4ab73 Mon Sep 17 00:00:00 2001
+From: Wayne Zou <b36644@freescale.com>
+Date: Wed, 20 Feb 2013 13:46:01 +0800
+Subject: ENGR00251015-2 FB/IPU: Add mxcfb ioctrl to update IPU DP CSC matrix
+
+Add mxcfb ioctrl MXCFB_CSC_UPDATE to update IPU DP CSC matrix
+for display adjustment.
+This patch implements the ioctrl interface.
+
+Signed-off-by: Wayne Zou <b36644@freescale.com>
+---
+ drivers/video/mxc/mxc_ipuv3_fb.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/video/mxc/mxc_ipuv3_fb.c b/drivers/video/mxc/mxc_ipuv3_fb.c
+index e8a3398..f8dd59e 100644
+--- a/drivers/video/mxc/mxc_ipuv3_fb.c
++++ b/drivers/video/mxc/mxc_ipuv3_fb.c
+@@ -1320,6 +1320,20 @@ static int mxcfb_ioctl(struct fb_info *fbi, unsigned int cmd, unsigned long arg)
+ 
+ 			break;
+ 		}
++	case MXCFB_CSC_UPDATE:
++		{
++			struct mxcfb_csc_matrix csc;
++
++			if (copy_from_user(&csc, (void *) arg, sizeof(csc)))
++				return -EFAULT;
++
++			if ((mxc_fbi->ipu_ch != MEM_FG_SYNC) &&
++				(mxc_fbi->ipu_ch != MEM_BG_SYNC) &&
++				(mxc_fbi->ipu_ch != MEM_BG_ASYNC0))
++				return -EFAULT;
++			ipu_set_csc_coefficients(mxc_fbi->ipu, mxc_fbi->ipu_ch,
++						csc.param);
++		}
+ 	default:
+ 		retval = -EINVAL;
+ 	}
+-- 
+1.7.9.5
+

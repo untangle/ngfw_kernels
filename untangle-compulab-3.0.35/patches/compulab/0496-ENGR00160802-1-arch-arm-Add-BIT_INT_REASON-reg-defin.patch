@@ -1,0 +1,28 @@
+From f83914b8ea5e5d58bd2582356b3fd2a7737be3bb Mon Sep 17 00:00:00 2001
+From: Sammy He <r62914@freescale.com>
+Date: Wed, 26 Oct 2011 20:46:12 +0800
+Subject: ENGR00160802-1 arch/arm: Add BIT_INT_REASON reg definition in
+ mxc_vpu.h
+
+The BIT_INT_REASON register is needed in vpu driver code, so add it here.
+
+Signed-off-by: Sammy He <r62914@freescale.com>
+---
+ arch/arm/plat-mxc/include/mach/mxc_vpu.h |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/plat-mxc/include/mach/mxc_vpu.h b/arch/arm/plat-mxc/include/mach/mxc_vpu.h
+index 0f81fb9..06fc69a 100755
+--- a/arch/arm/plat-mxc/include/mach/mxc_vpu.h
++++ b/arch/arm/plat-mxc/include/mach/mxc_vpu.h
+@@ -60,6 +60,7 @@ struct vpu_mem_desc {
+ #define BIT_CODE_DOWN			0x004
+ #define	BIT_INT_CLEAR			0x00C
+ #define	BIT_INT_STATUS			0x010
++#define BIT_INT_REASON			0x174
+ 
+ #define MJPEG_PIC_STATUS_REG		0x3004
+ 
+-- 
+1.7.9.5
+

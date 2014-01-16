@@ -1,0 +1,54 @@
+From 546aeb1e154065300c2440f4bae36a180721c7f0 Mon Sep 17 00:00:00 2001
+From: Javier Martin <javier.martin@vista-silicon.com>
+Date: Fri, 11 May 2012 12:15:41 +0200
+Subject: mtd: add fixup for S29NS512P NOR flash.
+
+Spansion S29NS512P flash uses a 16bit transfer to report number
+of sectors instead of two 8bit accesses as CFI specifies.
+
+Artem: remove warning message which said that we are applying the
+fixup - no need to scary the user unnecessarily.
+
+Signed-off-by: Javier Martin <javier.martin@vista-silicon.com>
+Signed-off-by: Artem Bityutskiy <artem.bityutskiy@linux.intel.com>
+Signed-off-by: David Woodhouse <David.Woodhouse@intel.com>
+Signed-off-by: Huang Shijie <b32955@freescale.com>
+---
+ drivers/mtd/chips/cfi_cmdset_0002.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/mtd/chips/cfi_cmdset_0002.c b/drivers/mtd/chips/cfi_cmdset_0002.c
+index 9b7ff55..23ee97f 100644
+--- a/drivers/mtd/chips/cfi_cmdset_0002.c
++++ b/drivers/mtd/chips/cfi_cmdset_0002.c
+@@ -332,6 +332,19 @@ static void fixup_s29gl032n_sectors(struct mtd_info *mtd)
+ 	}
+ }
+ 
++static void fixup_s29ns512p_sectors(struct mtd_info *mtd)
++{
++	struct map_info *map = mtd->priv;
++	struct cfi_private *cfi = map->fldrv_priv;
++
++	/*
++	 *  S29NS512P flash uses more than 8bits to report number of sectors,
++	 * which is not permitted by CFI.
++	 */
++	cfi->cfiq->EraseRegionInfo[0] = 0x020001ff;
++	pr_warning("%s: Bad S29NS512P CFI data, adjust to 512 sectors\n", mtd->name);
++}
++
+ /* Used to fix CFI-Tables of chips without Extended Query Tables */
+ static struct cfi_fixup cfi_nopri_fixup_table[] = {
+ 	{ CFI_MFR_SST, 0x234a, fixup_sst39vf }, /* SST39VF1602 */
+@@ -362,6 +375,7 @@ static struct cfi_fixup cfi_fixup_table[] = {
+ 	{ CFI_MFR_AMD, 0x1301, fixup_s29gl064n_sectors },
+ 	{ CFI_MFR_AMD, 0x1a00, fixup_s29gl032n_sectors },
+ 	{ CFI_MFR_AMD, 0x1a01, fixup_s29gl032n_sectors },
++	{ CFI_MFR_AMD, 0x3f00, fixup_s29ns512p_sectors },
+ 	{ CFI_MFR_SST, 0x536a, fixup_sst38vf640x_sectorsize }, /* SST38VF6402 */
+ 	{ CFI_MFR_SST, 0x536b, fixup_sst38vf640x_sectorsize }, /* SST38VF6401 */
+ 	{ CFI_MFR_SST, 0x536c, fixup_sst38vf640x_sectorsize }, /* SST38VF6404 */
+-- 
+1.7.9.5
+

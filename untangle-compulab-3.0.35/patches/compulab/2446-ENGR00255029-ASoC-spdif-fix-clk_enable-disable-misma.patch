@@ -1,0 +1,33 @@
+From 7c0721f7254d08c046b1783b9d26bf3cff6f065f Mon Sep 17 00:00:00 2001
+From: Nicolin Chen <b42378@freescale.com>
+Date: Wed, 20 Mar 2013 11:09:17 +0800
+Subject: ENGR00255029 ASoC: spdif: fix clk_enable/disable() mismatched issue
+
+  The function might be returned if the CNEW wasn't detected, while in this
+case the code won't disable the clk.
+  This patch just fixed the mismatch.
+
+Signed-off-by: Nicolin Chen <b42378@freescale.com>
+---
+ sound/soc/codecs/mxc_spdif.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/sound/soc/codecs/mxc_spdif.c b/sound/soc/codecs/mxc_spdif.c
+index 77e62ae..b358f71 100644
+--- a/sound/soc/codecs/mxc_spdif.c
++++ b/sound/soc/codecs/mxc_spdif.c
+@@ -888,8 +888,10 @@ static int mxc_spdif_capture_get(struct snd_kcontrol *kcontrol,
+ 
+ 	clk_enable(plat_data->spdif_clk);
+ 
+-	if (!(__raw_readl(spdif_base_addr + SPDIF_REG_SIS) & INT_CNEW))
++	if (!(__raw_readl(spdif_base_addr + SPDIF_REG_SIS) & INT_CNEW)) {
++		clk_disable(plat_data->spdif_clk);
+ 		return -EAGAIN;
++	}
+ 
+ 	cstatus = __raw_readl(spdif_base_addr + SPDIF_REG_SRCSLH);
+ 	ucontrol->value.iec958.status[0] = (cstatus >> 16) & 0xFF;
+-- 
+1.7.9.5
+

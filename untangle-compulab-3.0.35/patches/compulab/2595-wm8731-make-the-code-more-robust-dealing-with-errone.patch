@@ -1,0 +1,36 @@
+From c15f05b588725676c3f1feaa249c94752bb2eced Mon Sep 17 00:00:00 2001
+From: Andrey Gelman <andrey.gelman@compulab.co.il>
+Date: Thu, 20 Jun 2013 14:29:47 +0300
+Subject: wm8731: make the code more robust dealing with erroneous
+ configuration
+
+---
+ sound/soc/codecs/wm8731.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/sound/soc/codecs/wm8731.c b/sound/soc/codecs/wm8731.c
+index a17f154..28ef231 100644
+--- a/sound/soc/codecs/wm8731.c
++++ b/sound/soc/codecs/wm8731.c
+@@ -241,6 +241,8 @@ struct _coeff_div {
+ 
+ /* codec mclk clock divider coefficients */
+ static const struct _coeff_div coeff_div[] = {
++	{       0,     0,   0,   0,   0,   0},
++
+ 	/* 48k */
+ 	{12288000, 48000, 256, 0x0, 0x0, 0x0},
+ 	{18432000, 48000, 384, 0x0, 0x1, 0x0},
+@@ -313,6 +315,9 @@ static int wm8731_hw_params(struct snd_pcm_substream *substream,
+ 	case SNDRV_PCM_FORMAT_S24_LE:
+ 		iface |= 0x0008;
+ 		break;
++	default:
++		iface |= 0x000C;
++		break;
+ 	}
+ 
+ 	wm8731_set_deemph(codec);
+-- 
+1.7.9.5
+

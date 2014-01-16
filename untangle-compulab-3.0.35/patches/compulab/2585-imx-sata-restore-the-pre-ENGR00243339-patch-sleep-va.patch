@@ -1,0 +1,26 @@
+From 9632bc2dee5379cac78a5a633a27e1a5e468d108 Mon Sep 17 00:00:00 2001
+From: Valentin Raevsky <valentin@compulab.co.il>
+Date: Mon, 10 Jun 2013 16:07:11 +0300
+Subject: imx: sata: restore the pre-ENGR00243339 patch sleep value
+
+This patch fixes the "No sata disk." issue on CM-FX6.
+---
+ arch/arm/plat-mxc/ahci_sata.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/plat-mxc/ahci_sata.c b/arch/arm/plat-mxc/ahci_sata.c
+index de172a9..831cc32 100644
+--- a/arch/arm/plat-mxc/ahci_sata.c
++++ b/arch/arm/plat-mxc/ahci_sata.c
+@@ -176,7 +176,7 @@ int sata_init(void __iomem *addr, unsigned long timer1ms)
+ 	/* Release resources when there is no device on the port */
+ 	do {
+ 		if ((readl(addr + PORT_SATA_SR) & 0xF) == 0)
+-			usleep_range(1000, 2000);
++			msleep(25);
+ 		else
+ 			break;
+ 
+-- 
+1.7.9.5
+

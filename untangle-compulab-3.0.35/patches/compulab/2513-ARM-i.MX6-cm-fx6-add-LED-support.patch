@@ -1,0 +1,104 @@
+From a917bfb7ac7477bcc3c9745c642d97e5ccf5e84b Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Mon, 10 Dec 2012 17:57:15 +0200
+Subject: ARM: i.MX6: cm-fx6: add LED support
+
+Add support for the green LED (heart beat).
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6-dl.h |    3 ++-
+ arch/arm/mach-mx6/board-cm-fx6-q.h  |    3 ++-
+ arch/arm/mach-mx6/board-cm-fx6.c    |   34 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 38 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-dl.h b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+index e18cbb5..f1536ad 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-dl.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+@@ -23,7 +23,8 @@ static iomux_v3_cfg_t mx6dl_arm2_pads[] = {
+ 	/* UART4 for debug */
+ 	MX6DL_PAD_KEY_COL0__UART4_TXD,
+ 	MX6DL_PAD_KEY_ROW0__UART4_RXD,
+-
++	/* Green LED */
++	MX6DL_PAD_EIM_EB3__GPIO_2_31,
+ 	/* ENET */
+ 	MX6DL_PAD_ENET_MDIO__ENET_MDIO,
+ 	MX6DL_PAD_KEY_COL2__ENET_MDC,
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-q.h b/arch/arm/mach-mx6/board-cm-fx6-q.h
+index cb9bf79..8e86a34 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-q.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-q.h
+@@ -23,7 +23,8 @@ static iomux_v3_cfg_t mx6q_arm2_pads[] = {
+ 	/* UART4 for debug */
+ 	MX6Q_PAD_KEY_COL0__UART4_TXD,
+ 	MX6Q_PAD_KEY_ROW0__UART4_RXD,
+-
++	/* Green LED */
++	MX6Q_PAD_EIM_EB3__GPIO_2_31,
+ 	/* ENET */
+ 	MX6Q_PAD_ENET_MDIO__ENET_MDIO,
+ 	MX6Q_PAD_ENET_MDC__ENET_MDC,
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index 0a1f995..57b5e0f 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -76,6 +76,7 @@
+ #include "board-cm-fx6-dl.h"
+ 
+ /* GPIO PIN, sort by PORT/BIT */
++#define CM_FX6_GREEN_LED		IMX_GPIO_NR(2, 31)
+ #define MX6_ARM2_LDB_BACKLIGHT		IMX_GPIO_NR(1, 9)
+ #define MX6_ARM2_ECSPI1_CS0		IMX_GPIO_NR(2, 30)
+ #define MX6_ARM2_ECSPI1_CS1		IMX_GPIO_NR(3, 19)
+@@ -1024,6 +1025,37 @@ static int __init early_disable_mipi_dsi(char *p)
+ }
+ early_param("disable_mipi_dsi", early_disable_mipi_dsi);
+ 
++#if defined(CONFIG_LEDS_GPIO) || defined(CONFIG_LEDS_GPIO_MODULE)
++static struct gpio_led cm_fx6_leds[] = {
++	[0] = {
++		.gpio			= CM_FX6_GREEN_LED,
++		.name			= "cm_fx6:green",
++		.default_trigger	= "heartbeat",
++		.active_low		= 0,
++	},
++};
++
++static struct gpio_led_platform_data cm_fx6_led_pdata = {
++	.num_leds	= ARRAY_SIZE(cm_fx6_leds),
++	.leds		= cm_fx6_leds,
++};
++
++static struct platform_device cm_fx6_led_device = {
++	.name	= "leds-gpio",
++	.id	= -1,
++	.dev	= {
++		.platform_data = &cm_fx6_led_pdata,
++	},
++};
++
++static void __init cm_fx6_init_led(void)
++{
++	platform_device_register(&cm_fx6_led_device);
++}
++#else
++static inline void cm_fx6_init_led(void) {}
++#endif
++
+ /*
+  * Board specific initialization.
+  */
+@@ -1151,6 +1183,8 @@ static void __init cm_fx6_init(void)
+ 				ARRAY_SIZE(mxc_i2c2_board_info));
+ 	}
+ 
++	cm_fx6_init_led();
++
+ 	/* SPI */
+ 	imx6q_add_ecspi(0, &mx6_arm2_spi_data);
+ 	spi_device_init();
+-- 
+1.7.9.5
+

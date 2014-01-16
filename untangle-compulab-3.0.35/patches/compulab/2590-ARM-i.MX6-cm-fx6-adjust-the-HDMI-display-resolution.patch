@@ -1,0 +1,26 @@
+From 6796559adde31f5514b16a9ff7a6836d7a447c45 Mon Sep 17 00:00:00 2001
+From: Valentin Raevsky <valentin@compulab.co.il>
+Date: Thu, 27 Jun 2013 16:47:02 +0300
+Subject: ARM: i.MX6: cm-fx6: adjust the HDMI display resolution
+
+Adjust the HDMI display resolution.
+---
+ arch/arm/mach-mx6/board-cm-fx6.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index c5d5b60..d6085cd 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -1015,7 +1015,7 @@ static struct ipuv3_fb_platform_data cm_fx6_fb_data[] = {
+ 	}, {
+ 		.disp_dev               = "hdmi",
+ 		.interface_pix_fmt      = IPU_PIX_FMT_RGB24,
+-		.mode_str               = "1280x720M@50",
++		.mode_str               = "1920x1080M-24@50",
+ 		.default_bpp            = 24,
+ 		.int_clk                = false,
+ 	}, {
+-- 
+1.7.9.5
+

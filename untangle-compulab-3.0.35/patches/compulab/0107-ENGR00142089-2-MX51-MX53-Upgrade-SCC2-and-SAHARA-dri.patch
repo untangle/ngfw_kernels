@@ -1,0 +1,38 @@
+From 8b79dd544307a92c3c9e198516ef5cfa5c0301bb Mon Sep 17 00:00:00 2001
+From: Anish Trivedi <anish@freescale.com>
+Date: Wed, 13 Apr 2011 14:18:45 -0500
+Subject: ENGR00142089-2 MX51/MX53 Upgrade SCC2 and SAHARA drivers to 2.6.38
+
+Removed SCC2 IRQ definitions from header file since
+IRQs will be obtained from resource array during probe
+function.
+
+Signed-off-by: Anish Trivedi <anish@freescale.com>
+---
+ include/linux/mxc_scc2_driver.h |   10 ----------
+ 1 file changed, 10 deletions(-)
+
+diff --git a/include/linux/mxc_scc2_driver.h b/include/linux/mxc_scc2_driver.h
+index 4a32d62..91327e4 100644
+--- a/include/linux/mxc_scc2_driver.h
++++ b/include/linux/mxc_scc2_driver.h
+@@ -119,16 +119,6 @@
+ #define SCC_DRIVER_MINOR_VERSION_2    2
+ 
+ 
+-/*!
+- *  Interrupt line number of SCM interrupt.
+- */
+-#define INT_SCC_SCM         MXC_INT_SCC_SCM
+-
+-/*!
+- *  Interrupt line number of the SMN interrupt.
+- */
+-#define INT_SCC_SMN         MXC_INT_SCC_SMN
+-
+ /**
+  * @typedef scc_return_t
+  */
+-- 
+1.7.9.5
+

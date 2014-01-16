@@ -1,0 +1,71 @@
+From 9f38f6d29d941575e52a2b0d6102fc10115d177f Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Sun, 3 Mar 2013 13:28:36 +0200
+Subject: ARM: i.MX6: cm-fx6: add support for PCIE
+
+sb-fx6 features PCIE muxer and Realtek Ethernet controller.
+Add support for the muxer and the Ethernet reset lines.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6-dl.h |    2 ++
+ arch/arm/mach-mx6/board-cm-fx6-q.h  |    2 ++
+ arch/arm/mach-mx6/board-cm-fx6.c    |    6 ++++--
+ 3 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-dl.h b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+index f28e1ad..b802051 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-dl.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+@@ -34,6 +34,8 @@ static iomux_v3_cfg_t cm_fx6_dl_pads[] = {
+ 	MX6DL_PAD_GPIO_0__USBOH3_USBH1_PWR,
+ 	/* LCD PWM back light */
+ 	MX6DL_PAD_SD4_DAT1__PWM3_PWMO,
++	/* SB_FX6 ETH_RST */
++	MX6DL_PAD_ENET_RXD1__GPIO_1_26,
+ 
+ 	/* ENET */
+ 	MX6DL_PAD_ENET_MDIO__ENET_MDIO,
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-q.h b/arch/arm/mach-mx6/board-cm-fx6-q.h
+index aee2be7..2b7cbde 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-q.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-q.h
+@@ -34,6 +34,8 @@ static iomux_v3_cfg_t cm_fx6_q_common_pads[] = {
+ 	MX6Q_PAD_GPIO_0__USBOH3_USBH1_PWR,
+ 	/* LCD PWM back light */
+ 	MX6Q_PAD_SD4_DAT1__PWM3_PWMO,
++	/* SB_FX6 ETH_RST */
++	MX6Q_PAD_ENET_RXD1__GPIO_1_26,
+ 
+ 	/* ENET */
+ 	MX6Q_PAD_ENET_MDIO__ENET_MDIO,
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index 587fd0e..8539476 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -91,9 +91,11 @@
+ #define CM_FX6_USB_HUB_RST		IMX_GPIO_NR(7, 8)
+ 
+ #define SB_FX6_HX8520_PENDOWN		IMX_GPIO_NR(1, 4)
++#define SB_FX6_ETH_RST			IMX_GPIO_NR(1, 26)
+ #define SB_FX6_SD3_WP			IMX_GPIO_NR(7, 0)
+ #define SB_FX6_SD3_CD			IMX_GPIO_NR(7, 1)
+ #define SB_FX6_GPIO_EXT_BASE		IMX_GPIO_NR(8, 0)
++#define SB_FX6_PCIE_MUX_PWR		IMX_GPIO_NR(8, 4)
+ #define SB_FX6_LCD_RST			IMX_GPIO_NR(8, 11)
+ 
+ #define MX6_ARM2_USB_OTG_PWR		IMX_GPIO_NR(3, 22)
+@@ -1052,8 +1054,8 @@ static struct mxc_spdif_platform_data mxc_spdif_data = {
+ };
+ 
+ static const struct imx_pcie_platform_data mx6_arm2_pcie_data  __initconst = {
+-	.pcie_pwr_en	= -EINVAL,
+-	.pcie_rst	= -EINVAL,
++	.pcie_pwr_en	= SB_FX6_PCIE_MUX_PWR,
++	.pcie_rst	= SB_FX6_ETH_RST,
+ 	.pcie_wake_up	= -EINVAL,
+ 	.pcie_dis	= -EINVAL,
+ };
+-- 
+1.7.9.5
+

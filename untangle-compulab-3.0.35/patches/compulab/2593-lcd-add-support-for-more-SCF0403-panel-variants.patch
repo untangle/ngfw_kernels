@@ -1,0 +1,493 @@
+From 0d3e6354d66977800b83a0b6be73d5f5c63d82da Mon Sep 17 00:00:00 2001
+From: Dmitry Lifshitz <lifshitz@compulab.co.il>
+Date: Mon, 1 Jul 2013 10:03:33 +0300
+Subject: lcd: add support for more SCF0403 panel variants
+
+The SCF0403526GGU20 panel initialization sequence slightly
+differs from the SCF0403852GGU04.
+Add support for the SCF0403526GGU20 panel variant.
+
+Signed-off-by: Dmitry Lifshitz <lifshitz@compulab.co.il>
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ drivers/video/backlight/Kconfig   |    4 +-
+ drivers/video/backlight/scf0403.c |  340 ++++++++++++++++++++++---------------
+ include/linux/spi/scf0403.h       |    2 +-
+ 3 files changed, 203 insertions(+), 143 deletions(-)
+
+diff --git a/drivers/video/backlight/Kconfig b/drivers/video/backlight/Kconfig
+index 959b8a8..6a3abd2 100755
+--- a/drivers/video/backlight/Kconfig
++++ b/drivers/video/backlight/Kconfig
+@@ -73,10 +73,10 @@ config LCD_TDO24M
+ 	  include the support for it.
+ 
+ config LCD_SCF0403
+-	tristate "DataImage SCF0403852GGU04 LCD Panel support"
++	tristate "DataImage SCF0403 LCD Panel support"
+ 	depends on SPI_MASTER
+ 	help
+-	  If you have a DataImage SCF0403852GGU04 LCD panel, say y here to
++	  If you have a DataImage SCF0403 LCD panel, say y here to
+ 	  include support for it.
+ 
+ config LCD_VGG2432A4
+diff --git a/drivers/video/backlight/scf0403.c b/drivers/video/backlight/scf0403.c
+index ed6dcc9..720cfd1 100644
+--- a/drivers/video/backlight/scf0403.c
++++ b/drivers/video/backlight/scf0403.c
+@@ -1,5 +1,5 @@
+ /*
+- * scf0403.c -- support for DataImage SCF0403852GGU04 LCD
++ * scf0403.c -- support for DataImage SCF0403 LCD
+  *
+  * Copyright (c) 2012 Anders Electronics plc. All Rights Reserved.
+  * Copyright (c) 2012 CompuLab, Ltd
+@@ -25,14 +25,123 @@
+ #include <linux/spi/spi.h>
+ #include <linux/spi/scf0403.h>
+ 
++struct scf0403_cmd {
++	u16 cmd;
++	u16 *params;
++	int count;
++};
+ 
+-#define param(x) ((x) | 0x100)
++struct scf0403_initseq_entry {
++	struct scf0403_cmd cmd;
++	int delay_ms;
++};
+ 
+ struct scf0403_priv {
+ 	struct spi_device *spi;
+ 	struct lcd_device *ld;
+ 	unsigned int reset_gpio;
+ 	int lcd_state;
++	u32 rddid;
++	struct scf0403_initseq_entry *init_seq;
++	int seq_size;
++};
++
++#define SCF0403852GGU04_ID 0x000080
++
++/* SCF0403526GGU20 model commands parameters */
++static u16 extcmd_params_sn20[]		= {0xff, 0x98, 0x06};
++static u16 spiinttype_params_sn20[]	= {0x60};
++static u16 bc_params_sn20[]		= {
++		0x01, 0x10, 0x61, 0x74, 0x01, 0x01, 0x1B,
++		0x12, 0x71, 0x00, 0x00, 0x00, 0x01, 0x01,
++		0x05, 0x00, 0xFF, 0xF2, 0x01, 0x00, 0x40,
++};
++static u16 bd_params_sn20[] = {0x01, 0x23, 0x45, 0x67, 0x01, 0x23, 0x45, 0x67};
++static u16 be_params_sn20[] = {
++		0x01, 0x22, 0x22, 0xBA, 0xDC, 0x26, 0x28, 0x22,	0x22,
++};
++static u16 vcom_params_sn20[]		= {0x74};
++static u16 vmesur_params_sn20[]		= {0x7F, 0x0F, 0x00};
++static u16 powerctl_params_sn20[]	= {0x03, 0x0b, 0x00};
++static u16 lvglvolt_params_sn20[]	= {0x08};
++static u16 engsetting_params_sn20[]	= {0x00, 0x00, 0x00, 0x00, 0x00, 0x20};
++static u16 dispfunc_params_sn20[]	= {0xa0};
++static u16 dvddvolt_params_sn20[]	= {0x74};
++static u16 dispinv_params_sn20[]	= {0x00, 0x00, 0x00};
++static u16 panelres_params_sn20[]	= {0x82};
++static u16 framerate_params_sn20[]	= {0x00, 0x13, 0x13};
++static u16 timing_params_sn20[]		= {0x80, 0x05, 0x40, 0x28};
++static u16 powerctl2_params_sn20[]	= {0x17, 0x75, 0x79, 0x20};
++static u16 memaccess_params_sn20[]	= {0x00};
++static u16 pixfmt_params_sn20[]		= {0x66};
++static u16 pgamma_params_sn20[]		= {
++		0x00, 0x03, 0x0b, 0x0c, 0x0e, 0x08, 0xc5, 0x04,
++		0x08, 0x0c, 0x13, 0x11, 0x11, 0x14, 0x0c, 0x10,
++};
++static u16 ngamma_params_sn20[] = {
++		0x00, 0x0d, 0x11, 0x0c, 0x0c, 0x04, 0x76, 0x03,
++		0x08, 0x0b, 0x16, 0x10, 0x0d, 0x16, 0x0a, 0x00,
++};
++static u16 tearing_params_sn20[] = {0x00};
++
++/* SCF0403852GGU04 model commands parameters */
++static u16 memaccess_params_sn04[]	= {0x08};
++static u16 pixfmt_params_sn04[]		= {0x66};
++static u16 modectl_params_sn04[]	= {0x01};
++static u16 dispfunc_params_sn04[]	= {0x22, 0xe2, 0xFF, 0x04};
++static u16 vcom_params_sn04[]		= {0x00, 0x6A};
++static u16 pgamma_params_sn04[]		= {
++		0x00, 0x07, 0x0d, 0x10, 0x13, 0x19, 0x0f, 0x0c,
++		0x05, 0x08, 0x06, 0x13,	0x0f, 0x30, 0x20, 0x1f,
++};
++static u16 ngamma_params_sn04[]		= {
++		0x1F, 0x20, 0x30, 0x0F, 0x13, 0x06, 0x08, 0x05,
++		0x0C, 0x0F, 0x19, 0x13, 0x10, 0x0D, 0x07, 0x00,
++};
++static u16 dispinv_params_sn04[]	= {0x02};
++
++/* Common commands */
++static struct scf0403_cmd scf0403_cmd_slpout	= {0x11, NULL, 0};
++static struct scf0403_cmd scf0403_cmd_dison	= {0x29, NULL, 0};
++static struct scf0403_cmd scf0403_cmd_slpin	= {0x10, NULL, 0};
++static struct scf0403_cmd scf0403_cmd_disoff	= {0x28, NULL, 0};
++
++/* SCF0403852GGU04 init sequence */
++static struct scf0403_initseq_entry scf0403_initseq_entry_sn04[] = {
++	{{0x36, memaccess_params_sn04,	ARRAY_SIZE(memaccess_params_sn04)}, 0},
++	{{0x3A, pixfmt_params_sn04,	ARRAY_SIZE(pixfmt_params_sn04)}, 0},
++	{{0xB6, dispfunc_params_sn04,	ARRAY_SIZE(dispfunc_params_sn04)}, 0},
++	{{0xC5, vcom_params_sn04,	ARRAY_SIZE(vcom_params_sn04)}, 0},
++	{{0xE0, pgamma_params_sn04,	ARRAY_SIZE(pgamma_params_sn04)}, 0},
++	{{0xE1, ngamma_params_sn04,	ARRAY_SIZE(ngamma_params_sn04)}, 20},
++	{{0xB0, modectl_params_sn04,	ARRAY_SIZE(modectl_params_sn04)}, 0},
++	{{0xB4, dispinv_params_sn04,	ARRAY_SIZE(dispinv_params_sn04)}, 100},
++};
++
++/* SCF0403526GGU20 init sequence */
++static struct scf0403_initseq_entry scf0403_initseq_entry_sn20[] = {
++	{{0xff, extcmd_params_sn20,	ARRAY_SIZE(extcmd_params_sn20)}, 0},
++	{{0xba, spiinttype_params_sn20,	ARRAY_SIZE(spiinttype_params_sn20)}, 0},
++	{{0xbc, bc_params_sn20,		ARRAY_SIZE(bc_params_sn20)}, 0},
++	{{0xbd, bd_params_sn20,		ARRAY_SIZE(bd_params_sn20)}, 0},
++	{{0xbe, be_params_sn20,		ARRAY_SIZE(be_params_sn20)}, 0},
++	{{0xc7, vcom_params_sn20,	ARRAY_SIZE(vcom_params_sn20)}, 0},
++	{{0xed, vmesur_params_sn20,	ARRAY_SIZE(vmesur_params_sn20)}, 0},
++	{{0xc0, powerctl_params_sn20,	ARRAY_SIZE(powerctl_params_sn20)}, 0},
++	{{0xfc, lvglvolt_params_sn20,	ARRAY_SIZE(lvglvolt_params_sn20)}, 0},
++	{{0xb6, dispfunc_params_sn20,	ARRAY_SIZE(dispfunc_params_sn20)}, 0},
++	{{0xdf, engsetting_params_sn20,	ARRAY_SIZE(engsetting_params_sn20)}, 0},
++	{{0xf3, dvddvolt_params_sn20,	ARRAY_SIZE(dvddvolt_params_sn20)}, 0},
++	{{0xb4, dispinv_params_sn20,	ARRAY_SIZE(dispinv_params_sn20)}, 0},
++	{{0xf7, panelres_params_sn20,	ARRAY_SIZE(panelres_params_sn20)}, 0},
++	{{0xb1, framerate_params_sn20,	ARRAY_SIZE(framerate_params_sn20)}, 0},
++	{{0xf2, timing_params_sn20,	ARRAY_SIZE(timing_params_sn20)}, 0},
++	{{0xc1, powerctl2_params_sn20,	ARRAY_SIZE(powerctl2_params_sn20)}, 0},
++	{{0x36, memaccess_params_sn20,	ARRAY_SIZE(memaccess_params_sn20)}, 0},
++	{{0x3a, pixfmt_params_sn20,	ARRAY_SIZE(pixfmt_params_sn20)}, 0},
++	{{0xe0, pgamma_params_sn20,	ARRAY_SIZE(pgamma_params_sn20)}, 0},
++	{{0xe1, ngamma_params_sn20,	ARRAY_SIZE(ngamma_params_sn20)}, 0},
++	{{0x35, tearing_params_sn20,	ARRAY_SIZE(tearing_params_sn20)}, 0},
+ };
+ 
+ static void scf0403_gpio_reset(unsigned int gpio)
+@@ -48,153 +157,105 @@ static void scf0403_gpio_reset(unsigned int gpio)
+ 	msleep(100);
+ }
+ 
+-static int scf0403_spi_transfer(struct spi_device *spi, int cmd, const u8 *wbuf,
+-			   int wlen, u8 *rbuf, int rlen)
++static int scf0403_spi_write(struct spi_device *spi, u16 buf)
+ {
+-	struct spi_message	m;
+-	struct spi_transfer	*x, xfer[4];
+-	u16			w;
+-	int			r = 0;
++	struct spi_message  m;
++	struct spi_transfer x;
++	int ret = 0;
+ 
++	memset(&x, 0, sizeof(x));
+ 	spi_message_init(&m);
+ 
+-	memset(xfer, 0, sizeof(xfer));
+-	x = &xfer[0];
++	x.tx_buf	= &buf;
++	x.len		= 2;
++	x.bits_per_word = 9;
+ 
+-	cmd &=  0xff;
+-	x->tx_buf		= &cmd;
+-	x->bits_per_word	= 9;
+-	x->len			= 2;
+-	spi_message_add_tail(x, &m);
++	spi_message_add_tail(&x, &m);
++	ret = spi_sync(spi, &m);
+ 
+-	if (wlen) {
+-		x++;
+-		x->tx_buf		= wbuf;
+-		x->len			= wlen;
+-		x->bits_per_word	= 9;
+-		spi_message_add_tail(x, &m);
+-	}
+-
+-	if (rlen) {
+-		x++;
+-		x->rx_buf	= &w;
+-		x->len		= 1;
+-		spi_message_add_tail(x, &m);
+-
+-		if (rlen > 1) {
+-			/*
+-			 * Arrange for the extra clock before the first
+-			 * data bit.
+-			 */
+-			x->bits_per_word = 9;
+-			x->len		 = 2;
+-
+-			x++;
+-			x->rx_buf	 = &rbuf[1];
+-			x->len		 = rlen - 1;
+-			spi_message_add_tail(x, &m);
+-		}
+-	}
+-
+-	r = spi_sync(spi, &m);
+-
+-	if (rlen)
+-		rbuf[0] = w & 0xff;
+-
+-	return r;
++	return ret;
+ }
+ 
+-static void scf0403_lcd_init(struct spi_device *spi)
++static int scf0403_spi_read_rddid(struct spi_device *spi, u32 *rddid)
+ {
+-	struct scf0403_pdata *pdata = spi->dev.platform_data;
+-
+-	const u8 memAccessCtrl = 0x36;
+-	const u16 memAccessCtrlParam[] = { param(0x08) };
+-
+-	const u8 ifPixelFormat = 0x3A;
+-	const u16 ifPixelFormatParam[] = { param(0x66) };
++	struct spi_message m;
++	struct spi_transfer *x, xfer[4];
++	u32 ids_buf = 0x00;
++	u32 dummy_buf = 0x00;
++	u16 cmd = 0x04;
++	int ret = 0;
+ 
+-	const u8 ifModeCtrl = 0xB0;
+-	const u16 ifModeCtrlParam[] = { param(0x01) };
++	memset(xfer, 0, sizeof(xfer));
++	spi_message_init(&m);
+ 
+-	const u8 dispFuncCtrl = 0xB6;
+-	const u16 dispFuncCtrlParam[] = {
+-			param(0x22), param(0xe2), param(0xFF), param(0x04)
+-	};
++	/* Here 9 bits required to transmit a command */
++	x = &xfer[0];
++	x->tx_buf = &cmd;
++	x->len = 2;
++	x->bits_per_word = 9;
++	spi_message_add_tail(x, &m);
+ 
+-	const u8 vcomCtrl = 0xC5;
+-	const u16 vcomCtrlParam[] = { param(0x00), param(0x6A) };
++	/*
++	 * Here 8 + 1 bits required to arrange extra clock cycle
++	 * before the first data bit.
++	 * According to the datasheet - first parameter is the dummy data.
++	 */
++	x++;
++	x->rx_buf = &dummy_buf;
++	x->len = 2;
++	x->bits_per_word = 9;
++	spi_message_add_tail(x, &m);
+ 
+-	const u8 gamma = 0xE0;
+-	const u16 gammaParam[] = {
+-			param(0x00), param(0x07), param(0x0d), param(0x10),
+-			param(0x13), param(0x19), param(0x0f), param(0x0c),
+-			param(0x05), param(0x08), param(0x06), param(0x13),
+-			param(0x0f), param(0x30), param(0x20), param(0x1f)
+-	};
++	/* Read rest of the data */
++	x++;
++	x->rx_buf = &ids_buf;
++	x->len = 3;
++	x->bits_per_word = 8;
++	spi_message_add_tail(x, &m);
+ 
+-	const u8 negGamma = 0xE1;
+-	const u16 negGammaParam[] = {
+-			param(0x1F), param(0x20), param(0x30), param(0x0F),
+-			param(0x13), param(0x06), param(0x08), param(0x05),
+-			param(0x0C), param(0x0F), param(0x19), param(0x13),
+-			param(0x10), param(0x0D), param(0x07), param(0x00)
+-	};
++	ret = spi_sync(spi, &m);
+ 
+-	const u8 dispInvCtrl = 0xB4;
+-	const u16 dispInvCtrlParam[] = { 0x02 };
++	if (ret == 0)
++		*rddid = ids_buf;
+ 
+-	/* reset LCD */
+-	scf0403_gpio_reset(pdata->reset_gpio);
++	return ret;
++}
+ 
+-	/* perform initialization sequence */
+-	if (scf0403_spi_transfer(spi, dispFuncCtrl,
+-				(const u8 *)dispFuncCtrlParam,
+-				sizeof(dispFuncCtrlParam), NULL, 0) < 0) {
+-		dev_err(&spi->dev, "Setting Display Function Control - failed");
+-	}
++static int scf0403_spi_transfer(struct spi_device *spi, struct scf0403_cmd *cmd)
++{
++	int i;
++	int ret = 0;
+ 
+-	if (scf0403_spi_transfer(spi, vcomCtrl, (const u8 *)vcomCtrlParam,
+-				sizeof(vcomCtrlParam), NULL, 0) < 0) {
+-		dev_err(&spi->dev, "Setting VCOM Control - failed");
+-	}
++	ret = scf0403_spi_write(spi, cmd->cmd);
++	if (ret < 0)
++		return ret;
+ 
+-	if (scf0403_spi_transfer(spi, memAccessCtrl,
+-				(const u8 *)memAccessCtrlParam,
+-				sizeof(memAccessCtrlParam), NULL, 0) < 0) {
+-		dev_err(&spi->dev, "Setting Memory Access Control - failed");
++	for (i = 0; i < cmd->count; i++) {
++		ret = scf0403_spi_write(spi, (cmd->params[i] | 0x100));
++		if (ret < 0)
++			return ret;
+ 	}
+ 
+-	if (scf0403_spi_transfer(spi, ifPixelFormat,
+-				(const u8 *)ifPixelFormatParam,
+-				sizeof(ifPixelFormatParam), NULL, 0) < 0) {
+-		dev_err(&spi->dev, "Setting Interface Pixel Format - failed");
+-	}
++	return ret;
++}
+ 
+-	if (scf0403_spi_transfer(spi, gamma,
+-				(const u8 *)gammaParam,
+-				sizeof(gammaParam), NULL, 0) < 0) {
+-		dev_err(&spi->dev, "Setting Gamma - failed");
+-	}
++static void scf0403_lcd_init(struct spi_device *spi)
++{
++	struct scf0403_pdata *pdata = spi->dev.platform_data;
++	struct scf0403_priv *priv = dev_get_drvdata(&spi->dev);
++	int i;
+ 
+-	if (scf0403_spi_transfer(spi, negGamma, (const u8 *)negGammaParam,
+-				sizeof(negGammaParam), NULL, 0) < 0) {
+-		dev_err(&spi->dev, "Setting Negative Gamma - failed");
+-	}
++	dev_dbg(&spi->dev, "initializing LCD\n");
+ 
+-	msleep(20);
++	/* reset LCD */
++	scf0403_gpio_reset(pdata->reset_gpio);
+ 
+-	if (scf0403_spi_transfer(spi, ifModeCtrl, (const u8 *)ifModeCtrlParam,
+-				sizeof(ifModeCtrlParam), NULL, 0) < 0) {
+-		dev_err(&spi->dev, "Setting Interface Mode Control - failed");
+-	}
++	for (i = 0; i < priv->seq_size; i++) {
++		if (scf0403_spi_transfer(spi, &priv->init_seq[i].cmd) < 0)
++			dev_err(&spi->dev, "SPI transfer - failed");
+ 
+-	if (scf0403_spi_transfer(spi, dispInvCtrl, (const u8 *)dispInvCtrlParam,
+-				sizeof(dispInvCtrlParam), NULL, 0) < 0) {
+-		dev_err(&spi->dev, "Setting Dislay Inversion Control - failed");
++		msleep(priv->init_seq[i].delay_ms);
+ 	}
+-
+-	msleep(100);
+ }
+ 
+ static int scf0403_lcd_power_get(struct lcd_device *ld)
+@@ -209,12 +270,6 @@ static int scf0403_lcd_power_set(struct lcd_device *ld, int power)
+ 	struct scf0403_priv *priv = lcd_get_data(ld);
+ 	struct spi_device *spi = priv->spi;
+ 
+-	const u16 slpout = 0x11;
+-	const u16 dison = 0x29;
+-
+-	const u16 slpin = 0x10;
+-	const u16 disoff = 0x28;
+-
+ 	dev_dbg(&spi->dev, "LCD Power set, power = %d, curr power = %d\n",
+ 		power, priv->lcd_state);
+ 
+@@ -223,9 +278,10 @@ static int scf0403_lcd_power_set(struct lcd_device *ld, int power)
+ 			dev_dbg(&spi->dev, "LCD sleep in-out\n");
+ 		} else if (priv->lcd_state < FB_BLANK_POWERDOWN) {
+ 			dev_dbg(&spi->dev, "Resuming LCD\n");
+-			scf0403_spi_transfer(spi, dison, NULL, 0, NULL, 0);
++
++			scf0403_spi_transfer(spi, &scf0403_cmd_dison);
+ 			msleep(100);
+-			scf0403_spi_transfer(spi, slpout, NULL, 0, NULL, 0);
++			scf0403_spi_transfer(spi, &scf0403_cmd_slpout);
+ 		} else {
+ 			/* priv->lcd_state == FB_BLANK_POWERDOWN */
+ 			scf0403_lcd_init(spi);
+@@ -238,9 +294,9 @@ static int scf0403_lcd_power_set(struct lcd_device *ld, int power)
+ 			/* Send the display in standby */
+ 			dev_dbg(&spi->dev, "Standby the LCD\n");
+ 
+-			scf0403_spi_transfer(spi, disoff, NULL, 0, NULL, 0);
++			scf0403_spi_transfer(spi, &scf0403_cmd_disoff);
+ 			msleep(60);
+-			scf0403_spi_transfer(spi, slpin, NULL, 0, NULL, 0);
++			scf0403_spi_transfer(spi, &scf0403_cmd_slpin);
+ 		} else if (priv->lcd_state < FB_BLANK_POWERDOWN) {
+ 			/* Do nothing, the LCD is already in standby */
+ 		} else {
+@@ -253,7 +309,7 @@ static int scf0403_lcd_power_set(struct lcd_device *ld, int power)
+ 		/* power == FB_BLANK_POWERDOWN */
+ 		if (priv->lcd_state != FB_BLANK_POWERDOWN) {
+ 			/* Clear the screen before shutting down */
+-			scf0403_spi_transfer(spi, disoff, NULL, 0, NULL, 0);
++			scf0403_spi_transfer(spi, &scf0403_cmd_disoff);
+ 			msleep(60);
+ 		}
+ 	}
+@@ -272,8 +328,6 @@ static int __devinit scf0403_probe(struct spi_device *spi)
+ {
+ 	struct scf0403_priv *priv;
+ 	struct scf0403_pdata *pdata = spi->dev.platform_data;
+-	const u8 disp_ids = 0x04;
+-	u8 ids_buff[3] = { 0x00 };
+ 	int ret, reset_gpio = -EINVAL;
+ 
+ 	dev_dbg(&spi->dev, "LCD probe.\n");
+@@ -308,15 +362,21 @@ static int __devinit scf0403_probe(struct spi_device *spi)
+ 	/* reset LCD */
+ 	scf0403_gpio_reset(priv->reset_gpio);
+ 
+-	if (scf0403_spi_transfer(spi, disp_ids, NULL, 0, ids_buff, 3) < 0 ||
+-	    !(ids_buff[0] || ids_buff[1] || ids_buff[2])) {
++	ret = scf0403_spi_read_rddid(spi, &priv->rddid);
++	if (ret < 0) {
+ 		dev_err(&spi->dev, "IDs read failed\n");
+-		ret = -ENODEV;
+ 		goto free_gpio;
+ 	}
+ 
+-	dev_info(&spi->dev, "Device IDs: 0x%02X 0x%02X 0x%02X\n",
+-			 ids_buff[0], ids_buff[1], ids_buff[2]);
++	dev_info(&spi->dev, "Device ID: 0x%06X\n", priv->rddid);
++
++	if (priv->rddid == SCF0403852GGU04_ID) {
++		priv->init_seq = scf0403_initseq_entry_sn04;
++		priv->seq_size = ARRAY_SIZE(scf0403_initseq_entry_sn04);
++	} else {
++		priv->init_seq = scf0403_initseq_entry_sn20;
++		priv->seq_size = ARRAY_SIZE(scf0403_initseq_entry_sn20);
++	}
+ 
+ 	priv->ld = lcd_device_register("scf0403", &spi->dev, priv, &l4f_ops);
+ 	if (IS_ERR(priv->ld)) {
+diff --git a/include/linux/spi/scf0403.h b/include/linux/spi/scf0403.h
+index b7daa6f..8e57548 100644
+--- a/include/linux/spi/scf0403.h
++++ b/include/linux/spi/scf0403.h
+@@ -1,5 +1,5 @@
+ /*
+- * scf0403.h -- Platform glue for DataImage SFC0403852GGU04 LCD
++ * scf0403.h -- Platform glue for DataImage SCF0403 LCD
+  *
+  * Copyright (c) 2009 Alberto Panizzo <maramaopercheseimorto@gmail.com>
+  * Copyright (c) 2012 CompuLab, Ltd
+-- 
+1.7.9.5
+

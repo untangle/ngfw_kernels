@@ -1,0 +1,29 @@
+From fb988bb597f55260ad8aa0e27dbb634399358402 Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Wed, 6 Mar 2013 13:24:31 +0200
+Subject: ARM: i.MX6: cm-fx6: fix the sb-fx6 EEPROM address
+
+The sb-fx6 EEPROM is located at address 0x50 of the I2C1 bus.
+Fix the EEPROM I2C address.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index a0ebe97..ac40c14 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -541,7 +541,7 @@ static struct i2c_board_info cm_fx6_i2c0_board_info[] __initdata = {
+ #endif
+ #if defined(CONFIG_EEPROM_AT24) || defined(CONFIG_EEPROM_AT24_MODULE)
+ 	{
+-		I2C_BOARD_INFO("at24", 0x54),
++		I2C_BOARD_INFO("at24", 0x50),
+ 		.platform_data = &sb_fx6_eeprom_pdata,
+ 	},
+ #endif
+-- 
+1.7.9.5
+

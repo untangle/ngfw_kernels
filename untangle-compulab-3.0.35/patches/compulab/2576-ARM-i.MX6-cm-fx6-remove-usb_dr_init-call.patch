@@ -1,0 +1,30 @@
+From 9456b3830c63fa32bdc6a63819579aafe279c31f Mon Sep 17 00:00:00 2001
+From: Valentin Raevsky <valentin@compulab.co.il>
+Date: Thu, 16 May 2013 16:58:41 +0300
+Subject: ARM: i.MX6: cm-fx6: remove usb_dr_init call.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The latest freescale code has turned this call into a static modul_init call.
+Calling this function from the board file is impossible and makes no sense now.
+Requires the “CONFIG_USB_FSL_ARC_OTG” to be enabled in order to provide the OTG functionality.
+---
+ arch/arm/mach-mx6/board-cm-fx6.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index eaaa122..1fa9dbe 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -814,7 +814,6 @@ static void __init cm_fx6_init_usb(void)
+ 	mxc_iomux_set_gpr_register(1, 13, 1, 0);
+ 
+ 	mx6_set_otghost_vbus_func(cm_fx6_usbotg_vbus);
+-	mx6_usb_dr_init();
+ }
+ 
+ #if defined(CONFIG_SATA_AHCI_PLATFORM) || \
+-- 
+1.7.9.5
+

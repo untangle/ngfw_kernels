@@ -1,0 +1,33 @@
+From 436969b257e4c102ace584cf2579d1ca8a2dc0d0 Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Wed, 6 Mar 2013 14:07:00 +0200
+Subject: ARM: i.MX6: cm-fx6: switch HDMI display interface
+
+cm-fx6 supports the parallel LCD interface only on
+display interface 0 (DI0).
+On dual or more head configurations, this restricts the HDMI interface
+to display interface 1 (DI1).
+Switch the HDMI interface to use the display interface 1 (DI1) to enable
+the dual head configuration.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index 537bedf..d1c7777 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -811,7 +811,7 @@ static struct fsl_mxc_hdmi_platform_data cm_fx6_hdmi_data = {
+ 
+ static struct fsl_mxc_hdmi_core_platform_data cm_fx6_hdmi_core_data = {
+ 	.ipu_id		= 0,
+-	.disp_id	= 0,
++	.disp_id	= 1,
+ };
+ 
+ static void __init cm_fx6_init_hdmi(void)
+-- 
+1.7.9.5
+

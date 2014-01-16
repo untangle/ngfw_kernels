@@ -1,0 +1,27 @@
+From 7b5a7eff55b4989dfb3954a09bf582f1c5a5c4af Mon Sep 17 00:00:00 2001
+From: Sandor Yu <R01008@freescale.com>
+Date: Tue, 26 Jun 2012 17:57:58 +0800
+Subject: ENGR00213014-7 MXC EDID: Export function mxc_edid_parse_ext_blk
+
+Export function mxc_edid_parse_ext_blk.
+
+Signed-off-by: Sandor Yu <R01008@freescale.com>
+---
+ drivers/video/mxc/mxc_edid.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/video/mxc/mxc_edid.c b/drivers/video/mxc/mxc_edid.c
+index 6aec72d..c039992 100644
+--- a/drivers/video/mxc/mxc_edid.c
++++ b/drivers/video/mxc/mxc_edid.c
+@@ -412,6 +412,7 @@ int mxc_edid_parse_ext_blk(unsigned char *edid,
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL(mxc_edid_parse_ext_blk);
+ 
+ static int mxc_edid_readblk(struct i2c_adapter *adp,
+ 		unsigned short addr, unsigned char *edid)
+-- 
+1.7.9.5
+

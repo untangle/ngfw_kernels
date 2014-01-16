@@ -1,0 +1,88 @@
+From 9932e0e1ca5f2f45138776861385664249f269f1 Mon Sep 17 00:00:00 2001
+From: Jason Liu <r64343@freescale.com>
+Date: Sun, 7 Apr 2013 09:08:42 +0800
+Subject: ENGR00257658 Revert "ENGR00256893-2 MX6Q/DL-Fix Ethernet performance
+ issue
+
+This reverts commit 573bab0be2427d6664420eaf9d8e272dbe9d840f.
+
+i.mx6dl/dq sabreauto/sabresd board will boot up failed
+randomly with this patch-set, thus revert it. [Jason]
+
+Signed-off-by: Jason Liu <r64343@freescale.com>
+---
+ drivers/net/fec.c   |   17 -----------------
+ include/linux/fec.h |    3 ---
+ 2 files changed, 20 deletions(-)
+
+diff --git a/drivers/net/fec.c b/drivers/net/fec.c
+index fc65bdc..5f0e4e0 100755
+--- a/drivers/net/fec.c
++++ b/drivers/net/fec.c
+@@ -27,7 +27,6 @@
+ #include <linux/string.h>
+ #include <linux/ptrace.h>
+ #include <linux/errno.h>
+-#include <linux/gpio.h>
+ #include <linux/ioport.h>
+ #include <linux/slab.h>
+ #include <linux/interrupt.h>
+@@ -1867,17 +1866,6 @@ fec_probe(struct platform_device *pdev)
+ 	if (pdata)
+ 		fep->phy_interface = pdata->phy;
+ 
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-	gpio_request(pdata->gpio_irq, "gpio_enet_irq");
+-	gpio_direction_input(pdata->gpio_irq);
+-
+-	irq = gpio_to_irq(pdata->gpio_irq);
+-	ret = request_irq(irq, fec_enet_interrupt,
+-			IRQF_TRIGGER_RISING,
+-			 pdev->name, ndev);
+-	if (ret)
+-		goto failed_irq;
+-#else
+ 	/* This device has up to three irqs on some platforms */
+ 	for (i = 0; i < 3; i++) {
+ 		irq = platform_get_irq(pdev, i);
+@@ -1892,7 +1880,6 @@ fec_probe(struct platform_device *pdev)
+ 			goto failed_irq;
+ 		}
+ 	}
+-#endif
+ 
+ 	fep->clk = clk_get(&pdev->dev, "fec_clk");
+ 	if (IS_ERR(fep->clk)) {
+@@ -1943,15 +1930,11 @@ failed_init:
+ 	clk_disable(fep->clk);
+ 	clk_put(fep->clk);
+ failed_clk:
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-	free_irq(irq, ndev);
+-#else
+ 	for (i = 0; i < 3; i++) {
+ 		irq = platform_get_irq(pdev, i);
+ 		if (irq > 0)
+ 			free_irq(irq, ndev);
+ 	}
+-#endif
+ failed_irq:
+ 	iounmap(fep->hwp);
+ failed_ioremap:
+diff --git a/include/linux/fec.h b/include/linux/fec.h
+index a9d6594..97a56d4 100644
+--- a/include/linux/fec.h
++++ b/include/linux/fec.h
+@@ -21,9 +21,6 @@ struct fec_platform_data {
+ 	int (*power_hibernate) (struct phy_device *);
+ 	phy_interface_t phy;
+ 	unsigned char mac[ETH_ALEN];
+-#ifdef CONFIG_MX6_ENET_IRQ_TO_GPIO
+-	unsigned int gpio_irq;
+-#endif
+ };
+ 
+ #endif
+-- 
+1.7.9.5
+

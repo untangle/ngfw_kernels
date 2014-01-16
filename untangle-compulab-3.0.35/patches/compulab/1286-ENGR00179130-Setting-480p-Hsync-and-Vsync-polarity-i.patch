@@ -1,0 +1,30 @@
+From b9db5d3fc359be633cdcb4c4e26d2f0ac0ec2973 Mon Sep 17 00:00:00 2001
+From: Sandor Yu <R01008@freescale.com>
+Date: Sat, 7 Apr 2012 16:34:15 +0800
+Subject: ENGR00179130 Setting 480p Hsync and Vsync polarity is incorrect
+
+Fix IPU DI registr DI_GENERAL incorrect initialize.
+
+Signed-off-by: Sandor Yu <R01008@freescale.com>
+---
+ drivers/mxc/ipu3/ipu_disp.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/mxc/ipu3/ipu_disp.c b/drivers/mxc/ipu3/ipu_disp.c
+index a34d060..229545c 100644
+--- a/drivers/mxc/ipu3/ipu_disp.c
++++ b/drivers/mxc/ipu3/ipu_disp.c
+@@ -1292,8 +1292,8 @@ int32_t ipu_init_sync_panel(struct ipu_soc *ipu, int disp, uint32_t pixel_clk,
+ 
+ 	/*clear DI*/
+ 	di_gen = ipu_di_read(ipu, disp, DI_GENERAL);
+-	ipu_di_write(ipu, disp,
+-		di_gen & (0x3 << 20), DI_GENERAL);
++	di_gen &= (0x3 << 20);
++	ipu_di_write(ipu, disp, di_gen, DI_GENERAL);
+ 
+ 	if (sig.interlaced) {
+ 		if (g_ipu_hw_rev >= 2) {
+-- 
+1.7.9.5
+

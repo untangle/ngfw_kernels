@@ -1,0 +1,28 @@
+From 43b48b58b43cf98779a436d4d39ab65256bb58d9 Mon Sep 17 00:00:00 2001
+From: Loren Huang <b02279@freescale.com>
+Date: Mon, 17 Sep 2012 17:31:28 +0800
+Subject: ENGR00224467 GPU driver debug version build failure fix
+
+-Fix a value name typo in gc_hal_kernel_hardware.c
+
+Signed-off-by: Loren Huang <b02279@freescale.com>
+---
+ .../arch/XAQ2/hal/kernel/gc_hal_kernel_hardware.c  |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/mxc/gpu-viv/arch/XAQ2/hal/kernel/gc_hal_kernel_hardware.c b/drivers/mxc/gpu-viv/arch/XAQ2/hal/kernel/gc_hal_kernel_hardware.c
+index e29a175..0455b10 100644
+--- a/drivers/mxc/gpu-viv/arch/XAQ2/hal/kernel/gc_hal_kernel_hardware.c
++++ b/drivers/mxc/gpu-viv/arch/XAQ2/hal/kernel/gc_hal_kernel_hardware.c
+@@ -4276,7 +4276,7 @@ gckHARDWARE_SetFscaleValue(
+     gctUINT32 clock;
+     gctBOOL acquired = gcvFALSE;
+ 
+-    gcmkHEADER_ARG("Hardware=0x%x FscaleVal=%d", Hardware, FscaleVal);
++    gcmkHEADER_ARG("Hardware=0x%x FscaleValue=%d", Hardware, FscaleValue);
+ 
+     gcmkVERIFY_ARGUMENT(FscaleValue > 0 && FscaleValue <= 64);
+ 
+-- 
+1.7.9.5
+

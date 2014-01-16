@@ -1,0 +1,28 @@
+From ad18e2ee2b0005acca6eb45d536e7650cb9bf16a Mon Sep 17 00:00:00 2001
+From: Huang Shijie <b32955@freescale.com>
+Date: Tue, 8 Nov 2011 17:39:35 +0800
+Subject: ENGR00161643-3 UTP : bugfix
+
+The origin code lossed one line.
+fix it.
+
+Signed-off-by: Huang Shijie <b32955@freescale.com>
+---
+ drivers/usb/gadget/fsl_updater.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/usb/gadget/fsl_updater.c b/drivers/usb/gadget/fsl_updater.c
+index 8a08aa9..01b35f3 100644
+--- a/drivers/usb/gadget/fsl_updater.c
++++ b/drivers/usb/gadget/fsl_updater.c
+@@ -132,6 +132,7 @@ static ssize_t utp_file_write(struct file *file, const char __user *buf,
+ 	if (size < sizeof(uud->data))
+ 		return -EINVAL;
+ 	uud = utp_user_data_alloc(size);
++	if (uud == NULL)
+ 		return -ENOMEM;
+ 	if (copy_from_user(&uud->data, buf, size)) {
+ 		printk(KERN_INFO "[ %s ] copy error!\n", __func__);
+-- 
+1.7.9.5
+

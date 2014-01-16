@@ -1,0 +1,30 @@
+From f19e6d2f1c06c6ca450b937a53f17471c9e0fa99 Mon Sep 17 00:00:00 2001
+From: Zhang Jiejing <jiejing.zhang@freescale.com>
+Date: Mon, 20 Feb 2012 13:05:20 +0800
+Subject: ENGR00174829-2 power: max8903_charger: fix build warrning.
+
+Fix below warrning message:
+drivers/power/max8903_charger.c:218:
+warning: 'gpio' may be used uninitialized in this function
+
+Signed-off-by: Zhang Jiejing <jiejing.zhang@freescale.com>
+---
+ drivers/power/max8903_charger.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/power/max8903_charger.c b/drivers/power/max8903_charger.c
+index 19ca5fb..89bb5d1 100644
+--- a/drivers/power/max8903_charger.c
++++ b/drivers/power/max8903_charger.c
+@@ -185,7 +185,7 @@ static __devinit int max8903_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct max8903_pdata *pdata = pdev->dev.platform_data;
+ 	int ret = 0;
+-	int gpio;
++	int gpio = 0;
+ 	int ta_in = 0;
+ 	int usb_in = 0;
+ 
+-- 
+1.7.9.5
+

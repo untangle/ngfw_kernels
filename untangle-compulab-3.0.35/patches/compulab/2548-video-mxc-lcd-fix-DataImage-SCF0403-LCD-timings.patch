@@ -1,0 +1,42 @@
+From ec34cefde00cd5bcf7cd5a16a6516ca0a91d5130 Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Mon, 4 Mar 2013 15:43:59 +0200
+Subject: video: mxc: lcd: fix DataImage SCF0403 LCD timings
+
+The .pixclock value should be in picoseconds, not in KHz.
+The FB_SYNC_CLK_LAT_FALL flag is not applicable for the SCF0403 LCD.
+Fix both above issues.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ drivers/video/mxc/mxc_lcdif.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/video/mxc/mxc_lcdif.c b/drivers/video/mxc/mxc_lcdif.c
+index ad4d54f..8181098 100644
+--- a/drivers/video/mxc/mxc_lcdif.c
++++ b/drivers/video/mxc/mxc_lcdif.c
+@@ -40,18 +40,17 @@ static struct fb_videomode lcdif_modedb[] = {
+ 	FB_VMODE_NONINTERLACED,
+ 	0,},
+ 	{
+-	/* 480x800, pixel clk @ 35MHz */
++	/* 480x800 @ 60 Hz , pixel clk @ 29MHz */
+ 		.name		= "SCF04-WVGA",
+ 		.xres		= 480,
+ 		.yres		= 800,
+-		.pixclock	= 28800,
++		.pixclock	= 34722,
+ 		.left_margin	= 12,
+ 		.right_margin	= 16,
+ 		.upper_margin	= 30,
+ 		.lower_margin	= 40,
+ 		.hsync_len	= 26,
+ 		.vsync_len	= 30,
+-		.sync		= FB_SYNC_CLK_LAT_FALL,
+ 		.vmode		= FB_VMODE_NONINTERLACED,
+ 	},
+ };
+-- 
+1.7.9.5
+

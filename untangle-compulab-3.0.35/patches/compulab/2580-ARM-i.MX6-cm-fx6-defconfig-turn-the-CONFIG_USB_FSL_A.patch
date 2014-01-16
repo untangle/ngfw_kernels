@@ -1,0 +1,29 @@
+From a70c4b3bf65923209422c7dab90696ea32f466b4 Mon Sep 17 00:00:00 2001
+From: Valentin Raevsky <valentin@compulab.co.il>
+Date: Thu, 23 May 2013 13:09:22 +0300
+Subject: ARM: i.MX6: cm-fx6: defconfig: turn the CONFIG_USB_FSL_ARC_OTG
+ configuration on
+
+Turn the CONFIG_USB_FSL_ARC_OTG configuration on.
+The mx6_usb_dr_init function call has turned into a module_init call.
+If this CONFIG_USB_FSL_ARC_OTG is off then all OTG features don't work as well.
+This patch fixes the issue.
+---
+ arch/arm/configs/cm_fx6_defconfig |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/configs/cm_fx6_defconfig b/arch/arm/configs/cm_fx6_defconfig
+index e27c020..985f822 100644
+--- a/arch/arm/configs/cm_fx6_defconfig
++++ b/arch/arm/configs/cm_fx6_defconfig
+@@ -19,6 +19,7 @@ CONFIG_FORCE_MAX_ZONEORDER=14
+ CONFIG_MACH_CM_FX6=y
+ CONFIG_IMX_PCIE=y
+ CONFIG_USB_EHCI_ARC_H1=y
++CONFIG_USB_FSL_ARC_OTG=y
+ CONFIG_MXC_PWM=y
+ CONFIG_MXC_REBOOT_MFGMODE=y
+ CONFIG_CLK_DEBUG=y
+-- 
+1.7.9.5
+

@@ -1,0 +1,78 @@
+From 5eecce0e7b3fab7733c1051fe63c431b085afde1 Mon Sep 17 00:00:00 2001
+From: Nicolin Chen <b42378@freescale.com>
+Date: Fri, 22 Mar 2013 10:57:07 +0800
+Subject: ENGR00255482 ASoC: HDMI-audio: Add error message for HDMI-video
+ detect failure
+
+  HDMI-audio depends on HDMI-video. If users want to use HDMI-audio function,
+they need to load HDMI-video first. Sometime users would forget to put video
+info into U-boot cmdline, "video=mxcfb0:dev=hdmi,1920x1080M@60,if=RGB24" for
+example. That might cause HDMI-auido driver fail to detect HDMI-video.
+  Previously, if this happened to system, driver only returned with "ENOMEM"
+and system would print "Can't allocate memory". This might confuse users due
+to the vague infomation. Users would be hard to figure out the root cause.
+  So this patch just add some error message to give users a clear indication,
+and changed the "ENOMEM" error number to the more precise "ENODEV".
+
+Acked-by: Wang Shengjiu <b02247@freescale.com>
+Signed-off-by: Nicolin Chen <b42378@freescale.com>
+---
+ sound/soc/imx/imx-hdmi-dai.c |    8 +++++---
+ sound/soc/imx/imx-hdmi.c     |    8 +++++---
+ 2 files changed, 10 insertions(+), 6 deletions(-)
+
+diff --git a/sound/soc/imx/imx-hdmi-dai.c b/sound/soc/imx/imx-hdmi-dai.c
+index 0a1686bf..06805f3 100644
+--- a/sound/soc/imx/imx-hdmi-dai.c
++++ b/sound/soc/imx/imx-hdmi-dai.c
+@@ -1,7 +1,7 @@
+ /*
+  * ALSA SoC HDMI Audio Layer for MXS
+  *
+- * Copyright (C) 2011-2012 Freescale Semiconductor, Inc.
++ * Copyright (C) 2011-2013 Freescale Semiconductor, Inc.
+  *
+  * Based on stmp3xxx_spdif_dai.c
+  * Vladimir Barinov <vbarinov@embeddedalley.com>
+@@ -42,8 +42,10 @@ static int imx_hdmi_dai_probe(struct platform_device *pdev)
+ 	struct imx_hdmi *hdmi_data;
+ 	int ret = 0;
+ 
+-	if (!hdmi_get_registered())
+-		return -ENOMEM;
++	if (!hdmi_get_registered()) {
++		dev_err(&pdev->dev, "Failed: Load HDMI-video first.\n");
++		return -ENODEV;
++	}
+ 
+ 	hdmi_data = kzalloc(sizeof(*hdmi_data), GFP_KERNEL);
+ 	if (!hdmi_data)
+diff --git a/sound/soc/imx/imx-hdmi.c b/sound/soc/imx/imx-hdmi.c
+index a30d478..f214cff 100644
+--- a/sound/soc/imx/imx-hdmi.c
++++ b/sound/soc/imx/imx-hdmi.c
+@@ -1,7 +1,7 @@
+ /*
+  * ASoC HDMI Transmitter driver for IMX development boards
+  *
+- * Copyright (C) 2011-2012 Freescale Semiconductor, Inc.
++ * Copyright (C) 2011-2013 Freescale Semiconductor, Inc.
+  *
+  * based on stmp3780_devb_spdif.c
+  *
+@@ -57,8 +57,10 @@ static int __init imx_hdmi_init(void)
+ {
+ 	int ret = 0;
+ 
+-	if (!hdmi_get_registered())
+-		return -ENOMEM;
++	if (!hdmi_get_registered()) {
++		pr_err("Initialize HDMI-audio failed. Load HDMI-video first!\n");
++		return -ENODEV;
++	}
+ 
+ 	imx_hdmi_snd_device = platform_device_alloc("soc-audio", 4);
+ 	if (!imx_hdmi_snd_device) {
+-- 
+1.7.9.5
+

@@ -1,0 +1,27 @@
+From 97f053fc20362a50a7ef4c25df3ae099108df59d Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Wed, 20 Mar 2013 16:37:14 +0200
+Subject: ARM: i.MX6: cm-fx6: config: increase the log size
+
+Increase the default log buffer size for cm-fx6.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/configs/cm_fx6_defconfig |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/arch/arm/configs/cm_fx6_defconfig b/arch/arm/configs/cm_fx6_defconfig
+index 6db5e41..01188e4 100644
+--- a/arch/arm/configs/cm_fx6_defconfig
++++ b/arch/arm/configs/cm_fx6_defconfig
+@@ -3,7 +3,6 @@ CONFIG_LOCALVERSION="-cm-fx6"
+ CONFIG_SYSVIPC=y
+ CONFIG_IKCONFIG=y
+ CONFIG_IKCONFIG_PROC=y
+-CONFIG_LOG_BUF_SHIFT=14
+ CONFIG_BLK_DEV_INITRD=y
+ CONFIG_EMBEDDED=y
+ CONFIG_PERF_EVENTS=y
+-- 
+1.7.9.5
+

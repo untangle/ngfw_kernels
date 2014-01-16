@@ -1,0 +1,28 @@
+From 2b169d6f9de75f9ba95fd1353884420db60a7969 Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Wed, 13 Feb 2013 16:39:23 +0200
+Subject: ARM: IMX6: cm-fx6: add machine id to mach-types
+
+Add the machine id from the ARM machine registry to the mach-types file
+to allow booting the cm-fx6 with its own boot loader.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/tools/mach-types |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/tools/mach-types b/arch/arm/tools/mach-types
+index f6b5c0e..910fcd1 100644
+--- a/arch/arm/tools/mach-types
++++ b/arch/arm/tools/mach-types
+@@ -1118,6 +1118,7 @@ mx6q_sabrelite		MACH_MX6Q_SABRELITE	MX6Q_SABRELITE		3769
+ mx6q_sabresd		MACH_MX6Q_SABRESD	MX6Q_SABRESD		3980
+ mx6q_arm2		MACH_MX6Q_ARM2		MX6Q_ARM2		3837
+ mx6sl_arm2		MACH_MX6SL_ARM2		MX6SL_ARM2		4091
++cm_fx6			MACH_CM_FX6		CM_FX6			4273
+ mx6q_hdmidongle		MACH_MX6Q_HDMIDONGLE    MX6Q_HDMIDONGLE		4284
+ mx6sl_evk		MACH_MX6SL_EVK		MX6SL_EVK		4307
+ 
+-- 
+1.7.9.5
+

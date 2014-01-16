@@ -1,0 +1,99 @@
+From f1811055b330e92e20a7b4181d42eae41cb1a45d Mon Sep 17 00:00:00 2001
+From: Reuben Dowle <Reuben.Dowle@navico.com>
+Date: Tue, 1 Nov 2011 11:18:03 +1300
+Subject: can: flexcan: Fix CAN_RAW_RECV_OWN_MSGS and CAN_RAW_LOOPBACK
+
+Currently the flexcan driver uses hardware local echo. This blindly
+echos all transmitted frames to all receiving sockets, regardless what
+CAN_RAW_RECV_OWN_MSGS and CAN_RAW_LOOPBACK are set to.
+
+This patch now submits transmitted frames to be echoed in the transmit
+complete interrupt, preserving the reference to the sending
+socket. This allows the can protocol to correctly handle the local
+echo.
+
+Further this patch moves tx_bytes statistic accounting into the tx_complete
+handler.
+
+Signed-off-by: Reuben Dowle <reuben.dowle@navico.com>
+[mkl: move tx_bytes accounting into tx_complete handler; cleanups]
+Signed-off-by: Marc Kleine-Budde <mkl@pengutronix.de>
+---
+ drivers/net/can/flexcan.c |   17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/can/flexcan.c b/drivers/net/can/flexcan.c
+index 920b8a0..886905d 100644
+--- a/drivers/net/can/flexcan.c
++++ b/drivers/net/can/flexcan.c
+@@ -284,7 +284,6 @@ static int flexcan_get_berr_counter(const struct net_device *dev,
+ static int flexcan_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ {
+ 	const struct flexcan_priv *priv = netdev_priv(dev);
+-	struct net_device_stats *stats = &dev->stats;
+ 	struct flexcan_regs __iomem *regs = priv->base;
+ 	struct can_frame *cf = (struct can_frame *)skb->data;
+ 	u32 can_id;
+@@ -314,14 +313,11 @@ static int flexcan_start_xmit(struct sk_buff *skb, struct net_device *dev)
+ 		writel(data, &regs->cantxfg[FLEXCAN_TX_BUF_ID].data[1]);
+ 	}
+ 
++	can_put_echo_skb(skb, dev, 0);
++
+ 	writel(can_id, &regs->cantxfg[FLEXCAN_TX_BUF_ID].can_id);
+ 	writel(ctrl, &regs->cantxfg[FLEXCAN_TX_BUF_ID].can_ctrl);
+ 
+-	kfree_skb(skb);
+-
+-	/* tx_packets is incremented in flexcan_irq */
+-	stats->tx_bytes += cf->can_dlc;
+-
+ 	return NETDEV_TX_OK;
+ }
+ 
+@@ -633,7 +629,7 @@ static irqreturn_t flexcan_irq(int irq, void *dev_id)
+ 
+ 	/* transmission complete interrupt */
+ 	if (reg_iflag1 & (1 << FLEXCAN_TX_BUF_ID)) {
+-		/* tx_bytes is incremented in flexcan_start_xmit */
++		stats->tx_bytes += can_get_echo_skb(dev, 0);
+ 		stats->tx_packets++;
+ 		writel((1 << FLEXCAN_TX_BUF_ID), &regs->iflag1);
+ 		netif_wake_queue(dev);
+@@ -722,13 +718,14 @@ static int flexcan_chip_start(struct net_device *dev)
+ 	 * enable warning int
+ 	 * choose format C
+ 	 * enable self wakeup
++	 * disable local echo
+ 	 *
+ 	 */
+ 	reg_mcr = readl(&regs->mcr);
+ 	reg_mcr |= FLEXCAN_MCR_FRZ | FLEXCAN_MCR_FEN | FLEXCAN_MCR_HALT |
+ 		FLEXCAN_MCR_SUPV | FLEXCAN_MCR_WRN_EN |
+ 		FLEXCAN_MCR_IDAM_C | FLEXCAN_MCR_WAK_MSK |
+-		FLEXCAN_MCR_SLF_WAK;
++		FLEXCAN_MCR_SLF_WAK | FLEXCAN_MCR_SRX_DIS;
+ 	dev_dbg(dev->dev.parent, "%s: writing mcr=0x%08x", __func__, reg_mcr);
+ 	writel(reg_mcr, &regs->mcr);
+ 
+@@ -1008,7 +1005,7 @@ static int __devinit flexcan_probe(struct platform_device *pdev)
+ 		goto failed_map;
+ 	}
+ 
+-	dev = alloc_candev(sizeof(struct flexcan_priv), 0);
++	dev = alloc_candev(sizeof(struct flexcan_priv), 1);
+ 	if (!dev) {
+ 		err = -ENOMEM;
+ 		goto failed_alloc;
+@@ -1016,7 +1013,7 @@ static int __devinit flexcan_probe(struct platform_device *pdev)
+ 
+ 	dev->netdev_ops = &flexcan_netdev_ops;
+ 	dev->irq = irq;
+-	dev->flags |= IFF_ECHO; /* we support local echo in hardware */
++	dev->flags |= IFF_ECHO;
+ 
+ 	priv = netdev_priv(dev);
+ 	priv->can.clock.freq = clk_get_rate(clk);
+-- 
+1.7.9.5
+

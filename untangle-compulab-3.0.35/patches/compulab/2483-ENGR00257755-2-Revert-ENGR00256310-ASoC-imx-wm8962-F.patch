@@ -1,0 +1,39 @@
+From e0e9894dc779feb7cf3294deb2f7bd58bfb97e34 Mon Sep 17 00:00:00 2001
+From: Nicolin Chen <b42378@freescale.com>
+Date: Mon, 8 Apr 2013 19:58:26 +0800
+Subject: ENGR00257755-2 Revert "ENGR00256310 ASoC: imx-wm8962: Fix playback
+ abnormally"
+
+This reverts commit 80dd80156772ff155aaf5420e41346674a9521f0.
+
+With this patch, WM8962 couldn't work normally after SabreSD power-on.
+So revert it and find a better solution.
+
+Acked-by: Wang Shengjiu <b02247@freescale.com>
+Signed-off-by: Nicolin Chen <b42378@freescale.com>
+---
+ sound/soc/imx/imx-wm8962.c |    8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/sound/soc/imx/imx-wm8962.c b/sound/soc/imx/imx-wm8962.c
+index c99144f..8cf4bdd 100644
+--- a/sound/soc/imx/imx-wm8962.c
++++ b/sound/soc/imx/imx-wm8962.c
+@@ -214,14 +214,6 @@ static int imx_hifi_hw_free(struct snd_pcm_substream *substream)
+ 			pr_err("Failed to set MUTE: %d\n", ret);
+ 			return ret;
+ 		}
+-
+-		/* Disable FLL */
+-		ret = snd_soc_dai_set_pll(codec_dai, WM8962_FLL,
+-				WM8962_FLL_MCLK, 0, 0);
+-		if (ret < 0) {
+-			pr_err("Failed to set FLL: %d\n", ret);
+-			return ret;
+-		}
+ 	}
+ 	return 0;
+ }
+-- 
+1.7.9.5
+

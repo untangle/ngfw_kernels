@@ -1,0 +1,36 @@
+From ff40ceff74923233bca8dc2740a9584a3f13db0a Mon Sep 17 00:00:00 2001
+From: Wayne Zou <b36644@freescale.com>
+Date: Mon, 25 Mar 2013 12:56:46 +0800
+Subject: ENGR00256629 V4L2 output: Fix color bar issue on 1080p HDMI display
+
+When doing video playback on video16, which is also the first framebuffer
+and used for fb console as well, there is a color bar on top of 1080p screen.
+We need to make sure the correct vmode when doing pan display.
+
+Signed-off-by: Wayne Zou <b36644@freescale.com>
+---
+ drivers/media/video/mxc/output/mxc_vout.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/media/video/mxc/output/mxc_vout.c b/drivers/media/video/mxc/output/mxc_vout.c
+index a42100a..626bad5 100644
+--- a/drivers/media/video/mxc/output/mxc_vout.c
++++ b/drivers/media/video/mxc/output/mxc_vout.c
+@@ -545,12 +545,14 @@ static int show_buf(struct mxc_vout_output *vout, int idx,
+ 		fbi->var.yoffset = ipos->y + 1;
+ 		var.xoffset = ipos->x;
+ 		var.yoffset = ipos->y;
++		var.vmode |= FB_VMODE_YWRAP;
+ 		ret = fb_pan_display(fbi, &var);
+ 		fbi->fix.smem_start = fb_base;
+ 		console_unlock();
+ 	} else {
+ 		console_lock();
+ 		var.yoffset = idx * fbi->var.yres;
++		var.vmode &= ~FB_VMODE_YWRAP;
+ 		ret = fb_pan_display(fbi, &var);
+ 		console_unlock();
+ 	}
+-- 
+1.7.9.5
+

@@ -1,0 +1,67 @@
+From 21cc394f23681a222f1a3c9b70b09c621046b022 Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Sun, 24 Feb 2013 16:30:31 +0200
+Subject: ARM: i.MX6: cm-fx6: remove nand __init annotations
+
+Platform data and a like should not be marked as __init, so the drivers
+can be compiled as modules and not crash on load.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6-dl.h |    2 +-
+ arch/arm/mach-mx6/board-cm-fx6-q.h  |    2 +-
+ arch/arm/mach-mx6/board-cm-fx6.c    |    5 ++---
+ 3 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-dl.h b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+index d28e955..fcacd5a 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-dl.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-dl.h
+@@ -230,7 +230,7 @@ static iomux_v3_cfg_t MX6DL_USDHC_PAD_SETTING(3, 100);
+ static iomux_v3_cfg_t MX6DL_USDHC_PAD_SETTING(3, 200);
+ 
+ /* The GPMI is conflicted with SD3, so init this in the driver. */
+-static iomux_v3_cfg_t mx6dl_gpmi_nand[] __initdata = {
++static iomux_v3_cfg_t mx6dl_gpmi_nand[] = {
+ 	MX6DL_PAD_NANDF_CLE__RAWNAND_CLE,
+ 	MX6DL_PAD_NANDF_ALE__RAWNAND_ALE,
+ 	MX6DL_PAD_NANDF_CS0__RAWNAND_CE0N,
+diff --git a/arch/arm/mach-mx6/board-cm-fx6-q.h b/arch/arm/mach-mx6/board-cm-fx6-q.h
+index 190eaed..dbd00a1 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6-q.h
++++ b/arch/arm/mach-mx6/board-cm-fx6-q.h
+@@ -230,7 +230,7 @@ static iomux_v3_cfg_t MX6Q_USDHC_PAD_SETTING(3, 100);
+ static iomux_v3_cfg_t MX6Q_USDHC_PAD_SETTING(3, 200);
+ 
+ /* The GPMI is conflicted with SD3, so init this in the driver. */
+-static iomux_v3_cfg_t mx6q_gpmi_nand[] __initdata = {
++static iomux_v3_cfg_t mx6q_gpmi_nand[] = {
+ 	MX6Q_PAD_NANDF_CLE__RAWNAND_CLE,
+ 	MX6Q_PAD_NANDF_ALE__RAWNAND_ALE,
+ 	MX6Q_PAD_NANDF_CS0__RAWNAND_CE0N,
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index e735639..40dd526 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -191,7 +191,7 @@ static const struct esdhc_platform_data mx6_arm2_sd3_data __initconst = {
+ 	.platform_pad_change	= plt_sd_pad_change,
+ };
+ 
+-static int __init gpmi_nand_platform_init(void)
++static int gpmi_nand_platform_init(void)
+ {
+ 	iomux_v3_cfg_t *nand_pads = NULL;
+ 	u32 nand_pads_cnt;
+@@ -208,8 +208,7 @@ static int __init gpmi_nand_platform_init(void)
+ 	return mxc_iomux_v3_setup_multiple_pads(nand_pads, nand_pads_cnt);
+ }
+ 
+-static struct gpmi_nand_platform_data
+-mx6_gpmi_nand_platform_data __initdata = {
++static struct gpmi_nand_platform_data mx6_gpmi_nand_platform_data = {
+ 	.platform_init           = gpmi_nand_platform_init,
+ 	.min_prop_delay_in_ns    = 5,
+ 	.max_prop_delay_in_ns    = 9,
+-- 
+1.7.9.5
+

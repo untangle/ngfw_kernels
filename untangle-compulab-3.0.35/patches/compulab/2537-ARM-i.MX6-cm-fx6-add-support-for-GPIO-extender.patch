@@ -1,0 +1,54 @@
+From 6eab2016f9cf4cc8bb65172c1a4406acc0ccca44 Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Thu, 28 Feb 2013 11:19:06 +0200
+Subject: ARM: i.MX6: cm-fx6: add support for GPIO extender
+
+sb-fx6 features a GPIO extender on the I2C bus 1.
+Add support for the GPIO extender.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ arch/arm/mach-mx6/board-cm-fx6.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm/mach-mx6/board-cm-fx6.c b/arch/arm/mach-mx6/board-cm-fx6.c
+index 5cc62fa..de5792d 100644
+--- a/arch/arm/mach-mx6/board-cm-fx6.c
++++ b/arch/arm/mach-mx6/board-cm-fx6.c
+@@ -91,6 +91,7 @@
+ 
+ #define SB_FX6_SD3_WP			IMX_GPIO_NR(7, 0)
+ #define SB_FX6_SD3_CD			IMX_GPIO_NR(7, 1)
++#define SB_FX6_GPIO_EXT_BASE		IMX_GPIO_NR(8, 0)
+ #define SB_FX6_LCD_RST			IMX_GPIO_NR(8, 11)
+ 
+ #define MX6_ARM2_LDB_BACKLIGHT		IMX_GPIO_NR(1, 9)
+@@ -483,6 +484,12 @@ static struct imxi2c_platform_data cm_fx6_i2c2_data = {
+ 	.bitrate = 400000,
+ };
+ 
++#if defined(CONFIG_GPIO_PCA953X) || defined(CONFIG_GPIO_PCA953X_MODULE)
++static struct pca953x_platform_data sb_fx6_gpio_ext_pdata = {
++	.gpio_base = SB_FX6_GPIO_EXT_BASE,
++};
++#endif
++
+ #if defined(CONFIG_EEPROM_AT24) || defined(CONFIG_EEPROM_AT24_MODULE)
+ static struct at24_platform_data sb_fx6_eeprom_pdata = {
+         .byte_len       = 256,
+@@ -491,6 +498,12 @@ static struct at24_platform_data sb_fx6_eeprom_pdata = {
+ #endif
+ 
+ static struct i2c_board_info cm_fx6_i2c0_board_info[] __initdata = {
++#if defined(CONFIG_GPIO_PCA953X) || defined(CONFIG_GPIO_PCA953X_MODULE)
++	{
++		I2C_BOARD_INFO("pca9555", 0x26),
++		.platform_data = &sb_fx6_gpio_ext_pdata,
++	},
++#endif
+ #if defined(CONFIG_EEPROM_AT24) || defined(CONFIG_EEPROM_AT24_MODULE)
+ 	{
+ 		I2C_BOARD_INFO("at24", 0x54),
+-- 
+1.7.9.5
+

@@ -1,0 +1,60 @@
+From 8894ac97406672882e8861be9830a74b755cb741 Mon Sep 17 00:00:00 2001
+From: b02247 <b02247@freescale.com>
+Date: Fri, 29 Mar 2013 14:09:43 +0800
+Subject: ENGR00255104 The opening time of cs42888 is very long, about 400ms
+
+In this commit 957bc47ffbad8532f0e8f6463946e8c04bc3176f, add msleep(400)
+for reducing noise in the hw_params, but this time is very long for opening
+device.
+In this patch, remove this time and use the "Soft Ramp on Zero Crossings" to
+reduce the noise.
+
+Signed-off-by: b02247 <b02247@freescale.com>
+---
+ sound/soc/codecs/cs42888.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/codecs/cs42888.c b/sound/soc/codecs/cs42888.c
+index 698ff4b..03f160b 100644
+--- a/sound/soc/codecs/cs42888.c
++++ b/sound/soc/codecs/cs42888.c
+@@ -1,6 +1,6 @@
+ /*
+  * cs42888.c  -- CS42888 ALSA SoC Audio Driver
+- * Copyright (C) 2010-2012 Freescale Semiconductor, Inc. All Rights Reserved.
++ * Copyright (C) 2010-2013 Freescale Semiconductor, Inc. All Rights Reserved.
+  */
+ /*
+  * The code contained herein is licensed under the GNU General Public
+@@ -129,6 +129,11 @@ static const char *cs42888_supply_names[CS42888_NUM_SUPPLIES] = {
+ #define CS42888_TRANS_ADC_SNGVOL_MASK	(1 << CS42888_TRANS_ADC_SNGVOL_OFFSET)
+ #define CS42888_TRANS_ADC_SZC_MASK	(3 << CS42888_TRANS_ADC_SZC_OFFSET)
+ 
++#define CS42888_TRANS_DAC_SZC_IC     (0 << CS42888_TRANS_DAC_SZC_OFFSET)
++#define CS42888_TRANS_DAC_SZC_ZC     (1 << CS42888_TRANS_DAC_SZC_OFFSET)
++#define CS42888_TRANS_DAC_SZC_SR     (2 << CS42888_TRANS_DAC_SZC_OFFSET)
++#define CS42888_TRANS_DAC_SZC_SRZC   (3 << CS42888_TRANS_DAC_SZC_OFFSET)
++
+ #define CS42888_MUTE_AOUT8	(0x1 << 7)
+ #define CS42888_MUTE_AOUT7	(0x1 << 6)
+ #define CS42888_MUTE_AOUT6	(0x1 << 5)
+@@ -717,7 +722,6 @@ static int cs42888_hw_params(struct snd_pcm_substream *substream,
+ 		pr_err("i2c write failed\n");
+ 		return ret;
+ 	}
+-	 msleep(400);
+ 
+ 	ret = cs42888_fill_cache(codec);
+ 	if (ret < 0) {
+@@ -884,6 +888,8 @@ static int cs42888_probe(struct snd_soc_codec *codec)
+ 	/* Disable auto-mute */
+ 	val = snd_soc_read(codec, CS42888_TRANS);
+ 	val &= ~CS42888_TRANS_AMUTE_MASK;
++	val &= ~CS42888_TRANS_DAC_SZC_MASK;
++	val |=  CS42888_TRANS_DAC_SZC_SR;
+ 	ret = snd_soc_write(codec, CS42888_TRANS, val);
+ 	if (ret < 0) {
+ 		pr_err("i2c write failed\n");
+-- 
+1.7.9.5
+

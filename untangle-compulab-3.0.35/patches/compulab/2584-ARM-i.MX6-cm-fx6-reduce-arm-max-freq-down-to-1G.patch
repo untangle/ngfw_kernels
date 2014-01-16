@@ -1,0 +1,26 @@
+From d4ff7e01c3d9525fac75170fcf34855662106602 Mon Sep 17 00:00:00 2001
+From: Valentin Raevsky <valentin@compulab.co.il>
+Date: Tue, 4 Jun 2013 11:46:45 +0300
+Subject: ARM: i.MX6: cm-fx6: reduce arm max freq down to 1G
+
+The module shows very unstable behavior at 1.2G.
+---
+ arch/arm/mach-mx6/cpu.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-mx6/cpu.c b/arch/arm/mach-mx6/cpu.c
+index eaeae1d..09e84ed 100644
+--- a/arch/arm/mach-mx6/cpu.c
++++ b/arch/arm/mach-mx6/cpu.c
+@@ -35,7 +35,7 @@
+ struct cpu_op *(*get_cpu_op)(int *op);
+ bool enable_wait_mode = true;
+ u32 enable_ldo_mode = LDO_MODE_DEFAULT;
+-u32 arm_max_freq = CPU_AT_1_2GHz;
++u32 arm_max_freq = CPU_AT_1GHz;
+ bool mem_clk_on_in_wait;
+ int chip_rev;
+ 
+-- 
+1.7.9.5
+

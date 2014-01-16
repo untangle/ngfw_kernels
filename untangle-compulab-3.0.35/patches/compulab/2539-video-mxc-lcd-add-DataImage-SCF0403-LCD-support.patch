@@ -1,0 +1,41 @@
+From cc3f6e2115cb9c82b2eee1abd70e7055522f8aea Mon Sep 17 00:00:00 2001
+From: Igor Grinberg <grinberg@compulab.co.il>
+Date: Fri, 1 Mar 2013 23:36:27 +0200
+Subject: video: mxc: lcd: add DataImage SCF0403 LCD support
+
+Add support for DataImage SCF0403852GGU04 LCD panel.
+
+Signed-off-by: Igor Grinberg <grinberg@compulab.co.il>
+---
+ drivers/video/mxc/mxc_lcdif.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/drivers/video/mxc/mxc_lcdif.c b/drivers/video/mxc/mxc_lcdif.c
+index 5cbdc73..ad4d54f 100644
+--- a/drivers/video/mxc/mxc_lcdif.c
++++ b/drivers/video/mxc/mxc_lcdif.c
+@@ -39,6 +39,21 @@ static struct fb_videomode lcdif_modedb[] = {
+ 	FB_SYNC_CLK_LAT_FALL,
+ 	FB_VMODE_NONINTERLACED,
+ 	0,},
++	{
++	/* 480x800, pixel clk @ 35MHz */
++		.name		= "SCF04-WVGA",
++		.xres		= 480,
++		.yres		= 800,
++		.pixclock	= 28800,
++		.left_margin	= 12,
++		.right_margin	= 16,
++		.upper_margin	= 30,
++		.lower_margin	= 40,
++		.hsync_len	= 26,
++		.vsync_len	= 30,
++		.sync		= FB_SYNC_CLK_LAT_FALL,
++		.vmode		= FB_VMODE_NONINTERLACED,
++	},
+ };
+ static int lcdif_modedb_sz = ARRAY_SIZE(lcdif_modedb);
+ 
+-- 
+1.7.9.5
+
