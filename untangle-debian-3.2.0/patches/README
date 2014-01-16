@@ -1,0 +1,28 @@
+006-bridgefib.patch
+    This patche [appears] to provide a ioctl to query the location of a certain MAC address to determine the interface from the bridge FIB.
+
+007-bridge-mac-ageing-fix.patch
+    This patch is necessary because when Untangle is "bridging" traffic it doesn't actually allow traffic through the bridge, it intercepts it.
+    This causes traffic not to flow via the normal methods so the "forwarding information base" (or FIB) of the bridge doesn't get updated.
+    As such, without this patch the bridge can lose information about where a IP/mac pair lives and won't know where to send the traffic and just drop it.
+    Pinging the host will instantly resolve that state as the FIB would be updated. This patch updates the FIB when a packet is received on a bridge port.
+
+009-extensions.patch
+    This provides extensions to cmsg so that special fields like TTL, TOS, NFMARK, and SADDR can be specified in cmsg ancilarry data options in recvfrom and sendmsg.
+    This is used in libnetcap to send and receive UDP packets.
+
+013-iptables_tune.patch
+    This adds the "tune" table in netfilter which comes at the very end which is used for various tasks in our networking setup.
+
+014-nfqueue-untangle-mode.patch
+    Adds support for appending conntrack information to queued packets. This allows you to avoid a conntrack lookup for queued packets.
+    NOTE: Usage of this patch could be removed in favor of classd's handling of conntrack table.
+    The classd daemon subscribes to all conntrack table changes and manages its own list in memory and pairs queued packets with the in memory table.
+
+015-iptables_socket.patch
+    This changes the "-m socket" iptables match to modify the packet with the socket's mark if a socket is found.
+    This is a total hack as an iptable match shouldn't modify the packet, but the issue is that there is no conntrack entry for packets returning to nonlocal sockets
+    So we have no way to restore the QoS/bandwidth control mark so TCP ingress QoS doesn't work without this hack.
+     
+020-imq-debian.patch
+    This adds IMQ (intermediate queue device) which allows for ingress QoS filtering on WAN interfaces

@@ -1,0 +1,22 @@
+to build packages:
+make
+
+to develop:
+'make src' to expand the src
+edit the source in untangle-debian-2.6.32/linux-2.6-2.6.32/debian/build/build_amd64_untangle_amd64 (on amd64 anyway)
+'make kern' to build kernel package
+dpkg -i kernel package and reboot
+
+
+to port patches: 
+generally I'll do a 'make src'
+the go into linux-2.6-2.6.32/debian/build/
+cp -r source_amd64_untangle source_amd64_untangle.modified
+then patch in source_amd64_untangle.modified and get everything cleaned up
+create a new diff -urN based on those two directories and drop the new patch in patches/
+repeat.
+
+to get building working:
+sometimes the 'make kern' fails and often it hides the error message
+go into linux-2.6-2.6.32/debian/build/build_amd64_untangle_amd64/
+and run 'make' and it will display the error messages that caused the fail if it failed during the kernel build
