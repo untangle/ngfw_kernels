@@ -81,14 +81,6 @@ diff -urN linux-3.0.35.orig//include/net/route.h linux-3.0.35//include/net/route
 diff -urN linux-3.0.35.orig//include/net/sock.h linux-3.0.35//include/net/sock.h
 --- linux-3.0.35.orig//include/net/sock.h	2014-01-24 10:07:55.000000000 -0800
 +++ linux-3.0.35//include/net/sock.h	2014-01-24 10:52:29.000000000 -0800
-@@ -312,6 +312,7 @@
- 	unsigned int		sk_gso_max_size;
- 	int			sk_rcvlowat;
- 	unsigned long	        sk_lingertime;
-+
- 	struct sk_buff_head	sk_error_queue;
- 	struct proto		*sk_prot_creator;
- 	rwlock_t		sk_callback_lock;
 @@ -338,7 +339,11 @@
  #endif
  	__u32			sk_mark;
@@ -188,26 +180,6 @@ diff -urN linux-3.0.35.orig//net/ipv4/ip_output.c linux-3.0.35//net/ipv4/ip_outp
 diff -urN linux-3.0.35.orig//net/ipv4/ip_sockglue.c linux-3.0.35//net/ipv4/ip_sockglue.c
 --- linux-3.0.35.orig//net/ipv4/ip_sockglue.c	2014-01-24 10:07:58.000000000 -0800
 +++ linux-3.0.35//net/ipv4/ip_sockglue.c	2014-01-24 10:41:20.000000000 -0800
-@@ -50,6 +50,7 @@
- #define IP_CMSG_RETOPTS		16
- #define IP_CMSG_PASSSEC		32
- #define IP_CMSG_ORIGDSTADDR     64
-+#define IP_CMSG_NFMARK     128
- 
- /*
-  *	SOL_IP control messages.
-@@ -189,6 +190,11 @@
- 	if (flags & 1)
- 		ip_cmsg_recv_dstaddr(msg, skb);
- 
-+	if ((flags >>= 1) == 0)
-+		return;
-+	if (flags & 1)
-+		ip_cmsg_recv_nfmark(msg, skb);
-+    
- }
- EXPORT_SYMBOL(ip_cmsg_recv);
- 
 @@ -220,7 +226,38 @@
  			ipc->addr = info->ipi_spec_dst.s_addr;
  			break;
@@ -360,21 +332,6 @@ diff -urN linux-3.0.35.orig//net/ipv4/udp.c linux-3.0.35//net/ipv4/udp.c
  /* UDP is nearly always wildcards out the wazoo, it makes no sense to try
   * harder than this. -DaveM
   */
-@@ -564,6 +591,14 @@
- 	return s;
- }
- 
-+void udp_cmsg_recv(struct msghdr *msg, struct sk_buff *skb)
-+{
-+	struct inet_sock *inet = inet_sk(skb->sk);
-+	unsigned flags = inet->cmsg_flags;
-+    
-+    ip_cmsg_recv(msg, skb);
-+}
-+
- /*
-  * This routine is called by the ICMP module when it gets some
-  * sort of error condition.  If err < 0 then the socket should
 @@ -798,7 +833,7 @@
  	int free = 0;
  	int connected = 0;
@@ -442,15 +399,3 @@ diff -urN linux-3.0.35.orig//net/ipv4/udp.c linux-3.0.35//net/ipv4/udp.c
  	up->pending = AF_INET;
  
  do_append_data:
-@@ -1229,8 +1274,9 @@
- 		sin->sin_addr.s_addr = ip_hdr(skb)->saddr;
- 		memset(sin->sin_zero, 0, sizeof(sin->sin_zero));
- 	}
--	if (inet->cmsg_flags)
--		ip_cmsg_recv(msg, skb);
-+	if (inet->cmsg_flags) {
-+            udp_cmsg_recv(msg, skb); /* also calls ip_cmsg_recv */
-+        }
- 
- 	err = len;
- 	if (flags & MSG_TRUNC)
