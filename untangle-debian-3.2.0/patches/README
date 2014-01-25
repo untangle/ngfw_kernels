@@ -24,5 +24,6 @@
     This is a total hack as an iptable match shouldn't modify the packet, but the issue is that there is no conntrack entry for packets returning to nonlocal sockets
     So we have no way to restore the QoS/bandwidth control mark so TCP ingress QoS doesn't work without this hack.
      
-020-imq-debian.patch
-    This adds IMQ (intermediate queue device) which allows for ingress QoS filtering on WAN interfaces
+020-imq.patch
+    This adds IMQ (intermediate queue device) which allows for ingress QoS filtering on WAN interfaces. Patch from http://www.linuximq.net
+

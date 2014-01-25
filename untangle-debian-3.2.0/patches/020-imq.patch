@@ -1,7 +1,7 @@
-diff -urN source_amd64_untangle/drivers/net/imq.c source_amd64_untangle.modified/drivers/net/imq.c
---- source_amd64_untangle/drivers/net/imq.c	1969-12-31 16:00:00.000000000 -0800
-+++ source_amd64_untangle.modified/drivers/net/imq.c	2012-03-23 17:20:57.000000000 -0700
-@@ -0,0 +1,866 @@
+diff -uNr linux-3.1/drivers/net/imq.c linux-3.1-imq/drivers/net/imq.c
+--- linux-3.1/drivers/net/imq.c	1970-01-01 02:00:00.000000000 +0200
++++ linux-3.1-imq/drivers/net/imq.c	2011-11-04 12:16:10.454992642 +0200
+@@ -0,0 +1,850 @@
 +/*
 + *             Pseudo-driver for the intermediate queue device.
 + *
@@ -124,15 +124,6 @@ diff -urN source_amd64_untangle/drivers/net/imq.c source_amd64_untangle.modified
 + *              - Port to 3.1
 + *              - Clean-up, move 'get imq device pointer by imqX name' to
 + *                separate function from imq_nf_queue().
-+ *
-+ *             2012/01/05 - Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-+ *              - Port to 3.2
-+ *
-+ *             2012/03/19 - Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-+ *              - Port to 3.3
-+ *
-+ *             2012/03/23 - Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-+ *              - Backport to 2.6.32
 + *
 + *	       Also, many thanks to pablo Sebastian Greco for making the initial
 + *	       patch and to those who helped the testing.
@@ -350,14 +341,6 @@ diff -urN source_amd64_untangle/drivers/net/imq.c source_amd64_untangle.modified
 +	hash = jhash_3words(addr1, addr2, ports.in32, imq_hashrnd ^ ip_proto);
 +
 +	return (u16)(((u64)hash * dev->real_num_tx_queues) >> 32);
-+}
-+
-+/*
-+ * fake sk_tx_queue_get(), as 2.6.32 does not have sock->tx_queue_mapping.
-+ */
-+static inline sk_tx_queue_get(struct sock *sk)
-+{
-+	return -1;
 +}
 +
 +static inline bool sk_tx_queue_recorded(struct sock *sk)
@@ -689,7 +672,8 @@ diff -urN source_amd64_untangle/drivers/net/imq.c source_amd64_untangle.modified
 +	dev->features		= NETIF_F_SG | NETIF_F_FRAGLIST |
 +				  NETIF_F_GSO | NETIF_F_HW_CSUM |
 +				  NETIF_F_HIGHDMA;
-+	dev->priv_flags		&= ~IFF_XMIT_DST_RELEASE;
++	dev->priv_flags		&= ~(IFF_XMIT_DST_RELEASE |
++				     IFF_TX_SKB_SHARING);
 +}
 +
 +static int imq_validate(struct nlattr *tb[], struct nlattr *data[])
@@ -868,10 +852,10 @@ diff -urN source_amd64_untangle/drivers/net/imq.c source_amd64_untangle.modified
 +MODULE_LICENSE("GPL");
 +MODULE_ALIAS_RTNL_LINK("imq");
 +
-diff -urN source_amd64_untangle/drivers/net/Kconfig source_amd64_untangle.modified/drivers/net/Kconfig
---- source_amd64_untangle/drivers/net/Kconfig	2012-03-23 17:19:34.000000000 -0700
-+++ source_amd64_untangle.modified/drivers/net/Kconfig	2012-03-23 17:20:57.000000000 -0700
-@@ -121,6 +121,125 @@
+diff -uNr linux-3.1/drivers/net/Kconfig linux-3.1-imq/drivers/net/Kconfig
+--- linux-3.1/drivers/net/Kconfig	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.1-imq/drivers/net/Kconfig	2011-11-04 11:12:52.106390309 +0200
+@@ -124,6 +124,125 @@
  	  To compile this driver as a module, choose M here: the module
  	  will be called eql.  If unsure, say N.
  
@@ -997,20 +981,20 @@ diff -urN source_amd64_untangle/drivers/net/Kconfig source_amd64_untangle.modifi
  config TUN
  	tristate "Universal TUN/TAP device driver support"
  	select CRC32
-diff -urN source_amd64_untangle/drivers/net/Makefile source_amd64_untangle.modified/drivers/net/Makefile
---- source_amd64_untangle/drivers/net/Makefile	2012-03-23 17:19:29.000000000 -0700
-+++ source_amd64_untangle.modified/drivers/net/Makefile	2012-03-23 17:20:57.000000000 -0700
-@@ -168,6 +168,7 @@
+diff -uNr linux-3.1/drivers/net/Makefile linux-3.1-imq/drivers/net/Makefile
+--- linux-3.1/drivers/net/Makefile	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.1-imq/drivers/net/Makefile	2011-11-04 11:12:52.106390309 +0200
+@@ -175,6 +175,7 @@
+ obj-$(CONFIG_XEN_NETDEV_BACKEND) += xen-netback/
  
  obj-$(CONFIG_DUMMY) += dummy.o
- obj-$(CONFIG_IFB) += ifb.o
 +obj-$(CONFIG_IMQ) += imq.o
+ obj-$(CONFIG_IFB) += ifb.o
  obj-$(CONFIG_MACVLAN) += macvlan.o
  obj-$(CONFIG_MACVTAP) += macvtap.o
- obj-$(CONFIG_DE600) += de600.o
-diff -urN source_amd64_untangle/include/linux/imq.h source_amd64_untangle.modified/include/linux/imq.h
---- source_amd64_untangle/include/linux/imq.h	1969-12-31 16:00:00.000000000 -0800
-+++ source_amd64_untangle.modified/include/linux/imq.h	2012-03-23 17:20:57.000000000 -0700
+diff -uNr linux-3.1/include/linux/imq.h linux-3.1-imq/include/linux/imq.h
+--- linux-3.1/include/linux/imq.h	1970-01-01 02:00:00.000000000 +0200
++++ linux-3.1-imq/include/linux/imq.h	2011-11-04 11:12:52.109723710 +0200
 @@ -0,0 +1,13 @@
 +#ifndef _IMQ_H
 +#define _IMQ_H
@@ -1025,9 +1009,9 @@ diff -urN source_amd64_untangle/include/linux/imq.h source_amd64_untangle.modifi
 +
 +#endif /* _IMQ_H */
 +
-diff -urN source_amd64_untangle/include/linux/netfilter/xt_IMQ.h source_amd64_untangle.modified/include/linux/netfilter/xt_IMQ.h
---- source_amd64_untangle/include/linux/netfilter/xt_IMQ.h	1969-12-31 16:00:00.000000000 -0800
-+++ source_amd64_untangle.modified/include/linux/netfilter/xt_IMQ.h	2012-03-23 17:20:57.000000000 -0700
+diff -uNr linux-3.1/include/linux/netfilter/xt_IMQ.h linux-3.1-imq/include/linux/netfilter/xt_IMQ.h
+--- linux-3.1/include/linux/netfilter/xt_IMQ.h	1970-01-01 02:00:00.000000000 +0200
++++ linux-3.1-imq/include/linux/netfilter/xt_IMQ.h	2011-11-04 11:12:52.109723710 +0200
 @@ -0,0 +1,9 @@
 +#ifndef _XT_IMQ_H
 +#define _XT_IMQ_H
@@ -1038,10 +1022,10 @@ diff -urN source_amd64_untangle/include/linux/netfilter/xt_IMQ.h source_amd64_un
 +
 +#endif /* _XT_IMQ_H */
 +
-diff -urN source_amd64_untangle/include/linux/netfilter.h source_amd64_untangle.modified/include/linux/netfilter.h
---- source_amd64_untangle/include/linux/netfilter.h	2009-12-02 19:51:21.000000000 -0800
-+++ source_amd64_untangle.modified/include/linux/netfilter.h	2012-03-23 17:20:57.000000000 -0700
-@@ -21,7 +21,8 @@
+diff -uNr linux-3.1/include/linux/netfilter.h linux-3.1-imq/include/linux/netfilter.h
+--- linux-3.1/include/linux/netfilter.h	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.1-imq/include/linux/netfilter.h	2011-11-04 11:12:52.109723710 +0200
+@@ -22,7 +22,8 @@
  #define NF_QUEUE 3
  #define NF_REPEAT 4
  #define NF_STOP 5
@@ -1050,10 +1034,10 @@ diff -urN source_amd64_untangle/include/linux/netfilter.h source_amd64_untangle.
 +#define NF_MAX_VERDICT NF_IMQ_QUEUE
  
  /* we overload the higher bits for encoding auxiliary data such as the queue
-  * number. Not nice, but better than additional function arguments. */
-diff -urN source_amd64_untangle/include/linux/netfilter_ipv4/ipt_IMQ.h source_amd64_untangle.modified/include/linux/netfilter_ipv4/ipt_IMQ.h
---- source_amd64_untangle/include/linux/netfilter_ipv4/ipt_IMQ.h	1969-12-31 16:00:00.000000000 -0800
-+++ source_amd64_untangle.modified/include/linux/netfilter_ipv4/ipt_IMQ.h	2012-03-23 17:20:57.000000000 -0700
+  * number or errno values. Not nice, but better than additional function
+diff -uNr linux-3.1/include/linux/netfilter_ipv4/ipt_IMQ.h linux-3.1-imq/include/linux/netfilter_ipv4/ipt_IMQ.h
+--- linux-3.1/include/linux/netfilter_ipv4/ipt_IMQ.h	1970-01-01 02:00:00.000000000 +0200
++++ linux-3.1-imq/include/linux/netfilter_ipv4/ipt_IMQ.h	2011-11-04 11:12:52.109723710 +0200
 @@ -0,0 +1,10 @@
 +#ifndef _IPT_IMQ_H
 +#define _IPT_IMQ_H
@@ -1065,9 +1049,9 @@ diff -urN source_amd64_untangle/include/linux/netfilter_ipv4/ipt_IMQ.h source_am
 +
 +#endif /* _IPT_IMQ_H */
 +
-diff -urN source_amd64_untangle/include/linux/netfilter_ipv6/ip6t_IMQ.h source_amd64_untangle.modified/include/linux/netfilter_ipv6/ip6t_IMQ.h
---- source_amd64_untangle/include/linux/netfilter_ipv6/ip6t_IMQ.h	1969-12-31 16:00:00.000000000 -0800
-+++ source_amd64_untangle.modified/include/linux/netfilter_ipv6/ip6t_IMQ.h	2012-03-23 17:20:57.000000000 -0700
+diff -uNr linux-3.1/include/linux/netfilter_ipv6/ip6t_IMQ.h linux-3.1-imq/include/linux/netfilter_ipv6/ip6t_IMQ.h
+--- linux-3.1/include/linux/netfilter_ipv6/ip6t_IMQ.h	1970-01-01 02:00:00.000000000 +0200
++++ linux-3.1-imq/include/linux/netfilter_ipv6/ip6t_IMQ.h	2011-11-04 11:12:52.113057113 +0200
 @@ -0,0 +1,10 @@
 +#ifndef _IP6T_IMQ_H
 +#define _IP6T_IMQ_H
@@ -1079,9 +1063,9 @@ diff -urN source_amd64_untangle/include/linux/netfilter_ipv6/ip6t_IMQ.h source_a
 +
 +#endif /* _IP6T_IMQ_H */
 +
-diff -urN source_amd64_untangle/include/linux/skbuff.h source_amd64_untangle.modified/include/linux/skbuff.h
---- source_amd64_untangle/include/linux/skbuff.h	2012-03-23 17:19:31.000000000 -0700
-+++ source_amd64_untangle.modified/include/linux/skbuff.h	2012-03-23 17:20:57.000000000 -0700
+diff -uNr linux-3.1/include/linux/skbuff.h linux-3.1-imq/include/linux/skbuff.h
+--- linux-3.1/include/linux/skbuff.h	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.1-imq/include/linux/skbuff.h	2011-11-04 11:12:52.116390515 +0200
 @@ -29,6 +29,9 @@
  #include <linux/rcupdate.h>
  #include <linux/dmaengine.h>
@@ -1092,20 +1076,18 @@ diff -urN source_amd64_untangle/include/linux/skbuff.h source_amd64_untangle.mod
  
  /* Don't change this without changing skb_csum_unnecessary! */
  #define CHECKSUM_NONE 0
-@@ -329,7 +332,10 @@
- 	 * want to keep them across layers you have to do a skb_clone()
+@@ -356,6 +359,9 @@
  	 * first. This is owned by whoever has the skb queued ATM.
  	 */
--	char			cb[48];
-+	char			cb[48] __aligned(8);
+ 	char			cb[48] __aligned(8);
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+	void                    *cb_next;
++	void			*cb_next;
 +#endif
  
- 	unsigned int		len,
- 				data_len;
-@@ -362,6 +368,9 @@
- 	struct nf_conntrack	*nfct;
+ 	unsigned long		_skb_refdst;
+ #ifdef CONFIG_XFRM
+@@ -394,6 +400,9 @@
+ #ifdef NET_SKBUFF_NF_DEFRAG_NEEDED
  	struct sk_buff		*nfct_reasm;
  #endif
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
@@ -1114,9 +1096,9 @@ diff -urN source_amd64_untangle/include/linux/skbuff.h source_amd64_untangle.mod
  #ifdef CONFIG_BRIDGE_NETFILTER
  	struct nf_bridge_info	*nf_bridge;
  #endif
-@@ -383,6 +392,10 @@
+@@ -418,6 +427,10 @@
  
- 	/* 0/14 bit hole */
+ 	/* 0/13 bit hole */
  
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
 +	__u8			imq_flags:IMQ_F_BITS;
@@ -1125,7 +1107,7 @@ diff -urN source_amd64_untangle/include/linux/skbuff.h source_amd64_untangle.mod
  #ifdef CONFIG_NET_DMA
  	dma_cookie_t		dma_cookie;
  #endif
-@@ -437,6 +450,12 @@
+@@ -504,6 +517,12 @@
  	return (struct rtable *)skb_dst(skb);
  }
  
@@ -1138,7 +1120,7 @@ diff -urN source_amd64_untangle/include/linux/skbuff.h source_amd64_untangle.mod
  extern void kfree_skb(struct sk_buff *skb);
  extern void consume_skb(struct sk_buff *skb);
  extern void	       __kfree_skb(struct sk_buff *skb);
-@@ -1982,6 +2001,10 @@
+@@ -2157,6 +2176,10 @@
  	dst->nfct_reasm = src->nfct_reasm;
  	nf_conntrack_get_reasm(src->nfct_reasm);
  #endif
@@ -1149,9 +1131,9 @@ diff -urN source_amd64_untangle/include/linux/skbuff.h source_amd64_untangle.mod
  #ifdef CONFIG_BRIDGE_NETFILTER
  	dst->nf_bridge  = src->nf_bridge;
  	nf_bridge_get(src->nf_bridge);
-diff -urN source_amd64_untangle/include/net/netfilter/nf_queue.h source_amd64_untangle.modified/include/net/netfilter/nf_queue.h
---- source_amd64_untangle/include/net/netfilter/nf_queue.h	2009-12-02 19:51:21.000000000 -0800
-+++ source_amd64_untangle.modified/include/net/netfilter/nf_queue.h	2012-03-23 17:20:57.000000000 -0700
+diff -uNr linux-3.1/include/net/netfilter/nf_queue.h linux-3.1-imq/include/net/netfilter/nf_queue.h
+--- linux-3.1/include/net/netfilter/nf_queue.h	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.1-imq/include/net/netfilter/nf_queue.h	2011-11-04 11:12:52.116390515 +0200
 @@ -30,5 +30,11 @@
  				       const struct nf_queue_handler *qh);
  extern void nf_unregister_queue_handlers(const struct nf_queue_handler *qh);
@@ -1164,10 +1146,10 @@ diff -urN source_amd64_untangle/include/net/netfilter/nf_queue.h source_amd64_un
 +#endif
  
  #endif /* _NF_QUEUE_H */
-diff -urN source_amd64_untangle/net/core/dev.c source_amd64_untangle.modified/net/core/dev.c
---- source_amd64_untangle/net/core/dev.c	2012-03-23 17:19:36.000000000 -0700
-+++ source_amd64_untangle.modified/net/core/dev.c	2012-03-23 17:20:57.000000000 -0700
-@@ -96,6 +96,9 @@
+diff -uNr linux-3.1/net/core/dev.c linux-3.1-imq/net/core/dev.c
+--- linux-3.1/net/core/dev.c	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.1-imq/net/core/dev.c	2011-11-04 11:12:52.119723915 +0200
+@@ -98,6 +98,9 @@
  #include <net/net_namespace.h>
  #include <net/sock.h>
  #include <linux/rtnetlink.h>
@@ -1177,10 +1159,10 @@ diff -urN source_amd64_untangle/net/core/dev.c source_amd64_untangle.modified/ne
  #include <linux/proc_fs.h>
  #include <linux/seq_file.h>
  #include <linux/stat.h>
-@@ -1704,7 +1707,12 @@
- 	int rc;
+@@ -2126,7 +2129,12 @@
+ 		if (dev->priv_flags & IFF_XMIT_DST_RELEASE)
+ 			skb_dst_drop(skb);
  
- 	if (likely(!skb->next)) {
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
 +		if (!list_empty(&ptype_all) &&
 +					!(skb->imq_flags & IMQ_F_ENQUEUE))
@@ -1189,11 +1171,11 @@ diff -urN source_amd64_untangle/net/core/dev.c source_amd64_untangle.modified/ne
 +#endif
  			dev_queue_xmit_nit(skb, dev);
  
- 		if (netif_needs_gso(dev, skb)) {
-diff -urN source_amd64_untangle/net/core/skbuff.c source_amd64_untangle.modified/net/core/skbuff.c
---- source_amd64_untangle/net/core/skbuff.c	2012-03-23 17:19:36.000000000 -0700
-+++ source_amd64_untangle.modified/net/core/skbuff.c	2012-03-23 17:20:57.000000000 -0700
-@@ -72,6 +72,9 @@
+ 		skb_orphan_try(skb);
+diff -uNr linux-3.1/net/core/skbuff.c linux-3.1-imq/net/core/skbuff.c
+--- linux-3.1/net/core/skbuff.c	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.1-imq/net/core/skbuff.c	2011-11-04 11:12:52.123057315 +0200
+@@ -73,6 +73,9 @@
  
  static struct kmem_cache *skbuff_head_cache __read_mostly;
  static struct kmem_cache *skbuff_fclone_cache __read_mostly;
@@ -1203,7 +1185,7 @@ diff -urN source_amd64_untangle/net/core/skbuff.c source_amd64_untangle.modified
  
  static void sock_pipe_buf_release(struct pipe_inode_info *pipe,
  				  struct pipe_buffer *buf)
-@@ -91,6 +94,82 @@
+@@ -92,6 +95,82 @@
  	return 1;
  }
  
@@ -1285,16 +1267,14 @@ diff -urN source_amd64_untangle/net/core/skbuff.c source_amd64_untangle.modified
 +#endif
  
  /* Pipe buffer operations for a socket. */
- static struct pipe_buf_operations sock_pipe_buf_ops = {
-@@ -398,6 +477,29 @@
+ static const struct pipe_buf_operations sock_pipe_buf_ops = {
+@@ -392,6 +471,26 @@
  		WARN_ON(in_irq());
  		skb->destructor(skb);
  	}
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+	/*
-+	 * This should not happen. When it does, avoid memleak by restoring
-+	 * the chain of cb-backups.
-+	 */
++	/* This should not happen. When it does, avoid memleak by restoring
++	the chain of cb-backups. */
 +	while (skb->cb_next != NULL) {
 +		if (net_ratelimit())
 +			printk(KERN_WARNING "IMQ: kfree_skb: skb->cb_next: "
@@ -1302,8 +1282,7 @@ diff -urN source_amd64_untangle/net/core/skbuff.c source_amd64_untangle.modified
 +
 +		skb_restore_cb(skb);
 +	}
-+	/*
-+	 * This should not happen either, nf_queue_entry is nullified in
++	/* This should not happen either, nf_queue_entry is nullified in
 +	 * imq_dev_xmit(). If we have non-NULL nf_queue_entry then we are
 +	 * leaking entry pointers, maybe memory. We don't know if this is
 +	 * pointer to already freed memory, or should this be freed.
@@ -1311,12 +1290,12 @@ diff -urN source_amd64_untangle/net/core/skbuff.c source_amd64_untangle.modified
 +	 */
 +	if (skb->nf_queue_entry && net_ratelimit())
 +		printk(KERN_WARNING
-+			"IMQ: kfree_skb: skb->nf_queue_entry != NULL");
++				"IMQ: kfree_skb: skb->nf_queue_entry != NULL");
 +#endif
  #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
  	nf_conntrack_put(skb->nfct);
- 	nf_conntrack_put_reasm(skb->nfct_reasm);
-@@ -535,6 +637,9 @@
+ #endif
+@@ -533,6 +632,9 @@
  	new->sp			= secpath_get(old->sp);
  #endif
  	memcpy(new->cb, old->cb, sizeof(old->cb));
@@ -1326,7 +1305,7 @@ diff -urN source_amd64_untangle/net/core/skbuff.c source_amd64_untangle.modified
  	new->csum		= old->csum;
  	new->local_df		= old->local_df;
  	new->pkt_type		= old->pkt_type;
-@@ -2785,6 +2890,13 @@
+@@ -2888,6 +2990,13 @@
  						0,
  						SLAB_HWCACHE_ALIGN|SLAB_PANIC,
  						NULL);
@@ -1340,27 +1319,52 @@ diff -urN source_amd64_untangle/net/core/skbuff.c source_amd64_untangle.modified
  }
  
  /**
-diff -urN source_amd64_untangle/net/netfilter/core.c source_amd64_untangle.modified/net/netfilter/core.c
---- source_amd64_untangle/net/netfilter/core.c	2009-12-02 19:51:21.000000000 -0800
-+++ source_amd64_untangle.modified/net/netfilter/core.c	2012-03-23 17:20:57.000000000 -0700
-@@ -177,9 +177,11 @@
- 	} else if (verdict == NF_DROP) {
- 		kfree_skb(skb);
- 		ret = -EPERM;
+diff -uNr linux-3.1/net/ipv6/ip6_output.c linux-3.1-imq/net/ipv6/ip6_output.c
+--- linux-3.1/net/ipv6/ip6_output.c	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.1-imq/net/ipv6/ip6_output.c	2011-11-04 11:12:52.123057315 +0200
+@@ -102,9 +102,6 @@
+ 	struct net_device *dev = dst->dev;
+ 	struct neighbour *neigh;
+ 
+-	skb->protocol = htons(ETH_P_IPV6);
+-	skb->dev = dev;
+-
+ 	if (ipv6_addr_is_multicast(&ipv6_hdr(skb)->daddr)) {
+ 		struct inet6_dev *idev = ip6_dst_idev(skb_dst(skb));
+ 
+@@ -170,6 +167,11 @@
+ 		return 0;
+ 	}
+ 
++	/* IMQ-patch: moved setting skb->dev and skb->protocol from
++	 * ip6_finish_output2 to fix crashing at netif_skb_features(). */
++	skb->protocol = htons(ETH_P_IPV6);
++	skb->dev = dev;
++
+ 	return NF_HOOK_COND(NFPROTO_IPV6, NF_INET_POST_ROUTING, skb, NULL, dev,
+ 			    ip6_finish_output,
+ 			    !(IP6CB(skb)->flags & IP6SKB_REROUTED));
+diff -uNr linux-3.1/net/netfilter/core.c linux-3.1-imq/net/netfilter/core.c
+--- linux-3.1/net/netfilter/core.c	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.1-imq/net/netfilter/core.c	2011-11-04 11:12:52.123057315 +0200
+@@ -179,9 +179,11 @@
+ 		ret = NF_DROP_GETERR(verdict);
+ 		if (ret == 0)
+ 			ret = -EPERM;
 -	} else if ((verdict & NF_VERDICT_MASK) == NF_QUEUE) {
 +	} else if ((verdict & NF_VERDICT_MASK) == NF_QUEUE ||
 +		   (verdict & NF_VERDICT_MASK) == NF_IMQ_QUEUE) {
- 		if (!nf_queue(skb, elem, pf, hook, indev, outdev, okfn,
--			      verdict >> NF_VERDICT_BITS))
-+			      verdict >> NF_VERDICT_BITS,
-+			      verdict & NF_VERDICT_MASK))
- 			goto next_hook;
- 	}
- 	rcu_read_unlock();
-diff -urN source_amd64_untangle/net/netfilter/Kconfig source_amd64_untangle.modified/net/netfilter/Kconfig
---- source_amd64_untangle/net/netfilter/Kconfig	2009-12-02 19:51:21.000000000 -0800
-+++ source_amd64_untangle.modified/net/netfilter/Kconfig	2012-03-23 17:20:57.000000000 -0700
-@@ -396,6 +396,18 @@
+ 		ret = nf_queue(skb, elem, pf, hook, indev, outdev, okfn,
+-			       verdict >> NF_VERDICT_QBITS);
++			       verdict >> NF_VERDICT_QBITS,
++			       verdict & NF_VERDICT_MASK);
+ 		if (ret < 0) {
+ 			if (ret == -ECANCELED)
+ 				goto next_hook;
+diff -uNr linux-3.1/net/netfilter/Kconfig linux-3.1-imq/net/netfilter/Kconfig
+--- linux-3.1/net/netfilter/Kconfig	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.1-imq/net/netfilter/Kconfig	2011-11-04 11:12:52.123057315 +0200
+@@ -507,6 +507,18 @@
  	  For more information on the LEDs available on your system, see
  	  Documentation/leds-class.txt
  
@@ -1378,21 +1382,21 @@ diff -urN source_amd64_untangle/net/netfilter/Kconfig source_amd64_untangle.modi
 +
  config NETFILTER_XT_TARGET_MARK
  	tristate '"MARK" target support'
- 	default m if NETFILTER_ADVANCED=n
-diff -urN source_amd64_untangle/net/netfilter/Makefile source_amd64_untangle.modified/net/netfilter/Makefile
---- source_amd64_untangle/net/netfilter/Makefile	2009-12-02 19:51:21.000000000 -0800
-+++ source_amd64_untangle.modified/net/netfilter/Makefile	2012-03-23 17:20:57.000000000 -0700
-@@ -46,6 +46,7 @@
- obj-$(CONFIG_NETFILTER_XT_TARGET_CONNSECMARK) += xt_CONNSECMARK.o
+ 	depends on NETFILTER_ADVANCED
+diff -uNr linux-3.1/net/netfilter/Makefile linux-3.1-imq/net/netfilter/Makefile
+--- linux-3.1/net/netfilter/Makefile	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.1-imq/net/netfilter/Makefile	2011-11-04 11:12:52.123057315 +0200
+@@ -56,6 +56,7 @@
+ obj-$(CONFIG_NETFILTER_XT_TARGET_CT) += xt_CT.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_DSCP) += xt_DSCP.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_HL) += xt_HL.o
 +obj-$(CONFIG_NETFILTER_XT_TARGET_IMQ) += xt_IMQ.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_LED) += xt_LED.o
- obj-$(CONFIG_NETFILTER_XT_TARGET_MARK) += xt_MARK.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_NFLOG) += xt_NFLOG.o
-diff -urN source_amd64_untangle/net/netfilter/nf_internals.h source_amd64_untangle.modified/net/netfilter/nf_internals.h
---- source_amd64_untangle/net/netfilter/nf_internals.h	2009-12-02 19:51:21.000000000 -0800
-+++ source_amd64_untangle.modified/net/netfilter/nf_internals.h	2012-03-23 17:20:57.000000000 -0700
+ obj-$(CONFIG_NETFILTER_XT_TARGET_NFQUEUE) += xt_NFQUEUE.o
+diff -uNr linux-3.1/net/netfilter/nf_internals.h linux-3.1-imq/net/netfilter/nf_internals.h
+--- linux-3.1/net/netfilter/nf_internals.h	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.1-imq/net/netfilter/nf_internals.h	2011-11-04 11:12:52.123057315 +0200
 @@ -29,7 +29,7 @@
  		    struct net_device *indev,
  		    struct net_device *outdev,
@@ -1402,10 +1406,10 @@ diff -urN source_amd64_untangle/net/netfilter/nf_internals.h source_amd64_untang
  extern int __init netfilter_queue_init(void);
  
  /* nf_log.c */
-diff -urN source_amd64_untangle/net/netfilter/nf_queue.c source_amd64_untangle.modified/net/netfilter/nf_queue.c
---- source_amd64_untangle/net/netfilter/nf_queue.c	2009-12-02 19:51:21.000000000 -0800
-+++ source_amd64_untangle.modified/net/netfilter/nf_queue.c	2012-03-23 17:20:57.000000000 -0700
-@@ -20,6 +20,26 @@
+diff -uNr linux-3.1/net/netfilter/nf_queue.c linux-3.1-imq/net/netfilter/nf_queue.c
+--- linux-3.1/net/netfilter/nf_queue.c	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.1-imq/net/netfilter/nf_queue.c	2011-11-04 11:12:52.123057315 +0200
+@@ -22,6 +22,26 @@
  
  static DEFINE_MUTEX(queue_handler_mutex);
  
@@ -1432,7 +1436,7 @@ diff -urN source_amd64_untangle/net/netfilter/nf_queue.c source_amd64_untangle.m
  /* return EBUSY when somebody else is registered, return EEXIST if the
   * same handler is registered, return 0 in case of success. */
  int nf_register_queue_handler(u_int8_t pf, const struct nf_queue_handler *qh)
-@@ -80,7 +100,7 @@
+@@ -92,7 +112,7 @@
  }
  EXPORT_SYMBOL_GPL(nf_unregister_queue_handlers);
  
@@ -1441,7 +1445,7 @@ diff -urN source_amd64_untangle/net/netfilter/nf_queue.c source_amd64_untangle.m
  {
  	/* Release those devices we held, or Alexey will kill me. */
  	if (entry->indev)
-@@ -100,6 +120,7 @@
+@@ -112,6 +132,7 @@
  	/* Drop reference to owner of hook which queued us. */
  	module_put(entry->elem->owner);
  }
@@ -1449,7 +1453,7 @@ diff -urN source_amd64_untangle/net/netfilter/nf_queue.c source_amd64_untangle.m
  
  /*
   * Any packet that leaves via this function must come back
-@@ -111,7 +132,8 @@
+@@ -123,7 +144,8 @@
  		      struct net_device *indev,
  		      struct net_device *outdev,
  		      int (*okfn)(struct sk_buff *),
@@ -1457,10 +1461,10 @@ diff -urN source_amd64_untangle/net/netfilter/nf_queue.c source_amd64_untangle.m
 +		      unsigned int queuenum,
 +		      unsigned int queuetype)
  {
- 	int status;
+ 	int status = -ENOENT;
  	struct nf_queue_entry *entry = NULL;
-@@ -125,7 +147,17 @@
- 	/* QUEUE == DROP if noone is waiting, to be safe. */
+@@ -137,7 +159,17 @@
+ 	/* QUEUE == DROP if no one is waiting, to be safe. */
  	rcu_read_lock();
  
 -	qh = rcu_dereference(queue_handler[pf]);
@@ -1475,10 +1479,10 @@ diff -urN source_amd64_untangle/net/netfilter/nf_queue.c source_amd64_untangle.m
 +		qh = rcu_dereference(queue_handler[pf]);
 +	}
 +
- 	if (!qh)
+ 	if (!qh) {
+ 		status = -ESRCH;
  		goto err_unlock;
- 
-@@ -195,13 +227,14 @@
+@@ -209,7 +241,8 @@
  	     struct net_device *indev,
  	     struct net_device *outdev,
  	     int (*okfn)(struct sk_buff *),
@@ -1487,6 +1491,8 @@ diff -urN source_amd64_untangle/net/netfilter/nf_queue.c source_amd64_untangle.m
 +	     unsigned int queuetype)
  {
  	struct sk_buff *segs;
+ 	int err;
+@@ -217,7 +250,7 @@
  
  	if (!skb_is_gso(skb))
  		return __nf_queue(skb, elem, pf, hook, indev, outdev, okfn,
@@ -1495,31 +1501,31 @@ diff -urN source_amd64_untangle/net/netfilter/nf_queue.c source_amd64_untangle.m
  
  	switch (pf) {
  	case NFPROTO_IPV4:
-@@ -222,7 +255,7 @@
- 
+@@ -244,7 +277,7 @@
  		segs->next = NULL;
- 		if (!__nf_queue(segs, elem, pf, hook, indev, outdev, okfn,
--				queuenum))
-+				queuenum, queuetype))
- 			kfree_skb(segs);
- 		segs = nskb;
- 	} while (segs);
-@@ -268,9 +301,11 @@
- 	case NF_STOLEN:
+ 		if (err == 0)
+ 			err = __nf_queue(segs, elem, pf, hook, indev,
+-					   outdev, okfn, queuenum);
++					 outdev, okfn, queuenum, queuetype);
+ 		if (err == 0)
+ 			queued++;
+ 		else
+@@ -299,9 +332,11 @@
+ 		local_bh_enable();
  		break;
  	case NF_QUEUE:
 +	case NF_IMQ_QUEUE:
- 		if (!__nf_queue(skb, elem, entry->pf, entry->hook,
- 				entry->indev, entry->outdev, entry->okfn,
--				verdict >> NF_VERDICT_BITS))
-+				verdict >> NF_VERDICT_BITS,
-+				verdict & NF_VERDICT_MASK))
- 			goto next_hook;
- 		break;
- 	default:
-diff -urN source_amd64_untangle/net/netfilter/xt_IMQ.c source_amd64_untangle.modified/net/netfilter/xt_IMQ.c
---- source_amd64_untangle/net/netfilter/xt_IMQ.c	1969-12-31 16:00:00.000000000 -0800
-+++ source_amd64_untangle.modified/net/netfilter/xt_IMQ.c	2012-03-23 17:20:57.000000000 -0700
+ 		err = __nf_queue(skb, elem, entry->pf, entry->hook,
+ 				 entry->indev, entry->outdev, entry->okfn,
+-				 verdict >> NF_VERDICT_QBITS);
++				 verdict >> NF_VERDICT_QBITS,
++				 verdict & NF_VERDICT_MASK);
+ 		if (err < 0) {
+ 			if (err == -ECANCELED)
+ 				goto next_hook;
+diff -uNr linux-3.1/net/netfilter/xt_IMQ.c linux-3.1-imq/net/netfilter/xt_IMQ.c
+--- linux-3.1/net/netfilter/xt_IMQ.c	1970-01-01 02:00:00.000000000 +0200
++++ linux-3.1-imq/net/netfilter/xt_IMQ.c	2011-11-04 11:12:52.123057315 +0200
 @@ -0,0 +1,74 @@
 +/*
 + * This target marks packets to be enqueued to an imq device
@@ -1531,7 +1537,7 @@ diff -urN source_amd64_untangle/net/netfilter/xt_IMQ.c source_amd64_untangle.mod
 +#include <linux/imq.h>
 +
 +static unsigned int imq_target(struct sk_buff *pskb,
-+				const struct xt_target_param *par)
++				const struct xt_action_param *par)
 +{
 +	const struct xt_imq_info *mr = par->targinfo;
 +
@@ -1540,7 +1546,7 @@ diff -urN source_amd64_untangle/net/netfilter/xt_IMQ.c source_amd64_untangle.mod
 +	return XT_CONTINUE;
 +}
 +
-+static bool imq_checkentry(const struct xt_tgchk_param *par)
++static int imq_checkentry(const struct xt_tgchk_param *par)
 +{
 +	struct xt_imq_info *mr = par->targinfo;
 +
@@ -1548,10 +1554,10 @@ diff -urN source_amd64_untangle/net/netfilter/xt_IMQ.c source_amd64_untangle.mod
 +		printk(KERN_WARNING
 +		       "IMQ: invalid device specified, highest is %u\n",
 +		       IMQ_MAX_DEVS - 1);
-+		return false;
++		return -EINVAL;
 +	}
 +
-+	return true;
++	return 0;
 +}
 +
 +static struct xt_target xt_imq_reg[] __read_mostly = {

@@ -5,12 +5,12 @@ REPOSITORY=squeeze
 # EXTRADCHARGS:= --distributor Untangle
 
 # Upstream version numbers
-KVER=2.6.32
-KDEBVER=41
+KVER=3.2.51
+KDEBVER=1
 
 KUPVER=${KDEBVER}
-PACKPFX=linux-2.6_${KVER}
-WORKDIR=linux-2.6-${KVER}
+PACKPFX=linux_${KVER}
+WORKDIR=linux-${KVER}
 KDSC=${PACKPFX}-${KUPVER}.dsc
 KOURDIFF=untangle-debian.diff
 KOURPATCH=${KOURDIFF}.gz

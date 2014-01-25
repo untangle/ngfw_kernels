@@ -1,18 +1,18 @@
-diff -urN source_amd64_untangle/net/netfilter/xt_socket.c source_amd64_untangle.orig/net/netfilter/xt_socket.c
---- source_amd64_untangle.orig/net/netfilter/xt_socket.c	2013-07-23 18:10:23.000000000 -0700
-+++ source_amd64_untangle/net/netfilter/xt_socket.c	2013-07-23 23:50:18.000000000 -0700
-@@ -88,7 +88,7 @@
- 
+diff -urN linux-3.0.35.orig//net/netfilter/xt_socket.c linux-3.0.35//net/netfilter/xt_socket.c
+--- linux-3.0.35.orig//net/netfilter/xt_socket.c	2014-01-24 11:48:41.000000000 -0800
++++ linux-3.0.35//net/netfilter/xt_socket.c	2014-01-24 11:54:30.000000000 -0800
+@@ -102,7 +102,7 @@
+ }
  
  static bool
--socket_match(const struct sk_buff *skb, const struct xt_match_param *par,
-+socket_match(struct sk_buff *skb, const struct xt_match_param *par,
+-socket_match(const struct sk_buff *skb, struct xt_action_param *par,
++socket_match(struct sk_buff *skb, struct xt_action_param *par,
  	     const struct xt_socket_mtinfo1 *info)
  {
  	const struct iphdr *iph = ip_hdr(skb);
-@@ -171,6 +171,14 @@
- 		 ntohl(daddr), ntohs(dport),
- 		 ntohl(iph->daddr), hp ? ntohs(hp->dest) : 0, sk);
+@@ -184,6 +184,14 @@
+ 		 &daddr, ntohs(dport),
+ 		 &iph->daddr, hp ? ntohs(hp->dest) : 0, sk);
  
 +    /* Untangle hack - or the socket mark to the packet if found
 +     * We do this because there is no conntrack, and it is necessary

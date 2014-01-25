@@ -1,6 +1,6 @@
-diff -urN source/include/linux/if_bridge.h source.test//include/linux/if_bridge.h
---- source/include/linux/if_bridge.h	2009-12-02 19:51:21.000000000 -0800
-+++ source.test//include/linux/if_bridge.h	2014-01-14 12:44:16.000000000 -0800
+diff -urN linux-3.0.35.orig//include/linux/if_bridge.h linux-3.0.35/include/linux/if_bridge.h
+--- linux-3.0.35.orig//include/linux/if_bridge.h	2014-01-24 09:59:13.000000000 -0800
++++ linux-3.0.35/include/linux/if_bridge.h	2014-01-24 09:59:27.000000000 -0800
 @@ -42,6 +42,7 @@
  #define BRCTL_SET_PORT_PRIORITY 16
  #define BRCTL_SET_PATH_COST 17
@@ -9,10 +9,10 @@ diff -urN source/include/linux/if_bridge.h source.test//include/linux/if_bridge.
  
  #define BR_STATE_DISABLED 0
  #define BR_STATE_LISTENING 1
-diff -urN source/net/bridge/br_ioctl.c source.test//net/bridge/br_ioctl.c
---- source/net/bridge/br_ioctl.c	2009-12-02 19:51:21.000000000 -0800
-+++ source.test//net/bridge/br_ioctl.c	2014-01-14 12:44:16.000000000 -0800
-@@ -255,6 +255,36 @@
+diff -urN linux-3.0.35.orig//net/bridge/br_ioctl.c linux-3.0.35/net/bridge/br_ioctl.c
+--- linux-3.0.35.orig//net/bridge/br_ioctl.c	2014-01-24 09:59:14.000000000 -0800
++++ linux-3.0.35/net/bridge/br_ioctl.c	2014-01-24 09:59:27.000000000 -0800
+@@ -235,6 +235,36 @@
  		return 0;
  	}
  
