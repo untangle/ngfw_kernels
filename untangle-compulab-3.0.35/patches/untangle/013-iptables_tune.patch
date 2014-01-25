@@ -128,7 +128,7 @@ diff -urN linux-3.0.35.orig//net/ipv4/netfilter/iptable_tune.c linux-3.0.35//net
 +
 +static void __net_exit iptable_tune_net_exit(struct net *net)
 +{
-+	ipt_unregister_table(net->ipv4.iptable_tune);
++	ipt_unregister_table(net, net->ipv4.iptable_tune);
 +}
 +
 +static struct pernet_operations iptable_tune_net_ops = {
