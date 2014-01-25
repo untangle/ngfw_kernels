@@ -12,13 +12,12 @@ diff -urN build_i386_none_686.unt/include/net/route.h build_i386_none_686/includ
 diff -urN source/include/linux/in.h source.modified/include/linux/in.h
 --- source/include/linux/in.h	2009-12-02 19:51:21.000000000 -0800
 +++ source.modified/include/linux/in.h	2012-03-22 12:37:07.000000000 -0700
-@@ -84,6 +84,12 @@
+@@ -84,6 +84,11 @@
  #define IP_ORIGDSTADDR       20
  #define IP_RECVORIGDSTADDR   IP_ORIGDSTADDR
  
 +/* Extensions */
 +#define IP_SADDR	22
-+#define IP_RECVNFMARK	23
 +#define IP_SENDNFMARK	24
 +#define IP_FIRSTNFMARK	25
 +
@@ -39,16 +38,10 @@ diff -urN source/include/linux/in.h source.modified/include/linux/in.h
 diff -urN source/include/linux/udp.h source.modified/include/linux/udp.h
 --- source/include/linux/udp.h	2009-12-02 19:51:21.000000000 -0800
 +++ source.modified/include/linux/udp.h	2012-03-22 12:37:07.000000000 -0700
-@@ -30,6 +30,15 @@
+@@ -30,6 +30,9 @@
  #define UDP_CORK	1	/* Never send partially complete segments */
  #define UDP_ENCAP	100	/* Set the socket to accept encapsulated packets */
  
-+/* Extensions */
-+#define UDP_RECVHDR 2   /* the original ip and udp hdr in ancillary msg */
-+
-+/* UDP cmsg options */
-+#define UDP_CMSG_RECVHDR     32 /* see udp.c, ip_sockglue.c */
-+
 +/* UDP ancillary data types */
 +#define UDP_SPORT 1
 +
@@ -86,23 +79,13 @@ diff -urN source/include/net/ip.h source.modified/include/net/ip.h
 diff -urN source/include/net/sock.h source.modified/include/net/sock.h
 --- source/include/net/sock.h	2012-03-22 12:34:40.000000000 -0700
 +++ source.modified/include/net/sock.h	2012-03-22 12:37:07.000000000 -0700
-@@ -267,6 +267,7 @@
- 	int			sk_rcvlowat;
- 	unsigned long 		sk_flags;
- 	unsigned long	        sk_lingertime;
-+
- 	struct sk_buff_head	sk_error_queue;
- 	struct proto		*sk_prot_creator;
- 	rwlock_t		sk_callback_lock;
-@@ -294,6 +295,12 @@
+@@ -294,6 +295,10 @@
  #endif
  	__u32			sk_mark;
  	/* XXX 4 bytes hole on 64 bit */
 +
 +        /* Extensions */
 + 	u_int32_t	        sk_nfmark_first;
-+ 	u_int32_t	        sk_snd_first;
-+ 	u_int32_t	        sk_rcv_first;
 +
  	void			(*sk_state_change)(struct sock *sk);
  	void			(*sk_data_ready)(struct sock *sk, int bytes);
@@ -198,39 +181,6 @@ diff -urN source/net/ipv4/ip_output.c source.modified/net/ipv4/ip_output.c
 diff -urN source/net/ipv4/ip_sockglue.c source.modified/net/ipv4/ip_sockglue.c
 --- source/net/ipv4/ip_sockglue.c	2009-12-02 19:51:21.000000000 -0800
 +++ source.modified/net/ipv4/ip_sockglue.c	2012-03-22 12:46:35.000000000 -0700
-@@ -49,6 +49,7 @@
- #define IP_CMSG_RETOPTS		16
- #define IP_CMSG_PASSSEC		32
- #define IP_CMSG_ORIGDSTADDR     64
-+#define IP_CMSG_NFMARK     128
- 
- /*
-  *	SOL_IP control messages.
-@@ -71,6 +72,12 @@
- 	put_cmsg(msg, SOL_IP, IP_PKTINFO, sizeof(info), &info);
- }
- 
-+static void ip_cmsg_recv_nfmark(struct msghdr *msg, struct sk_buff *skb)
-+{
-+	unsigned int nfmark = skb->mark;
-+	put_cmsg(msg, SOL_IP, IP_RECVNFMARK, sizeof(unsigned int), &nfmark);
-+}
-+
- static void ip_cmsg_recv_ttl(struct msghdr *msg, struct sk_buff *skb)
- {
- 	int ttl = ip_hdr(skb)->ttl;
-@@ -188,6 +195,11 @@
- 	if (flags & 1)
- 		ip_cmsg_recv_dstaddr(msg, skb);
- 
-+	if ((flags >>= 1) == 0)
-+		return;
-+	if (flags & 1)
-+		ip_cmsg_recv_nfmark(msg, skb);
-+    
- }
- EXPORT_SYMBOL(ip_cmsg_recv);
- 
 @@ -219,7 +231,38 @@
  			ipc->addr = info->ipi_spec_dst.s_addr;
  			break;
@@ -270,26 +220,10 @@ diff -urN source/net/ipv4/ip_sockglue.c source.modified/net/ipv4/ip_sockglue.c
  			return -EINVAL;
  		}
  	}
-@@ -451,7 +494,8 @@
- 			     (1<<IP_TTL) | (1<<IP_HDRINCL) |
- 			     (1<<IP_MTU_DISCOVER) | (1<<IP_RECVERR) |
- 			     (1<<IP_ROUTER_ALERT) | (1<<IP_FREEBIND) |
--			     (1<<IP_PASSSEC) | (1<<IP_TRANSPARENT))) ||
-+			     (1<<IP_PASSSEC) | (1<<IP_TRANSPARENT) |
-+                 (1<<IP_RECVNFMARK))) ||
- 	    optname == IP_MULTICAST_TTL ||
- 	    optname == IP_MULTICAST_ALL ||
- 	    optname == IP_MULTICAST_LOOP ||
-@@ -549,6 +593,30 @@
+@@ -549,6 +593,24 @@
  		else
  			inet->cmsg_flags &= ~IP_CMSG_ORIGDSTADDR;
  		break;
-+        case IP_RECVNFMARK:
-+            if (val)
-+                inet->cmsg_flags |=  IP_CMSG_NFMARK;
-+            else
-+                inet->cmsg_flags &= ~IP_CMSG_NFMARK;
-+            break;
 +        case IP_SENDNFMARK:
 +        {
 +            struct ip_sendnfmark_opts nfopt;
@@ -350,18 +284,6 @@ diff -urN source/net/ipv4/raw.c source.modified/net/ipv4/raw.c
  	ipc.addr = inet->saddr;
  	ipc.opt = NULL;
  	ipc.shtx.flags = 0;
-diff -urN source/net/ipv4/tcp_input.c source.modified/net/ipv4/tcp_input.c
---- source/net/ipv4/tcp_input.c	2012-03-22 12:34:41.000000000 -0700
-+++ source.modified/net/ipv4/tcp_input.c	2012-03-22 12:37:07.000000000 -0700
-@@ -5431,6 +5431,8 @@
- 		 */
- 		tp->rcv_nxt = TCP_SKB_CB(skb)->seq + 1;
- 		tp->rcv_wup = TCP_SKB_CB(skb)->seq + 1;
-+		sk->sk_rcv_first = tp->rcv_nxt;
-+		sk->sk_snd_first = tp->snd_nxt;
- 
- 		/* RFC1323: The window in SYN & SYN/ACK segments is
- 		 * never scaled.
 diff -urN source/net/ipv4/tcp_ipv4.c source.modified/net/ipv4/tcp_ipv4.c
 --- source/net/ipv4/tcp_ipv4.c	2012-03-22 12:34:49.000000000 -0700
 +++ source.modified/net/ipv4/tcp_ipv4.c	2012-03-22 12:37:07.000000000 -0700
@@ -373,18 +295,6 @@ diff -urN source/net/ipv4/tcp_ipv4.c source.modified/net/ipv4/tcp_ipv4.c
 +
  	newsk->sk_gso_type = SKB_GSO_TCPV4;
  	sk_setup_caps(newsk, dst);
- 
-diff -urN source/net/ipv4/tcp_minisocks.c source.modified/net/ipv4/tcp_minisocks.c
---- source/net/ipv4/tcp_minisocks.c	2009-12-02 19:51:21.000000000 -0800
-+++ source.modified/net/ipv4/tcp_minisocks.c	2012-03-22 12:48:18.000000000 -0700
-@@ -397,6 +397,8 @@
- 		newtp->rcv_wup = newtp->copied_seq = newtp->rcv_nxt = treq->rcv_isn + 1;
- 		newtp->snd_sml = newtp->snd_una = newtp->snd_nxt = treq->snt_isn + 1;
- 		newtp->snd_up = treq->snt_isn + 1;
-+		newsk->sk_rcv_first = newtp->rcv_nxt;
-+		newsk->sk_snd_first = newtp->snd_nxt;
- 
- 		tcp_prequeue_init(newtp);
  
 diff -urN source/net/ipv4/udp.c source.modified/net/ipv4/udp.c
 --- source/net/ipv4/udp.c	2012-03-22 12:34:45.000000000 -0700
@@ -423,33 +333,6 @@ diff -urN source/net/ipv4/udp.c source.modified/net/ipv4/udp.c
  /* UDP is nearly always wildcards out the wazoo, it makes no sense to try
   * harder than this. -DaveM
   */
-@@ -371,6 +398,26 @@
- 	return s;
- }
- 
-+static void udp_cmsg_recv_hdr(struct msghdr *msg, struct sk_buff *skb)
-+{
-+    int size = ((ip_hdr(skb)->ihl) * 4) + sizeof (struct udphdr);
-+
-+    /* FIXME check for room */
-+
-+    put_cmsg(msg, SOL_UDP, UDP_RECVHDR, size, ip_hdr(skb));
-+}
-+
-+void udp_cmsg_recv(struct msghdr *msg, struct sk_buff *skb)
-+{
-+	struct inet_sock *inet = inet_sk(skb->sk);
-+	unsigned flags = inet->cmsg_flags;
-+    
-+    if (flags & UDP_CMSG_RECVHDR)
-+        udp_cmsg_recv_hdr(msg, skb);
-+
-+    ip_cmsg_recv(msg, skb);
-+}
-+
- /*
-  * This routine is called by the ICMP module when it gets some
-  * sort of error condition.  If err < 0 then the socket should
 @@ -587,7 +634,7 @@
  	int free = 0;
  	int connected = 0;
@@ -517,40 +400,3 @@ diff -urN source/net/ipv4/udp.c source.modified/net/ipv4/udp.c
  	up->pending = AF_INET;
  
  do_append_data:
-@@ -991,8 +1048,9 @@
- 		sin->sin_addr.s_addr = ip_hdr(skb)->saddr;
- 		memset(sin->sin_zero, 0, sizeof(sin->sin_zero));
- 	}
--	if (inet->cmsg_flags)
--		ip_cmsg_recv(msg, skb);
-+	if (inet->cmsg_flags) {
-+            udp_cmsg_recv(msg, skb); /* also calls ip_cmsg_recv */
-+        }
- 
- 	err = copied;
- 	if (flags & MSG_TRUNC)
-@@ -1420,6 +1478,13 @@
- 		}
- 		break;
- 
-+        case UDP_RECVHDR: 
-+            if (val)
-+                inet_sk(sk)->cmsg_flags |= UDP_CMSG_RECVHDR;
-+            else
-+                inet_sk(sk)->cmsg_flags &= ~UDP_CMSG_RECVHDR;
-+            break;
-+
- 	case UDP_ENCAP:
- 		switch (val) {
- 		case 0:
-@@ -1514,6 +1579,10 @@
- 		val = up->corkflag;
- 		break;
- 
-+    case UDP_RECVHDR:
-+        val = ((inet_sk(sk)->cmsg_flags & UDP_CMSG_RECVHDR) != 0);
-+        break;
-+
- 	case UDP_ENCAP:
- 		val = up->encap_type;
- 		break;
