@@ -12,14 +12,13 @@ diff -urN build_i386_none_686.unt/include/net/route.h build_i386_none_686/includ
 diff -urN source/include/linux/in.h source.modified/include/linux/in.h
 --- source/include/linux/in.h	2009-12-02 19:51:21.000000000 -0800
 +++ source.modified/include/linux/in.h	2012-03-22 12:37:07.000000000 -0700
-@@ -84,6 +84,11 @@
+@@ -84,6 +84,10 @@
  #define IP_ORIGDSTADDR       20
  #define IP_RECVORIGDSTADDR   IP_ORIGDSTADDR
  
 +/* Extensions */
 +#define IP_SADDR	22
 +#define IP_SENDNFMARK	24
-+#define IP_FIRSTNFMARK	25
 +
  /* IP_MTU_DISCOVER values */
  #define IP_PMTUDISC_DONT		0	/* Never send DF frames */
@@ -76,20 +75,6 @@ diff -urN source/include/net/ip.h source.modified/include/net/ip.h
  	union skb_shared_tx	shtx;
  };
  
-diff -urN source/include/net/sock.h source.modified/include/net/sock.h
---- source/include/net/sock.h	2012-03-22 12:34:40.000000000 -0700
-+++ source.modified/include/net/sock.h	2012-03-22 12:37:07.000000000 -0700
-@@ -294,6 +295,10 @@
- #endif
- 	__u32			sk_mark;
- 	/* XXX 4 bytes hole on 64 bit */
-+
-+        /* Extensions */
-+ 	u_int32_t	        sk_nfmark_first;
-+
- 	void			(*sk_state_change)(struct sock *sk);
- 	void			(*sk_data_ready)(struct sock *sk, int bytes);
- 	void			(*sk_write_space)(struct sock *sk);
 diff -urN source/net/ipv4/icmp.c source.modified/net/ipv4/icmp.c
 --- source/net/ipv4/icmp.c	2009-12-02 19:51:21.000000000 -0800
 +++ source.modified/net/ipv4/icmp.c	2012-03-22 12:37:07.000000000 -0700
@@ -245,7 +230,7 @@ diff -urN source/net/ipv4/ip_sockglue.c source.modified/net/ipv4/ip_sockglue.c
  	case IP_TOS:	/* This sets both TOS and Precedence */
  		if (sk->sk_type == SOCK_STREAM) {
  			val &= ~3;
-@@ -1073,6 +1141,26 @@
+@@ -1073,6 +1141,23 @@
  	case IP_RECVORIGDSTADDR:
  		val = (inet->cmsg_flags & IP_CMSG_ORIGDSTADDR) != 0;
  		break;
@@ -266,9 +251,6 @@ diff -urN source/net/ipv4/ip_sockglue.c source.modified/net/ipv4/ip_sockglue.c
 +            }
 +            return 0;
 +        }
-+        case IP_FIRSTNFMARK:
-+            val = sk->sk_nfmark_first;
-+            break;
  	case IP_TOS:
  		val = inet->tos;
  		break;
@@ -284,18 +266,6 @@ diff -urN source/net/ipv4/raw.c source.modified/net/ipv4/raw.c
  	ipc.addr = inet->saddr;
  	ipc.opt = NULL;
  	ipc.shtx.flags = 0;
-diff -urN source/net/ipv4/tcp_ipv4.c source.modified/net/ipv4/tcp_ipv4.c
---- source/net/ipv4/tcp_ipv4.c	2012-03-22 12:34:49.000000000 -0700
-+++ source.modified/net/ipv4/tcp_ipv4.c	2012-03-22 12:37:07.000000000 -0700
-@@ -1375,6 +1375,8 @@
- 	if (!newsk)
- 		goto exit;
- 
-+	newsk->sk_nfmark_first = skb->mark;
-+
- 	newsk->sk_gso_type = SKB_GSO_TCPV4;
- 	sk_setup_caps(newsk, dst);
- 
 diff -urN source/net/ipv4/udp.c source.modified/net/ipv4/udp.c
 --- source/net/ipv4/udp.c	2012-03-22 12:34:45.000000000 -0700
 +++ source.modified/net/ipv4/udp.c	2012-03-22 12:50:06.000000000 -0700

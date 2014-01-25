@@ -1,14 +1,13 @@
 diff -urN linux-3.0.35.orig//include/linux/in.h linux-3.0.35//include/linux/in.h
 --- linux-3.0.35.orig//include/linux/in.h	2014-01-24 10:07:55.000000000 -0800
 +++ linux-3.0.35//include/linux/in.h	2014-01-24 11:16:19.000000000 -0800
-@@ -87,6 +87,11 @@
+@@ -87,6 +87,10 @@
  #define IP_MINTTL       21
  #define IP_NODEFRAG     22
  
 +/* Extensions */
 +#define IP_SADDR	24
 +#define IP_SENDNFMARK	25
-+#define IP_FIRSTNFMARK	26S
 +
  /* IP_MTU_DISCOVER values */
  #define IP_PMTUDISC_DONT		0	/* Never send DF frames */
@@ -78,22 +77,6 @@ diff -urN linux-3.0.35.orig//include/net/route.h linux-3.0.35//include/net/route
  
  #define RT_CONN_FLAGS(sk)   (RT_TOS(inet_sk(sk)->tos) | sock_flag(sk, SOCK_LOCALROUTE))
  
-diff -urN linux-3.0.35.orig//include/net/sock.h linux-3.0.35//include/net/sock.h
---- linux-3.0.35.orig//include/net/sock.h	2014-01-24 10:07:55.000000000 -0800
-+++ linux-3.0.35//include/net/sock.h	2014-01-24 10:52:29.000000000 -0800
-@@ -338,7 +339,11 @@
- #endif
- 	__u32			sk_mark;
- 	u32			sk_classid;
--	void			(*sk_state_change)(struct sock *sk);
-+
-+    /* Extensions */
-+ 	u_int32_t	        sk_nfmark_first;
-+
-+    void			(*sk_state_change)(struct sock *sk);
- 	void			(*sk_data_ready)(struct sock *sk, int bytes);
- 	void			(*sk_write_space)(struct sock *sk);
- 	void			(*sk_error_report)(struct sock *sk);
 diff -urN linux-3.0.35.orig//net/ipv4/icmp.c linux-3.0.35//net/ipv4/icmp.c
 --- linux-3.0.35.orig//net/ipv4/icmp.c	2014-01-24 10:07:58.000000000 -0800
 +++ linux-3.0.35//net/ipv4/icmp.c	2014-01-24 10:09:25.000000000 -0800
@@ -244,7 +227,7 @@ diff -urN linux-3.0.35.orig//net/ipv4/ip_sockglue.c linux-3.0.35//net/ipv4/ip_so
  	case IP_TOS:	/* This sets both TOS and Precedence */
  		if (sk->sk_type == SOCK_STREAM) {
  			val &= ~3;
-@@ -1135,6 +1190,26 @@
+@@ -1135,6 +1190,23 @@
  	case IP_RECVORIGDSTADDR:
  		val = (inet->cmsg_flags & IP_CMSG_ORIGDSTADDR) != 0;
  		break;
@@ -265,9 +248,6 @@ diff -urN linux-3.0.35.orig//net/ipv4/ip_sockglue.c linux-3.0.35//net/ipv4/ip_so
 +            }
 +            return 0;
 +        }
-+        case IP_FIRSTNFMARK:
-+            val = sk->sk_nfmark_first;
-+            break;
  	case IP_TOS:
  		val = inet->tos;
  		break;
@@ -283,18 +263,6 @@ diff -urN linux-3.0.35.orig//net/ipv4/raw.c linux-3.0.35//net/ipv4/raw.c
  	ipc.addr = inet->inet_saddr;
  	ipc.opt = NULL;
  	ipc.tx_flags = 0;
-diff -urN linux-3.0.35.orig//net/ipv4/tcp_ipv4.c linux-3.0.35//net/ipv4/tcp_ipv4.c
---- linux-3.0.35.orig//net/ipv4/tcp_ipv4.c	2014-01-24 10:07:58.000000000 -0800
-+++ linux-3.0.35//net/ipv4/tcp_ipv4.c	2014-01-24 10:09:25.000000000 -0800
-@@ -1436,6 +1436,8 @@
- 	if (!newsk)
- 		goto exit_nonewsk;
- 
-+	newsk->sk_nfmark_first = skb->mark;
-+
- 	newsk->sk_gso_type = SKB_GSO_TCPV4;
- 
- 	newtp		      = tcp_sk(newsk);
 diff -urN linux-3.0.35.orig//net/ipv4/udp.c linux-3.0.35//net/ipv4/udp.c
 --- linux-3.0.35.orig//net/ipv4/udp.c	2014-01-24 10:07:58.000000000 -0800
 +++ linux-3.0.35//net/ipv4/udp.c	2014-01-24 11:16:56.000000000 -0800
