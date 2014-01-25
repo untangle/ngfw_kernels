@@ -1,5 +1,5 @@
 to build packages:
-make
+make src pkgs
 
 to develop:
 'make src' to expand the src
