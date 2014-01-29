@@ -66,17 +66,6 @@ diff -urN linux-3.0.35.orig//include/net/ip.h linux-3.0.35/include/net/ip.h
  };
  
  #define IPCB(skb) ((struct inet_skb_parm*)((skb)->cb))
-diff -urN linux-3.0.35.orig//include/net/route.h linux-3.0.35/include/net/route.h
---- linux-3.0.35.orig//include/net/route.h	2012-06-17 11:23:33.000000000 -0700
-+++ linux-3.0.35/include/net/route.h	2014-01-29 14:18:29.000000000 -0800
-@@ -36,6 +36,7 @@
- #include <linux/security.h>
- 
- #define RTO_ONLINK	0x01
-+#define RTO_TPROXY   0x02	
- 
- #define RT_CONN_FLAGS(sk)   (RT_TOS(inet_sk(sk)->tos) | sock_flag(sk, SOCK_LOCALROUTE))
- 
 diff -urN linux-3.0.35.orig//net/ipv4/icmp.c linux-3.0.35/net/ipv4/icmp.c
 --- linux-3.0.35.orig//net/ipv4/icmp.c	2012-06-17 11:23:33.000000000 -0700
 +++ linux-3.0.35/net/ipv4/icmp.c	2014-01-29 14:18:29.000000000 -0800
@@ -365,17 +354,6 @@ diff -urN linux-3.0.35.orig//net/ipv4/udp.c linux-3.0.35/net/ipv4/udp.c
  	saddr = ipc.addr;
  	ipc.addr = faddr = daddr;
  
-@@ -902,6 +935,10 @@
- 		connected = 0;
- 	}
- 	tos = RT_TOS(inet->tos);
-+
-+    if (ipc.pkt_udp_sport || ipc.addr)
-+        tos |= RTO_TPROXY;
-+
- 	if (sock_flag(sk, SOCK_LOCALROUTE) ||
- 	    (msg->msg_flags & MSG_DONTROUTE) ||
- 	    (ipc.opt && ipc.opt->opt.is_strictroute)) {
 @@ -927,7 +964,7 @@
  		flowi4_init_output(fl4, ipc.oif, sk->sk_mark, tos,
  				   RT_SCOPE_UNIVERSE, sk->sk_protocol,
