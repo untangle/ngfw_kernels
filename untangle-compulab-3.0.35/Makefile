@@ -39,7 +39,7 @@ $(CONFIG_DEST): extract-stamp $(CONFIG_COMPULAB_ORIG) $(CONFIG_UNTANGLE_ORIG)
 
 kernel-package: patch-stamp config
 	cd $(KERNEL_DIR) ; \
-	MAKEFLAGS= DEB_HOST_ARCH=armel CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) fakeroot make-kpkg --arch arm --cross-compile arm-linux-gnueabi- --initrd --revision=1+untangle1 kernel_image kernel_headers
+	MAKEFLAGS= MFLAGS= DEB_HOST_ARCH=armel CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) fakeroot make-kpkg --arch arm --cross-compile arm-linux-gnueabi- --initrd --revision=1+untangle1 kernel_image kernel_headers
 
 clean:
 	rm -fr $(KERNEL_DIR)
