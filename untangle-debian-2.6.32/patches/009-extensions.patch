@@ -1,14 +1,3 @@
-diff -urN build_i386_none_686.unt/include/net/route.h build_i386_none_686/include/net/route.h
---- build_i386_none_686.unt/include/net/route.h	2010-07-23 15:57:32.000000000 -0700
-+++ build_i386_none_686/include/net/route.h	2010-07-23 15:56:52.000000000 -0700
-@@ -40,6 +40,7 @@
- #endif
- 
- #define RTO_ONLINK	0x01
-+#define RTO_TPROXY   0x02	
- 
- #define RTO_CONN	0
- /* RTO_CONN is not used (being alias for 0), but preserved not to break
 diff -urN source/include/linux/in.h source.modified/include/linux/in.h
 --- source/include/linux/in.h	2009-12-02 19:51:21.000000000 -0800
 +++ source.modified/include/linux/in.h	2012-03-22 12:37:07.000000000 -0700
@@ -341,17 +330,6 @@ diff -urN source/net/ipv4/udp.c source.modified/net/ipv4/udp.c
  	saddr = ipc.addr;
  	ipc.addr = faddr = daddr;
  
-@@ -676,6 +729,10 @@
- 		connected = 0;
- 	}
- 	tos = RT_TOS(inet->tos);
-+
-+    if (ipc.pkt_udp_sport || ipc.addr)
-+        tos |= RTO_TPROXY;
-+
- 	if (sock_flag(sk, SOCK_LOCALROUTE) ||
- 	    (msg->msg_flags & MSG_DONTROUTE) ||
- 	    (ipc.opt && ipc.opt->is_strictroute)) {
 @@ -704,7 +761,7 @@
  				    .proto = sk->sk_protocol,
  				    .flags = inet_sk_flowi_flags(sk),
