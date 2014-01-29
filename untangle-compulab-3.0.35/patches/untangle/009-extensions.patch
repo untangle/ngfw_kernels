@@ -1,3 +1,14 @@
+diff -urN linux-3.0.35.orig//include/net/route.h linux-3.0.35//include/net/route.h
+--- linux-3.0.35.orig//include/net/route.h	2014-01-24 10:07:55.000000000 -0800
++++ linux-3.0.35//include/net/route.h	2014-01-24 10:09:25.000000000 -0800
+@@ -36,6 +36,7 @@
+ #include <linux/security.h>
+ 
+ #define RTO_ONLINK	0x01
++#define RTO_TPROXY   0x02	
+ 
+ #define RT_CONN_FLAGS(sk)   (RT_TOS(inet_sk(sk)->tos) | sock_flag(sk, SOCK_LOCALROUTE))
+ 
 diff -urN linux-3.0.35.orig//include/linux/in.h linux-3.0.35//include/linux/in.h
 --- linux-3.0.35.orig//include/linux/in.h	2014-01-24 10:07:55.000000000 -0800
 +++ linux-3.0.35//include/linux/in.h	2014-01-24 11:16:19.000000000 -0800
@@ -66,17 +77,6 @@ diff -urN linux-3.0.35.orig//include/net/ip.h linux-3.0.35//include/net/ip.h
  };
  
  #define IPCB(skb) ((struct inet_skb_parm*)((skb)->cb))
-diff -urN linux-3.0.35.orig//include/net/route.h linux-3.0.35//include/net/route.h
---- linux-3.0.35.orig//include/net/route.h	2014-01-24 10:07:55.000000000 -0800
-+++ linux-3.0.35//include/net/route.h	2014-01-24 10:09:25.000000000 -0800
-@@ -36,6 +36,7 @@
- #include <linux/security.h>
- 
- #define RTO_ONLINK	0x01
-+#define RTO_TPROXY   0x02	
- 
- #define RT_CONN_FLAGS(sk)   (RT_TOS(inet_sk(sk)->tos) | sock_flag(sk, SOCK_LOCALROUTE))
- 
 diff -urN linux-3.0.35.orig//net/ipv4/icmp.c linux-3.0.35//net/ipv4/icmp.c
 --- linux-3.0.35.orig//net/ipv4/icmp.c	2014-01-24 10:07:58.000000000 -0800
 +++ linux-3.0.35//net/ipv4/icmp.c	2014-01-24 10:09:25.000000000 -0800
