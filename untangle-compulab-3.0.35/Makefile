@@ -6,7 +6,7 @@ CONFIG_DEST := $(KERNEL_DIR)/.config
 CONCURRENCY_LEVEL := $(( 1 + $(grep -c '^processor\s:' /proc/cpuinfo) ))
 UNTANGLE_PATCH_SERIES := patches/untangle/series
 
-all: kernel-package
+all: kernel-package uImage
 
 extract: extract-stamp
 extract-stamp: $(TARBALL)
@@ -40,6 +40,10 @@ $(CONFIG_DEST): extract-stamp $(CONFIG_COMPULAB_ORIG) $(CONFIG_UNTANGLE_ORIG)
 kernel-package: patch-stamp config
 	cd $(KERNEL_DIR) ; \
 	MAKEFLAGS= MFLAGS= DEB_HOST_ARCH=armel CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) fakeroot make-kpkg --arch arm --cross-compile arm-linux-gnueabi- --initrd --revision=1+untangle1 kernel_image kernel_headers
+
+uImage: patch-stamp config
+	cd $(KERNEL_DIR) ; \
+	ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make uImage
 
 clean:
 	rm -fr $(KERNEL_DIR)
