@@ -1,4 +1,4 @@
-TARBALL := linux-3.0.35.tar.bz2
+TARBALL := linux-3.0.35+cmfx6-5.1.tar.bz2
 KERNEL_DIR := linux-3.0.35
 CONFIG_COMPULAB_ORIG := linux-3.0.35-cm-fx6-3.config
 CONFIG_UNTANGLE_ORIG := untangle.config
@@ -14,7 +14,7 @@ extract-stamp: $(TARBALL)
 	touch $@
 
 patch: patch-stamp
-patch-stamp: patch-compulab-stamp patch-untangle-stamp
+patch-stamp: patch-untangle-stamp
 	touch $@
 
 patch-compulab: patch-compulab-stamp
@@ -26,7 +26,7 @@ patch-compulab-stamp: extract-stamp patches/compulab/*
 	touch $@
 
 patch-untangle: patch-untangle-stamp 
-patch-untangle-stamp: patch-compulab-stamp patches/untangle/*
+patch-untangle-stamp: extract-stamp patches/untangle/*
 	while read patch ; do \
 	  echo "Applying $$patch" ; \
 	  patch -d $(KERNEL_DIR) -p1 < patches/untangle/$$patch ; \
