@@ -1,6 +1,5 @@
 TARBALL := linux-3.0.35+cmfx6-5.1.tar.bz2
 KERNEL_DIR := linux-3.0.35
-KERNEL_PACKAGE := $(ls *image*3.0.35*deb)
 UIMAGE := $(KERNEL_DIR)/linux-3.0.35/arch/arm/boot/uImage
 CONFIG_COMPULAB_ORIG := linux-3.0.35-cm-fx6-5.1.config
 CONFIG_UNTANGLE_ORIG := untangle.config
@@ -39,8 +38,7 @@ config: $(CONFIG_DEST)
 $(CONFIG_DEST): extract-stamp $(CONFIG_COMPULAB_ORIG) $(CONFIG_UNTANGLE_ORIG)
 	cat $(CONFIG_COMPULAB_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $@
 
-kernel-package: $(KERNEL_PACKAGE)
-$(KERNEL_PACKAGE): patch-stamp config
+kernel-package: patch-stamp config
 	cd $(KERNEL_DIR) ; \
 	MAKEFLAGS= MFLAGS= DEB_HOST_ARCH=armel CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) fakeroot make-kpkg --arch arm --cross-compile arm-linux-gnueabi- --initrd --revision=1+untangle1 kernel_image kernel_headers
 
