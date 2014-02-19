@@ -18,14 +18,6 @@ patch: patch-stamp
 patch-stamp: patch-untangle-stamp
 	touch $@
 
-patch-compulab: patch-compulab-stamp
-patch-compulab-stamp: extract-stamp patches/compulab/*
-	for patch in patches/compulab/* ; do \
-	  echo "Applying $$patch" ; \
-	  patch -d $(KERNEL_DIR) -f -p1 < $$patch ; \
-	done
-	touch $@
-
 patch-untangle: patch-untangle-stamp 
 patch-untangle-stamp: extract-stamp patches/untangle/*
 	while read patch ; do \
