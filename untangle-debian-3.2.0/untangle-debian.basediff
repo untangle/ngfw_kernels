@@ -39,132 +39,14 @@ diff --git ./debian/config/amd64/defines ./debian/config/amd64/defines
 index e086612..92a709a 100644
 --- ./debian/config/amd64/defines
 +++ ./debian/config/amd64/defines
-@@ -6,6 +6,8 @@
+@@ -6,6 +6,7 @@
  [base]
  featuresets:
   none
-+ untangle+xen
 + untangle
   rt
  kernel-arch: x86
  
-diff --git ./debian/config/amd64/untangle+xen/config ./debian/config/amd64/untangle+xen/config
-new file mode 100644
-index 0000000..ac416b2
---- /dev/null
-+++ ./debian/config/amd64/untangle+xen/config
-@@ -0,0 +1,40 @@
-+ CONFIG_XEN=y
-+ CONFIG_XEN_MAX_DOMAIN_MEMORY=32
-+ CONFIG_XEN_SAVE_RESTORE=y
-+ # CONFIG_XEN_DEBUG_FS is not set
-+ CONFIG_SWIOTLB_XEN=y
-+ CONFIG_MICROCODE_XEN=y
-+ CONFIG_XEN_DOM0=y
-+ CONFIG_XEN_PRIVILEGED_GUEST=y
-+ CONFIG_XEN_DOM0_PCI=y
-+ # CONFIG_XEN_PCI_PASSTHROUGH is not set
-+ CONFIG_PCI_XEN=y
-+ CONFIG_XEN_PCIDEV_FRONTEND=y
-+ CONFIG_XEN_BLKDEV_FRONTEND=m
-+ CONFIG_NETXEN_NIC=m
-+ CONFIG_XEN_NETDEV_FRONTEND=m
-+ CONFIG_XEN_KBDDEV_FRONTEND=y
-+ CONFIG_HVC_XEN=y
-+ CONFIG_XEN_FBDEV_FRONTEND=y
-+ CONFIG_XEN_BALLOON=y
-+ CONFIG_XEN_SCRUB_PAGES=y
-+ CONFIG_XEN_DEV_EVTCHN=m
-+ CONFIG_XEN_BACKEND=y
-+ CONFIG_XEN_NETDEV_BACKEND=y
-+ CONFIG_XEN_BLKDEV_BACKEND=y
-+ CONFIG_XEN_BLKDEV_TAP=m
-+ CONFIG_XEN_BLKBACK_PAGEMAP=y
-+ CONFIG_XEN_PCIDEV_BACKEND=y
-+ CONFIG_XEN_PCIDEV_BACKEND_VPCI=y
-+ # CONFIG_XEN_PCIDEV_BACKEND_PASS is not set
-+ # CONFIG_XEN_PCIDEV_BACKEND_SLOT is not set
-+ # CONFIG_XEN_PCIDEV_BACKEND_CONTROLLER is not set
-+ # CONFIG_XEN_PCIDEV_BE_DEBUG is not set
-+ CONFIG_XENFS=m
-+ CONFIG_XEN_COMPAT_XENFS=y
-+ CONFIG_XEN_SYS_HYPERVISOR=y
-+ CONFIG_XEN_XENBUS_FRONTEND=y
-+ CONFIG_XEN_GNTDEV=y
-+ CONFIG_XEN_S3=y
-+ CONFIG_ACPI_PROCESSOR_XEN=m
-+ CONFIG_XEN_PLATFORM_PCI=y
-diff --git ./debian/config/i386/untangle+xen/config ./debian/config/i386/untangle+xen/config
-new file mode 100644
-index 0000000..ac416b2
---- /dev/null
-+++ ./debian/config/i386/untangle+xen/config
-@@ -0,0 +1,40 @@
-+ CONFIG_XEN=y
-+ CONFIG_XEN_MAX_DOMAIN_MEMORY=32
-+ CONFIG_XEN_SAVE_RESTORE=y
-+ # CONFIG_XEN_DEBUG_FS is not set
-+ CONFIG_SWIOTLB_XEN=y
-+ CONFIG_MICROCODE_XEN=y
-+ CONFIG_XEN_DOM0=y
-+ CONFIG_XEN_PRIVILEGED_GUEST=y
-+ CONFIG_XEN_DOM0_PCI=y
-+ # CONFIG_XEN_PCI_PASSTHROUGH is not set
-+ CONFIG_PCI_XEN=y
-+ CONFIG_XEN_PCIDEV_FRONTEND=y
-+ CONFIG_XEN_BLKDEV_FRONTEND=m
-+ CONFIG_NETXEN_NIC=m
-+ CONFIG_XEN_NETDEV_FRONTEND=m
-+ CONFIG_XEN_KBDDEV_FRONTEND=y
-+ CONFIG_HVC_XEN=y
-+ CONFIG_XEN_FBDEV_FRONTEND=y
-+ CONFIG_XEN_BALLOON=y
-+ CONFIG_XEN_SCRUB_PAGES=y
-+ CONFIG_XEN_DEV_EVTCHN=m
-+ CONFIG_XEN_BACKEND=y
-+ CONFIG_XEN_NETDEV_BACKEND=y
-+ CONFIG_XEN_BLKDEV_BACKEND=y
-+ CONFIG_XEN_BLKDEV_TAP=m
-+ CONFIG_XEN_BLKBACK_PAGEMAP=y
-+ CONFIG_XEN_PCIDEV_BACKEND=y
-+ CONFIG_XEN_PCIDEV_BACKEND_VPCI=y
-+ # CONFIG_XEN_PCIDEV_BACKEND_PASS is not set
-+ # CONFIG_XEN_PCIDEV_BACKEND_SLOT is not set
-+ # CONFIG_XEN_PCIDEV_BACKEND_CONTROLLER is not set
-+ # CONFIG_XEN_PCIDEV_BE_DEBUG is not set
-+ CONFIG_XENFS=m
-+ CONFIG_XEN_COMPAT_XENFS=y
-+ CONFIG_XEN_SYS_HYPERVISOR=y
-+ CONFIG_XEN_XENBUS_FRONTEND=y
-+ CONFIG_XEN_GNTDEV=y
-+ CONFIG_XEN_S3=y
-+ CONFIG_ACPI_PROCESSOR_XEN=m
-+ CONFIG_XEN_PLATFORM_PCI=y
-diff --git ./debian/config/amd64/untangle+xen/defines ./debian/config/amd64/untangle+xen/defines
-new file mode 100644
-index 0000000..ac416b2
---- /dev/null
-+++ ./debian/config/amd64/untangle+xen/defines
-@@ -0,0 +1,16 @@
-+[base]
-+flavours:
-+ amd64
-+
-+[image]
-+initramfs-generators: initramfs-tools
-+
-+[xen]
-+flavours:
-+ amd64
-+
-+[amd64_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-amd64, linux-image-2.6-untangle+xen, linux-image-2.6-untangle+xen-amd64
-+configs:
-+  featureset-untangle/config
-+  amd64/xen/config
-diff --git ./debian/config/amd64/untangle/defines ./debian/config/amd64/untangle/defines
-new file mode 100644
-index 0000000..ab475e4
 --- /dev/null
 +++ ./debian/config/amd64/untangle/defines
 @@ -0,0 +1,6 @@
@@ -178,52 +60,21 @@ diff --git ./debian/config/defines ./debian/config/defines
 index 890ed95..8cdce59 100644
 --- ./debian/config/defines
 +++ ./debian/config/defines
-@@ -74,11 +74,22 @@
+@@ -74,11 +74,14 @@
  compiler: gcc-4.6
  featuresets:
   none
-+ untangle+xen
 + untangle
   rt
  
  [featureset-rt_base]
  enabled: true
  
-+[featureset-untangle+xen_base]
-+enabled: true
-+
 +[featureset-untangle_base]
 +enabled: true
-+
-+[featureset-xen_base]
-+enabled: true
-+
  [description]
  part-long-up: This kernel is not suitable for SMP (multi-processor,
   multi-core or hyper-threaded) systems.
-diff --git ./debian/config/featureset-untangle+xen/defines ./debian/config/featureset-untangle+xen/defines
-new file mode 100644
-index 0000000..6b9cb6f
---- /dev/null
-+++ ./debian/config/featureset-untangle+xen/defines
-@@ -0,0 +1,14 @@
-+[abi]
-+ignore-changes: *
-+
-+[description]
-+parts: xen
-+part-long-xen: This kernel also runs on a Xen hypervisor.
-+ It supports both privileged (dom0) and unprivileged (domU) operation.
-+part-short-xen: Xen dom0 support
-+
-+[image-dbg]
-+enabled: true
-+
-+[xen]
-+dom0-support: true
-diff --git ./debian/config/featureset-untangle/config ./debian/config/featureset-untangle/config
-new file mode 100644
-index 0000000..2b885d9
 --- /dev/null
 +++ ./debian/config/featureset-untangle/config
 @@ -0,0 +1,26 @@
@@ -268,37 +119,14 @@ diff --git ./debian/config/i386/defines ./debian/config/i386/defines
 index a1c346e..61f99c6 100644
 --- ./debian/config/i386/defines
 +++ ./debian/config/i386/defines
-@@ -8,6 +8,8 @@
+@@ -8,6 +8,7 @@
  [base]
  featuresets:
   none
-+ untangle+xen
 + untangle
   rt
  kernel-arch: x86
  
-diff --git ./debian/config/i386/untangle+xen/defines ./debian/config/i386/untangle+xen/defines
-new file mode 100644
-index 0000000..09cc2db
---- /dev/null
-+++ ./debian/config/i386/untangle+xen/defines
-@@ -0,0 +1,16 @@
-+[base]
-+flavours:
-+ 686
-+
-+[xen]
-+flavours:
-+ i386
-+ amd64
-+
-+[686_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-686, linux-image-2.6-untangle+xen, linux-image-2.6-untangle+xen-486
-+configs:
-+  i386/none/config.686
-+  featureset-untangle/config
-+  i386/xen/config
-+
 diff --git ./debian/config/i386/untangle/defines ./debian/config/i386/untangle/defines
 new file mode 100644
 index 0000000..4cc1164
