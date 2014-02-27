@@ -3,7 +3,7 @@ index bcf2e3c..6f2f003 100644
 --- ./debian/changelog
 +++ ./debian/changelog
 @@ -1,5 +1,11 @@
- linux (3.2.51-1) wheezy; urgency=low
+ linux (3.2.51-1untangle1) wheezy; urgency=low
  
 +  * Untangle build 1
 +
