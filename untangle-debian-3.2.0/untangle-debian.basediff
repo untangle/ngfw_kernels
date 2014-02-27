@@ -135,10 +135,10 @@ index 0000000..4cc1164
 @@ -0,0 +1,9 @@
 +[base]
 +flavours:
-+ 686
++ 686-pae
 +
-+[686_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle, linux-image-3.2-untangle-686
++[686-pae_image]
++provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle, linux-image-3.2-untangle-686-pae
 +configs:
 +  i386/none/config.686-pae
 +
