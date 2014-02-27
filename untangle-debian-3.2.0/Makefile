@@ -31,10 +31,8 @@ deps:	force
 
 kpkg:	control-real force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules clean
-#	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_${MACHINE}_untangle+xen setup_${MACHINE}_untangle+xen source_${MACHINE}_untangle setup_${MACHINE}_untangle
-	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen setup_${MACHINE}_untangle
-#	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle+xen binary-arch_${MACHINE}_untangle binary-arch_${MACHINE}_real
-	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle binary-arch_${MACHINE}_real
+	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source setup_${MACHINE}
+	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen build-arch_${MACHINE}_untangle
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules binary-indep
 
 # for development
