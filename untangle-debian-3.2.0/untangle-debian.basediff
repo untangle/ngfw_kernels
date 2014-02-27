@@ -331,32 +331,3 @@ index 530549d..a338aa5 100644
 +features/all/untangle/014-nfqueue-untangle-mode.patch featureset=untangle
 +features/all/untangle/015-iptables_socket.patch featureset=untangle
 +features/all/untangle/020-imq.patch featureset=untangle
-diff --git ./debian/templates/patch.apply.in ./debian/templates/patch.apply.in
-index dd35c65..8d366b9 100644
---- ./debian/templates/patch.apply.in
-+++ ./debian/templates/patch.apply.in
-@@ -14,6 +14,10 @@ upstream = "@upstream@"
- class MatchExtra(object):
-     def __init__(self, arch, featureset):
-         self.arch, self.featureset = arch, featureset
-+        if self.featureset:
-+            self.featuresets = self.featureset.split('+')
-+            print "*"*200
-+            print self.featuresets
- 
-         self.matched_arch = self.matched_featureset = False
- 
-@@ -46,9 +50,10 @@ class MatchExtra(object):
- 
-         if match_featureset:
-             if self.featureset is not None:
--                if self.featureset in match_featureset:
--                    self.matched_featureset = True
--                    ret_featureset = True
-+                for fs in self.featuresets:
-+                    if fs in match_featureset:
-+                        self.matched_featureset = True
-+                        ret_featureset = True
- 
-         else:
-             ret_featureset = True
