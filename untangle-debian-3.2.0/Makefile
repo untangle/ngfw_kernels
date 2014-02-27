@@ -1,6 +1,6 @@
 BUILDDEPS=debhelper cpio module-init-tools python libelf-dev binutils-dev asciidoc xmlto gcc-4.3 
 
-REPOSITORY=squeeze
+REPOSITORY=wheezy
 
 # EXTRADCHARGS:= --distributor Untangle
 
