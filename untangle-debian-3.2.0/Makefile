@@ -1,4 +1,4 @@
-BUILDDEPS=debhelper cpio module-init-tools python libelf-dev binutils-dev asciidoc xmlto gcc-4.3 
+BUILDDEPS=debhelper cpio module-init-tools python libelf-dev binutils-dev asciidoc xmlto gcc-4.6 quilt
 
 REPOSITORY=wheezy
 
@@ -32,7 +32,7 @@ deps:	force
 kpkg:	control-real force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules clean
 #	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_${MACHINE}_untangle+xen setup_${MACHINE}_untangle+xen source_${MACHINE}_untangle setup_${MACHINE}_untangle
-	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_${MACHINE}_untangle setup_${MACHINE}_untangle
+	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen setup_${MACHINE}_untangle
 #	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle+xen binary-arch_${MACHINE}_untangle binary-arch_${MACHINE}_real
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle binary-arch_${MACHINE}_real
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules binary-indep
