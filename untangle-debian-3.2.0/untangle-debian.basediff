@@ -55,7 +55,7 @@ index e086612..92a709a 100644
 + amd64
 +
 +[amd64_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-amd64
++provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle, linux-image-3.2-untangle-amd64
 diff --git ./debian/config/defines ./debian/config/defines
 index 890ed95..8cdce59 100644
 --- ./debian/config/defines
@@ -138,9 +138,9 @@ index 0000000..4cc1164
 + 686
 +
 +[686_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-686
++provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle, linux-image-3.2-untangle-686
 +configs:
-+  i386/none/config.686
++  i386/none/config.686-pae
 +
 diff --git ./debian/patches/series/40-extra ./debian/patches/series/40-extra
 index 530549d..a338aa5 100644
