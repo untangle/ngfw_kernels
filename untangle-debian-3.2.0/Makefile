@@ -52,6 +52,7 @@ ${KOURPATCH}: untangle-debian.basediff patches/*
 	mkdir -p ${TEMPDIR}/${UPATCHSETLOC}
 	mkdir -p ${TEMPDIR2}/${UPATCHSETLOC}
 	cp patches/* ${TEMPDIR}/${UPATCHSETLOC}
+	perl -pe 's|^|features/all/untangle/|' patches/series > ${TEMPDIR}/${WORKDIR}/debian/patches/series-untangle
 	cp maintainer-scripts/* ${TEMPDIR}/${WORKDIR}/debian
 	if [ -n "${EXTRAPATCHES}" ]; then cp "${EXTRAPATCHES}" ${TEMPDIR}/${UPATCHSETLOC}; fi
 	-(cd ${TEMPDIR2}/${WORKDIR} ; diff -Ncr . ${TEMPDIR}/${WORKDIR}) | perl -pe 's|'${TEMPDIR}/${WORKDIR}/?'|./|g' > ${KOURDIFF}

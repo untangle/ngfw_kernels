@@ -142,20 +142,3 @@ index 0000000..4cc1164
 +configs:
 +  i386/none/config.686-pae
 +
-diff --git ./debian/patches/series/40-extra ./debian/patches/series/40-extra
-index 530549d..a338aa5 100644
---- ./debian/patches/series.orig        2014-01-24 23:03:23.000000000 -0800
-+++ ./debian/patches/series     2014-01-24 23:03:29.000000000 -0800
-@@ -679,3 +679,12 @@
- features/all/aufs3/aufs-bugfix-retval-from-au_pin-call-in-au_file_refre.patch
- features/all/aufs3/aufs-bugfix-clear-S_AUTOMOUNT.patch
- bugfix/all/kernel-doc-bugfix-multi-line-macros.patch
-+
-+# untangle
-+features/all/untangle/006-bridgefib.patch featureset=untangle
-+features/all/untangle/007-bridge-mac-ageing-fix.patch featureset=untangle
-+features/all/untangle/009-extensions.patch featureset=untangle
-+features/all/untangle/013-iptables_tune.patch featureset=untangle
-+features/all/untangle/014-nfqueue-untangle-mode.patch featureset=untangle
-+features/all/untangle/015-iptables_socket.patch featureset=untangle
-+features/all/untangle/020-imq.patch featureset=untangle
