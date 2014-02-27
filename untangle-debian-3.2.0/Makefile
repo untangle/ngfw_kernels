@@ -15,7 +15,7 @@ KDSC=${PACKPFX}-${KUPVER}.dsc
 KOURDIFF=untangle-debian.diff
 KOURPATCH=${KOURDIFF}.gz
 
-DOPTIONS=DEBIAN_KERNEL_JOBS="${NPROCEXP}" DEB_BUILD_OPTIONS="parallel=${NPROCEXP}" AUTOBUILD=1
+DOPTIONS = DEBIAN_KERNEL_JOBS=${NPROCEXP} DEB_BUILD_OPTIONS="parallel=${NPROCEXP}" CONCURRENCY_LEVEL=${NPROCEXP} AUTOBUILD=1
 
 MACHINE:=$(shell dpkg-architecture -qDEB_BUILD_ARCH)
 NPROCEXP:=$(shell echo "$$((1+`grep -c processor /proc/cpuinfo`))")
@@ -30,9 +30,9 @@ deps:	force
 	sudo aptitude install ${BUILDDEPS} || echo "unable to run sudo"
 
 kpkg:	control-real force
-	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules clean
+#	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules clean
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_untangle setup_${MACHINE}_untangle
-	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen build-arch_${MACHINE}_untangle
+	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -j ${NPROCEXP} -f debian/rules.gen binary-arch_${MACHINE}_untangle
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules binary-indep
 
 # for development
