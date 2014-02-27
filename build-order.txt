@@ -1,0 +1,4 @@
+untangle-debian-2.6.26          lenny           i386,amd64
+untangle-debian-2.6.32          squeeze         i386,amd64,armel
+untangle-compulab-3.0.35        squeeze,wheezy  armel
+untangle-debian-3.2.0           wheezy          i386,amd64,armel,armhf
