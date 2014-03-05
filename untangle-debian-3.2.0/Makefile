@@ -24,24 +24,20 @@ TEMPDIR2:=$(shell mktemp)
 
 all:	clean kpkg 
 
-pkgs:	kpkg
+pkgs:	kpkg-arch kpkg-indep
 
 deps:	force
 	sudo aptitude install ${BUILDDEPS} || echo "unable to run sudo"
 
-kpkg:	control-real force
-#	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules clean
-	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_untangle setup_${MACHINE}_untangle
+kpkg-arch: control-real force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -j ${NPROCEXP} -f debian/rules.gen binary-arch_${MACHINE}_untangle
-	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules binary-indep
+kpkg-indep: control-real force
+	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -j ${NPROCEXP} -f debian/rules binary-indep
 
-# for development
-src: 	${WORKDIR} control-real force
-	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_${MACHINE}_untangle setup_${MACHINE}_untangle
+kern:   kpkg-arch
 
-# for development
-kern:	${WORKDIR} control-real force
-	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen binary-arch_${MACHINE}_untangle
+src: 	control-real force
+	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_untangle setup_${MACHINE}_untangle
 
 # This combines our "generic" kernel patches with the specific Debian kernel
 # patches into one patch to rule them all.
@@ -67,7 +63,7 @@ ${WORKDIR}:	${KDSC} ${KOURPATCH}
 	cd ${WORKDIR};gunzip -c ../${KOURPATCH} | patch -p1
 	perl -i -pe 's/fuzz=0/fuzz=3/' ${WORKDIR}/debian/rules*
 
-control-real:
+control-real: ${WORKDIR}debian/control-real
 	cd ${WORKDIR};make -f debian/rules debian/control-real || true
 
 clean::
@@ -81,5 +77,5 @@ force:
 # Utility rule to fetch the new ones
 getsrc:
 	-sudo apt-get update
-	apt-get --download-only source linux-image-2.6.32-1-amd64
+	apt-get --download-only source linux-image-3.2.0-1-amd64
 	apt-get --download-only source linux-latest-2.6
