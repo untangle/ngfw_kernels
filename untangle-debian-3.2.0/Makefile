@@ -64,6 +64,7 @@ ${WORKDIR}:	${KDSC} ${KOURPATCH}
 	perl -i -pe 's/fuzz=0/fuzz=3/' ${WORKDIR}/debian/rules*
 
 control-real: ${WORKDIR}/debian/control-real
+${WORKDIR}/debian/control-real: force
 	cd ${WORKDIR};make -f debian/rules debian/control-real || true
 
 clean::
