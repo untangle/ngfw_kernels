@@ -58,13 +58,12 @@ ${KOURPATCH}: untangle-debian.basediff patches/*
 
 patch: ${WORKDIR}
 ${WORKDIR}:	${KDSC} ${KOURPATCH}
-	rm -rf ${WORKDIR}
 	dpkg-source -x ${KDSC}
 	cd ${WORKDIR};gunzip -c ../${KOURPATCH} | patch -p1
 	perl -i -pe 's/fuzz=0/fuzz=3/' ${WORKDIR}/debian/rules*
 
 control-real: ${WORKDIR}/debian/control-real
-${WORKDIR}/debian/control-real: force
+${WORKDIR}/debian/control-real: force patch
 	cd ${WORKDIR};make -f debian/rules debian/control-real || true
 
 clean::
