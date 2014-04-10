@@ -6,8 +6,9 @@ CONFIG_UNTANGLE_ORIG := untangle.config
 CONFIG_DEST := $(KERNEL_DIR)/.config
 CONCURRENCY_LEVEL := $(( 1 + $(grep -c '^processor\s:' /proc/cpuinfo) ))
 UNTANGLE_PATCH_SERIES := patches/untangle/series
+MODULES_TARBALL := modules.tar.bz2
 
-all: kernel-package uImage
+all: kernel-package uImage modules
 
 extract: extract-stamp
 extract-stamp: $(TARBALL)
@@ -30,14 +31,21 @@ config: $(CONFIG_DEST)
 $(CONFIG_DEST): extract-stamp $(CONFIG_COMPULAB_ORIG) $(CONFIG_UNTANGLE_ORIG)
 	cat $(CONFIG_COMPULAB_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $@
 
-kernel-package: patch-stamp config
+kernel-package: kernel-package-stamp
+kernel-package-stamp: patch-stamp config
 	cd $(KERNEL_DIR) ; \
-	MAKEFLAGS= MFLAGS= DEB_HOST_ARCH=armel CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) fakeroot make-kpkg --arch arm --cross-compile arm-linux-gnueabi- --initrd kernel_image kernel_headers
+	MAKEFLAGS= MFLAGS= DEB_HOST_ARCH=armel CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) fakeroot make-kpkg --arch arm --cross-compile arm-linux-gnueabi- --initrd kernel_image kernel_headers ; \
+	touch $@
 
 uImage: $(UIMAGE)
-$(UIMAGE): kernel-package
+$(UIMAGE): kernel-package-stamp
 	cd $(KERNEL_DIR) ; \
-	ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make uImage
+	ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make uImage ; \
+	cp arch/arm/boot/uImage ../uImage-cm-fx6
+
+modules: $(MODULES_TARBALL)
+$(MODULES_TARBALL): kernel-package-stamp
+	tar -C $(KERNEL_DIR)/debian/linux-image-3.0.35-cm-fx6-5.1*/lib/modules -cjf $@ .
 
 clean:
 	rm -fr $(KERNEL_DIR)
