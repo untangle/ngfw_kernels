@@ -1,4 +1,4 @@
-BUILDDEPS=debhelper cpio kernel-wedge module-init-tools python libelf-dev binutils-dev asciidoc xmlto gcc-4.6 quilt
+[BUILDDEPS=debhelper cpio kernel-wedge module-init-tools python libelf-dev binutils-dev asciidoc xmlto gcc-4.6 quilt
 
 REPOSITORY=wheezy
 
@@ -34,9 +34,9 @@ kpkg-arch: control-real force
 kpkg-indep: control-real force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -j ${NPROCEXP} -f debian/rules binary-indep
 
-kern:   kpkg-arch
+kern:   ${WORKDIR} kpkg-arch
 
-src: 	control-real force
+src: 	${WORKDIR} control-real force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_untangle setup_${MACHINE}_untangle
 
 # This combines our "generic" kernel patches with the specific Debian kernel
@@ -76,6 +76,6 @@ force:
 
 # Utility rule to fetch the new ones
 getsrc:
-	-sudo apt-get update
+	sudo apt-get update
 	apt-get --download-only source linux-image-3.2.0-1-amd64
 	apt-get --download-only source linux-latest-2.6
