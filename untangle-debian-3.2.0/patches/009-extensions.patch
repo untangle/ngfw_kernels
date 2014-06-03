@@ -1,6 +1,6 @@
-diff -urN linux-3.0.35.orig//include/linux/in.h linux-3.0.35/include/linux/in.h
---- linux-3.0.35.orig//include/linux/in.h	2012-06-17 11:23:33.000000000 -0700
-+++ linux-3.0.35/include/linux/in.h	2014-01-29 14:18:29.000000000 -0800
+diff -urN source_untangle.orig/include/linux/in.h source_untangle/include/linux/in.h
+--- source_untangle.orig/include/linux/in.h	2014-06-03 12:38:31.000000000 -0700
++++ source_untangle/include/linux/in.h	2014-06-03 12:02:42.000000000 -0700
 @@ -87,6 +87,10 @@
  #define IP_MINTTL       21
  #define IP_NODEFRAG     22
@@ -23,9 +23,9 @@ diff -urN linux-3.0.35.orig//include/linux/in.h linux-3.0.35/include/linux/in.h
  
  /*
   * Definitions of the bits in an Internet address integer.
-diff -urN linux-3.0.35.orig//include/linux/udp.h linux-3.0.35/include/linux/udp.h
---- linux-3.0.35.orig//include/linux/udp.h	2012-06-17 11:23:33.000000000 -0700
-+++ linux-3.0.35/include/linux/udp.h	2014-01-29 14:18:29.000000000 -0800
+diff -urN source_untangle.orig/include/linux/udp.h source_untangle/include/linux/udp.h
+--- source_untangle.orig/include/linux/udp.h	2014-06-03 12:38:31.000000000 -0700
++++ source_untangle/include/linux/udp.h	2014-06-03 12:02:42.000000000 -0700
 @@ -30,6 +30,9 @@
  #define UDP_CORK	1	/* Never send partially complete segments */
  #define UDP_ENCAP	100	/* Set the socket to accept encapsulated packets */
@@ -36,9 +36,9 @@ diff -urN linux-3.0.35.orig//include/linux/udp.h linux-3.0.35/include/linux/udp.
  /* UDP encapsulation types */
  #define UDP_ENCAP_ESPINUDP_NON_IKE	1 /* draft-ietf-ipsec-nat-t-ike-00/01 */
  #define UDP_ENCAP_ESPINUDP	2 /* draft-ietf-ipsec-udp-encaps-06 */
-diff -urN linux-3.0.35.orig//include/net/ip.h linux-3.0.35/include/net/ip.h
---- linux-3.0.35.orig//include/net/ip.h	2012-06-17 11:23:33.000000000 -0700
-+++ linux-3.0.35/include/net/ip.h	2014-01-29 14:18:29.000000000 -0800
+diff -urN source_untangle.orig/include/net/ip.h source_untangle/include/net/ip.h
+--- source_untangle.orig/include/net/ip.h	2014-06-03 12:38:31.000000000 -0700
++++ source_untangle/include/net/ip.h	2014-06-03 12:02:42.000000000 -0700
 @@ -37,6 +37,10 @@
  	struct ip_options	opt;		/* Compiled IP options		*/
  	unsigned char		flags;
@@ -66,9 +66,9 @@ diff -urN linux-3.0.35.orig//include/net/ip.h linux-3.0.35/include/net/ip.h
  };
  
  #define IPCB(skb) ((struct inet_skb_parm*)((skb)->cb))
-diff -urN linux-3.0.35.orig//net/ipv4/icmp.c linux-3.0.35/net/ipv4/icmp.c
---- linux-3.0.35.orig//net/ipv4/icmp.c	2012-06-17 11:23:33.000000000 -0700
-+++ linux-3.0.35/net/ipv4/icmp.c	2014-01-29 14:18:29.000000000 -0800
+diff -urN source_untangle.orig/net/ipv4/icmp.c source_untangle/net/ipv4/icmp.c
+--- source_untangle.orig/net/ipv4/icmp.c	2014-06-03 12:38:31.000000000 -0700
++++ source_untangle/net/ipv4/icmp.c	2014-06-03 12:02:42.000000000 -0700
 @@ -343,6 +343,8 @@
  		return;
  	inet = inet_sk(sk);
@@ -86,10 +86,10 @@ diff -urN linux-3.0.35.orig//net/ipv4/icmp.c linux-3.0.35/net/ipv4/icmp.c
  	ipc.addr = iph->saddr;
  	ipc.opt = &icmp_param.replyopts.opt;
  	ipc.tx_flags = 0;
-diff -urN linux-3.0.35.orig//net/ipv4/ip_output.c linux-3.0.35/net/ipv4/ip_output.c
---- linux-3.0.35.orig//net/ipv4/ip_output.c	2012-06-17 11:23:33.000000000 -0700
-+++ linux-3.0.35/net/ipv4/ip_output.c	2014-01-29 14:19:01.000000000 -0800
-@@ -153,11 +153,15 @@
+diff -urN source_untangle.orig/net/ipv4/ip_output.c source_untangle/net/ipv4/ip_output.c
+--- source_untangle.orig/net/ipv4/ip_output.c	2014-06-03 12:38:31.000000000 -0700
++++ source_untangle/net/ipv4/ip_output.c	2014-06-03 12:40:08.000000000 -0700
+@@ -154,11 +154,15 @@
  	iph->version  = 4;
  	iph->ihl      = 5;
  	iph->tos      = inet->tos;
@@ -105,7 +105,7 @@ diff -urN linux-3.0.35.orig//net/ipv4/ip_output.c linux-3.0.35/net/ipv4/ip_outpu
  	iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
  	iph->saddr    = saddr;
  	iph->protocol = sk->sk_protocol;
-@@ -169,7 +173,7 @@
+@@ -170,7 +174,7 @@
  	}
  
  	skb->priority = sk->sk_priority;
@@ -114,7 +114,7 @@ diff -urN linux-3.0.35.orig//net/ipv4/ip_output.c linux-3.0.35/net/ipv4/ip_outpu
  
  	/* Send it out. */
  	return ip_local_out(skb);
-@@ -401,7 +405,7 @@
+@@ -394,7 +398,7 @@
  			     (skb_shinfo(skb)->gso_segs ?: 1) - 1);
  
  	skb->priority = sk->sk_priority;
@@ -123,7 +123,7 @@ diff -urN linux-3.0.35.orig//net/ipv4/ip_output.c linux-3.0.35/net/ipv4/ip_outpu
  
  	res = ip_local_out(skb);
  	rcu_read_unlock();
-@@ -796,7 +800,7 @@
+@@ -789,7 +793,7 @@
  			    struct inet_cork *cork,
  			    int getfrag(void *from, char *to, int offset,
  					int len, int odd, struct sk_buff *skb),
@@ -132,7 +132,7 @@ diff -urN linux-3.0.35.orig//net/ipv4/ip_output.c linux-3.0.35/net/ipv4/ip_outpu
  			    unsigned int flags)
  {
  	struct inet_sock *inet = inet_sk(sk);
-@@ -943,6 +947,17 @@
+@@ -936,6 +940,17 @@
  						 fragheaderlen);
  			data += fragheaderlen + exthdrlen;
  
@@ -150,7 +150,7 @@ diff -urN linux-3.0.35.orig//net/ipv4/ip_output.c linux-3.0.35/net/ipv4/ip_outpu
  			if (fraggap) {
  				skb->csum = skb_copy_and_csum_bits(
  					skb_prev, maxfraglen,
-@@ -1118,7 +1133,7 @@
+@@ -1112,7 +1127,7 @@
  	}
  
  	return __ip_append_data(sk, fl4, &sk->sk_write_queue, &inet->cork.base, getfrag,
@@ -159,7 +159,16 @@ diff -urN linux-3.0.35.orig//net/ipv4/ip_output.c linux-3.0.35/net/ipv4/ip_outpu
  }
  
  ssize_t	ip_append_page(struct sock *sk, struct flowi4 *fl4, struct page *page,
-@@ -1442,7 +1457,7 @@
+@@ -1346,7 +1361,7 @@
+ 	}
+ 
+ 	skb->priority = sk->sk_priority;
+-	skb->mark = sk->sk_mark;
++	skb->mark |= sk->sk_mark;
+ 	/*
+ 	 * Steal rt from cork.dst to avoid a pair of atomic_inc/atomic_dec
+ 	 * on dst refcount
+@@ -1436,7 +1451,7 @@
  		return ERR_PTR(err);
  
  	err = __ip_append_data(sk, fl4, &queue, &cork, getfrag,
@@ -168,7 +177,7 @@ diff -urN linux-3.0.35.orig//net/ipv4/ip_output.c linux-3.0.35/net/ipv4/ip_outpu
  	if (err) {
  		__ip_flush_pending_frames(sk, &queue, &cork);
  		return ERR_PTR(err);
-@@ -1483,6 +1498,7 @@
+@@ -1477,6 +1492,7 @@
  	if (ip_options_echo(&replyopts.opt.opt, skb))
  		return;
  
@@ -176,10 +185,10 @@ diff -urN linux-3.0.35.orig//net/ipv4/ip_output.c linux-3.0.35/net/ipv4/ip_outpu
  	ipc.addr = daddr;
  	ipc.opt = NULL;
  	ipc.tx_flags = 0;
-diff -urN linux-3.0.35.orig//net/ipv4/ip_sockglue.c linux-3.0.35/net/ipv4/ip_sockglue.c
---- linux-3.0.35.orig//net/ipv4/ip_sockglue.c	2012-06-17 11:23:33.000000000 -0700
-+++ linux-3.0.35/net/ipv4/ip_sockglue.c	2014-01-29 14:18:29.000000000 -0800
-@@ -220,7 +220,38 @@
+diff -urN source_untangle.orig/net/ipv4/ip_sockglue.c source_untangle/net/ipv4/ip_sockglue.c
+--- source_untangle.orig/net/ipv4/ip_sockglue.c	2014-06-03 12:38:31.000000000 -0700
++++ source_untangle/net/ipv4/ip_sockglue.c	2014-06-03 12:02:43.000000000 -0700
+@@ -221,7 +221,38 @@
  			ipc->addr = info->ipi_spec_dst.s_addr;
  			break;
  		}
@@ -218,7 +227,7 @@ diff -urN linux-3.0.35.orig//net/ipv4/ip_sockglue.c linux-3.0.35/net/ipv4/ip_soc
  			return -EINVAL;
  		}
  	}
-@@ -576,6 +607,24 @@
+@@ -586,6 +617,24 @@
  		else
  			inet->cmsg_flags &= ~IP_CMSG_ORIGDSTADDR;
  		break;
@@ -242,8 +251,8 @@ diff -urN linux-3.0.35.orig//net/ipv4/ip_sockglue.c linux-3.0.35/net/ipv4/ip_soc
 +        }
  	case IP_TOS:	/* This sets both TOS and Precedence */
  		if (sk->sk_type == SOCK_STREAM) {
- 			val &= ~3;
-@@ -1135,6 +1184,23 @@
+ 			val &= ~INET_ECN_MASK;
+@@ -1145,6 +1194,23 @@
  	case IP_RECVORIGDSTADDR:
  		val = (inet->cmsg_flags & IP_CMSG_ORIGDSTADDR) != 0;
  		break;
@@ -267,10 +276,10 @@ diff -urN linux-3.0.35.orig//net/ipv4/ip_sockglue.c linux-3.0.35/net/ipv4/ip_soc
  	case IP_TOS:
  		val = inet->tos;
  		break;
-diff -urN linux-3.0.35.orig//net/ipv4/raw.c linux-3.0.35/net/ipv4/raw.c
---- linux-3.0.35.orig//net/ipv4/raw.c	2012-06-17 11:23:33.000000000 -0700
-+++ linux-3.0.35/net/ipv4/raw.c	2014-01-29 14:18:29.000000000 -0800
-@@ -507,6 +507,8 @@
+diff -urN source_untangle.orig/net/ipv4/raw.c source_untangle/net/ipv4/raw.c
+--- source_untangle.orig/net/ipv4/raw.c	2014-06-03 12:38:31.000000000 -0700
++++ source_untangle/net/ipv4/raw.c	2014-06-03 12:02:43.000000000 -0700
+@@ -510,6 +510,8 @@
  		daddr = inet->inet_daddr;
  	}
  
@@ -279,10 +288,10 @@ diff -urN linux-3.0.35.orig//net/ipv4/raw.c linux-3.0.35/net/ipv4/raw.c
  	ipc.addr = inet->inet_saddr;
  	ipc.opt = NULL;
  	ipc.tx_flags = 0;
-diff -urN linux-3.0.35.orig//net/ipv4/udp.c linux-3.0.35/net/ipv4/udp.c
---- linux-3.0.35.orig//net/ipv4/udp.c	2012-06-17 11:23:33.000000000 -0700
-+++ linux-3.0.35/net/ipv4/udp.c	2014-01-29 14:18:29.000000000 -0800
-@@ -441,6 +441,33 @@
+diff -urN source_untangle.orig/net/ipv4/udp.c source_untangle/net/ipv4/udp.c
+--- source_untangle.orig/net/ipv4/udp.c	2014-06-03 12:38:31.000000000 -0700
++++ source_untangle/net/ipv4/udp.c	2014-06-03 12:02:43.000000000 -0700
+@@ -442,6 +442,33 @@
  	return result;
  }
  
@@ -316,7 +325,17 @@ diff -urN linux-3.0.35.orig//net/ipv4/udp.c linux-3.0.35/net/ipv4/udp.c
  /* UDP is nearly always wildcards out the wazoo, it makes no sense to try
   * harder than this. -DaveM
   */
-@@ -798,7 +825,7 @@
+@@ -722,7 +749,8 @@
+ 	 * Create a UDP header
+ 	 */
+ 	uh = udp_hdr(skb);
+-	uh->source = inet->inet_sport;
++	//uh->source = inet->inet_sport;
++	uh->source = fl4->fl4_sport;
+ 	uh->dest = fl4->fl4_dport;
+ 	uh->len = htons(len);
+ 	uh->check = 0;
+@@ -800,7 +829,7 @@
  	int free = 0;
  	int connected = 0;
  	__be32 daddr, faddr, saddr;
@@ -325,7 +344,7 @@ diff -urN linux-3.0.35.orig//net/ipv4/udp.c linux-3.0.35/net/ipv4/udp.c
  	u8  tos;
  	int err, is_udplite = IS_UDPLITE(sk);
  	int corkreq = up->corkflag || msg->msg_flags&MSG_MORE;
-@@ -816,6 +843,7 @@
+@@ -818,6 +847,7 @@
  	if (msg->msg_flags & MSG_OOB) /* Mirror BSD error message compatibility */
  		return -EOPNOTSUPP;
  
@@ -333,7 +352,7 @@ diff -urN linux-3.0.35.orig//net/ipv4/udp.c linux-3.0.35/net/ipv4/udp.c
  	ipc.opt = NULL;
  	ipc.tx_flags = 0;
  
-@@ -872,7 +900,7 @@
+@@ -874,7 +904,7 @@
  	if (err)
  		return err;
  	if (msg->msg_controllen) {
@@ -342,7 +361,7 @@ diff -urN linux-3.0.35.orig//net/ipv4/udp.c linux-3.0.35/net/ipv4/udp.c
  		if (err)
  			return err;
  		if (ipc.opt)
-@@ -892,6 +920,11 @@
+@@ -894,6 +924,11 @@
  		rcu_read_unlock();
  	}
  
@@ -354,7 +373,7 @@ diff -urN linux-3.0.35.orig//net/ipv4/udp.c linux-3.0.35/net/ipv4/udp.c
  	saddr = ipc.addr;
  	ipc.addr = faddr = daddr;
  
-@@ -927,7 +964,7 @@
+@@ -929,7 +964,7 @@
  		flowi4_init_output(fl4, ipc.oif, sk->sk_mark, tos,
  				   RT_SCOPE_UNIVERSE, sk->sk_protocol,
  				   inet_sk_flowi_flags(sk)|FLOWI_FLAG_CAN_SLEEP,
@@ -363,7 +382,7 @@ diff -urN linux-3.0.35.orig//net/ipv4/udp.c linux-3.0.35/net/ipv4/udp.c
  
  		security_sk_classify_flow(sk, flowi4_to_flowi(fl4));
  		rt = ip_route_output_flow(net, fl4, sk);
-@@ -983,7 +1020,7 @@
+@@ -985,7 +1020,7 @@
  	fl4->daddr = daddr;
  	fl4->saddr = saddr;
  	fl4->fl4_dport = dport;

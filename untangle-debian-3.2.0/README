@@ -3,7 +3,7 @@ make src pkgs
 
 to develop:
 'make src' to expand the src
-edit the source in untangle-debian-2.6.32/linux-2.6-2.6.32/debian/build/build_amd64_untangle_amd64 (on amd64 anyway)
+edit the source in untangle-debian-3.2.0/linux-3.2.51/debian/build/source_untangle/ (on amd64 anyway)
 'make kern' to build kernel package
 dpkg -i kernel package and reboot
 
