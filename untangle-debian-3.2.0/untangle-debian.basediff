@@ -2,18 +2,22 @@ diff --git ./debian/changelog ./debian/changelog
 index bcf2e3c..6f2f003 100644
 --- ./debian/changelog
 +++ ./debian/changelog
-@@ -1,5 +1,11 @@
- linux (3.2.51-1untangle1) wheezy; urgency=low
- 
-+  * Untangle build 1
+@@ -1,3 +1,15 @@
++linux (3.2.51-1untangle2) wheezy; urgency=low
++
++ * fix kernel UDP issues (SPORT extensiion and NFMARK extension not working)
++
++ -- Dirk Morris <dmorris@untangle.com>  Mon, 09 Jun 2014 19:48:52 +0200
++
++linux (3.2.51-1untangle1) wheezy; urgency=low
++
++ * Untangle build 1
 +
 + -- Dirk Morris <dmorris@untangle.com>  Fri, 24 Jan 2014 22:44:55 +0800
 +
-+linux (3.2.51-1) wheezy; urgency=low
-+
+ linux (3.2.51-1) wheezy; urgency=low
+ 
    * New upstream stable update:
-     http://www.kernel.org/pub/linux/kernel/v3.x/ChangeLog-3.2.47
-     - xfs: kill suid/sgid through the truncate path.
 diff --git a/untangle-debian-2.6.32/linux-2.6-2.6.32/debian/config/armel/defines b/untangle-debian-2.6.32/linux-2.6-2.6.32/debian/config/armel/defines
 --- ./debian/config/armel/defines
 +++ ./debian/config/armel/defines
