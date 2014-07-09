@@ -2,7 +2,13 @@ diff --git ./debian/changelog ./debian/changelog
 index bcf2e3c..6f2f003 100644
 --- ./debian/changelog
 +++ ./debian/changelog
-@@ -1,3 +1,15 @@
+@@ -1,3 +1,21 @@
++linux (3.2.51-1untangle3) wheezy; urgency=low
++
++ * Add physdev patch
++
++ -- Dirk Morris <dmorris@untangle.com>  Wed, 09 Jul 2014 13:10:12 +0200
++
 +linux (3.2.51-1untangle2) wheezy; urgency=low
 +
 + * fix kernel UDP issues (SPORT extensiion and NFMARK extension not working)
