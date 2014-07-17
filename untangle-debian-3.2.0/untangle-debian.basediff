@@ -152,3 +152,52 @@ index 0000000..4cc1164
 +configs:
 +  i386/none/config.686-pae
 +
+--- ./debian/config/armhf/defines	2013-02-24 04:53:14.000000000 +0100
++++ ./debian/config/armhf/defines	2014-07-14 17:35:54.656398685 +0200
+@@ -1,4 +1,6 @@
+ [base]
++featuresets:
++ untangle
+ flavours:
+  mx5
+  omap
+--- /dev/null	2014-07-01 01:44:56.252971416 +0200
++++ ./debian/config/armhf/untangle/defines	2014-07-14 17:38:26.540860077 +0200
+@@ -0,0 +1,37 @@
++[base]
++flavours:
++ mx5
++ omap
++ vexpress
++kernel-arch: arm
++
++[image]
++suggests: fdutils
++configs:
++ armel/config
++ armhf/config
++
++[mx5_build]
++image-file: arch/arm/boot/zImage
++
++[mx5_description]
++hardware: Freescale i.MX51/53
++hardware-long: Freescale i.MX51 or i.MX53 based systems
++
++[omap_build]
++image-file: arch/arm/boot/zImage
++
++[omap_description]
++hardware: TI OMAP3+
++hardware-long: Texas Instruments OMAP3 or OMAP4 based systems
++
++[omap_image]
++recommends: uboot-mkimage
++
++[vexpress_build]
++image-file: arch/arm/boot/zImage
++
++[vexpress_description]
++hardware: ARM Ltd. Versatile Express
++hardware-long: ARM Ltd. Versatile Express family of processors
++
