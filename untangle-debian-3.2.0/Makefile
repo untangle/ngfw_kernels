@@ -15,12 +15,16 @@ KDSC=${PACKPFX}-${KUPVER}.dsc
 KOURDIFF=untangle-debian.diff
 KOURPATCH=${KOURDIFF}.gz
 
-DOPTIONS = DEBIAN_KERNEL_JOBS=${NPROCEXP} DEB_BUILD_OPTIONS="parallel=${NPROCEXP}" CONCURRENCY_LEVEL=${NPROCEXP} AUTOBUILD=1
-
 MACHINE:=$(shell dpkg-architecture -qDEB_BUILD_ARCH)
 NPROCEXP:=$(shell echo "$$((1+`grep -c processor /proc/cpuinfo`))")
 TEMPDIR:=$(shell mktemp)
 TEMPDIR2:=$(shell mktemp)
+
+ifeq ($(MACHINE),"armhf")
+  NPROCEXP := 1
+endif
+
+DOPTIONS = DEBIAN_KERNEL_JOBS=${NPROCEXP} DEB_BUILD_OPTIONS="parallel=${NPROCEXP}" CONCURRENCY_LEVEL=${NPROCEXP} AUTOBUILD=1
 
 all:	clean kpkg 
 
