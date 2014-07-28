@@ -1,0 +1,14 @@
+diff -urN linux-3.0.35.orig//net/bridge/br_input.c linux-3.0.35//net/bridge/br_input.c
+--- linux-3.0.35.orig//net/bridge/br_input.c	2014-01-24 10:04:29.000000000 -0800
++++ linux-3.0.35//net/bridge/br_input.c	2014-01-24 10:04:45.000000000 -0800
+@@ -161,6 +161,10 @@
+ 
+ 	p = br_port_get_rcu(skb->dev);
+ 
++	if (p->state == BR_STATE_LEARNING ||
++            p->state == BR_STATE_FORWARDING)
++		br_fdb_update(p->br, p, eth_hdr(skb)->h_source);
++
+ 	if (unlikely(is_link_local(dest))) {
+ 		/* Pause frames shouldn't be passed up by driver anyway */
+ 		if (skb->protocol == htons(ETH_P_PAUSE))
