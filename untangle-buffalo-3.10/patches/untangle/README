@@ -1,6 +1,3 @@
-006-bridgefib.patch
-    This patche [appears] to provide a ioctl to query the location of a certain MAC address to determine the interface from the bridge FIB.
-
 007-bridge-mac-ageing-fix.patch
     This patch is necessary because when Untangle is "bridging" traffic it doesn't actually allow traffic through the bridge, it intercepts it.
     This causes traffic not to flow via the normal methods so the "forwarding information base" (or FIB) of the bridge doesn't get updated.
@@ -24,6 +21,11 @@
     This is a total hack as an iptable match shouldn't modify the packet, but the issue is that there is no conntrack entry for packets returning to nonlocal sockets
     So we have no way to restore the QoS/bandwidth control mark so TCP ingress QoS doesn't work without this hack.
      
-020-imq.patch
-    This adds IMQ (intermediate queue device) which allows for ingress QoS filtering on WAN interfaces. Patch from http://www.linuximq.net
+022-physdev.patch
+    The patch is trying to find the bridge port in bridge fdb inside xt_physdev module, so the physoutdev field can match in the FORWARD chain.
+    The kernel without patch can't find the bridge port as the patcket hasn't reach the Bridge code internal yet. 
+    Back to Linux kernel 2.6.18, the kernel is trying to make packet go through bridge forwarding desicion first and then go through forwarding chain. 
+    Follwoing two patchs are original changes in kernel tree at timeframe about 2.6.18 that removed the physoutdev matching in the FORWARD chain.
+    https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/patch/net/netfilter/xt_physdev.c?id=10ea6ac895418bd0d23900e3330daa6ba0836d26
+    https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/patch/net/netfilter/xt_physdev.c?id=2bf540b73ed5b304e84bb4d4c390d49d1cfa0ef8
 
