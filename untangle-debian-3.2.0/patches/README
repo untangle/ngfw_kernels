@@ -1,5 +1,6 @@
 006-bridgefib.patch
     This patche [appears] to provide a ioctl to query the location of a certain MAC address to determine the interface from the bridge FIB.
+    XXX - This is no longer needed with 022-physdev. We are keeping it until it is verified that 022-physdev fulfills our needs and works as expected.
 
 007-bridge-mac-ageing-fix.patch
     This patch is necessary because when Untangle is "bridging" traffic it doesn't actually allow traffic through the bridge, it intercepts it.
