@@ -20,7 +20,7 @@ NPROCEXP:=$(shell echo "$$((1+`grep -c processor /proc/cpuinfo`))")
 TEMPDIR:=$(shell mktemp)
 TEMPDIR2:=$(shell mktemp)
 
-ifeq ($(MACHINE),"armhf")
+ifeq ($(MACHINE),armhf)
   NPROCEXP := 1
 endif
 
