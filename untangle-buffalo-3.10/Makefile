@@ -6,6 +6,7 @@ CONFIG_UNTANGLE_ORIG := untangle.config
 CONFIG_DEST := $(KERNEL_DIR)/.config
 CONCURRENCY_LEVEL := $(( 1 + $(grep -c '^processor\s:' /proc/cpuinfo) ))
 UNTANGLE_PATCH_SERIES := patches/untangle/series
+DDWRT_PATCH_SERIES := patches/dd-wrt/series
 
 all: kernel-package uImage
 
@@ -15,15 +16,23 @@ extract-stamp: $(TARBALL)
 	touch $@
 
 patch: patch-stamp
-patch-stamp: patch-untangle-stamp
+patch-stamp: patch-untangle patch-ddwrt
 	touch $@
 
-patch-untangle: patch-untangle-stamp 
+patch-untangle: patch-untangle-stamp
 patch-untangle-stamp: extract-stamp patches/untangle/*
 	while read patch ; do \
 	  echo "Applying $$patch" ; \
 	  patch -d $(KERNEL_DIR) -p1 < patches/untangle/$$patch ; \
 	done < $(UNTANGLE_PATCH_SERIES)
+	touch $@
+
+patch-ddwrt: patch-ddwrt-stamp
+patch-ddwrt-stamp: extract-stamp patches/dd-wrt/*
+	while read patch ; do \
+	  echo "Applying $$patch" ; \
+	  patch -d $(KERNEL_DIR) -p1 < patches/dd-wrt/$$patch ; \
+	done < $(DDWRT_PATCH_SERIES)
 	touch $@
 
 config: $(CONFIG_DEST)

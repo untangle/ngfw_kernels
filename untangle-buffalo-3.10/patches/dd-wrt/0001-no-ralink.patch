@@ -1,0 +1,26 @@
+--- linux-3.10.49/drivers/net/wireless/Kconfig~	2014-07-27 12:35:24.000000000 +0200
++++ linux-3.10.49/drivers/net/wireless/Kconfig	2014-07-31 11:34:52.741699304 +0200
+@@ -280,14 +280,14 @@
+ source "drivers/net/wireless/ti/Kconfig"
+ source "drivers/net/wireless/zd1211rw/Kconfig"
+ source "drivers/net/wireless/mwifiex/Kconfig"
+-if RALINK_DEVICE
+-source "drivers/net/wireless/rt3352/rt2860v2_ap/Kconfig"
+-source "drivers/net/wireless/rt3352/rt2860v2_sta/Kconfig"
+-endif
+-if SOC_MT7620_OPENWRT
+-source "drivers/net/wireless/rt7620/rt2860v2_ap/Kconfig"
+-source "drivers/net/wireless/rt7620/rt2860v2_sta/Kconfig"
+-source "drivers/net/wireless/rt5592/Kconfig"
+-endif
++# if RALINK_DEVICE
++# source "drivers/net/wireless/rt3352/rt2860v2_ap/Kconfig"
++# source "drivers/net/wireless/rt3352/rt2860v2_sta/Kconfig"
++# endif
++# if SOC_MT7620_OPENWRT
++# source "drivers/net/wireless/rt7620/rt2860v2_ap/Kconfig"
++# source "drivers/net/wireless/rt7620/rt2860v2_sta/Kconfig"
++# source "drivers/net/wireless/rt5592/Kconfig"
++# endif
+ 
+ endif # WLAN
