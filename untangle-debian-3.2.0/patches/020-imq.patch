@@ -1,7 +1,6 @@
-Index: source_untangle/drivers/net/imq.c
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ source_untangle/drivers/net/imq.c	2014-02-27 11:43:08.308013044 +0100
+diff -uNr linux-3.2/drivers/net/imq.c linux-3.2-imq/drivers/net/imq.c
+--- linux-3.2/drivers/net/imq.c	1970-01-01 02:00:00.000000000 +0200
++++ linux-3.2-imq/drivers/net/imq.c	2011-11-04 12:16:10.454992642 +0200
 @@ -0,0 +1,850 @@
 +/*
 + *             Pseudo-driver for the intermediate queue device.
@@ -853,13 +852,12 @@ Index: source_untangle/drivers/net/imq.c
 +MODULE_LICENSE("GPL");
 +MODULE_ALIAS_RTNL_LINK("imq");
 +
-Index: source_untangle/drivers/net/Kconfig
-===================================================================
---- source_untangle.orig/drivers/net/Kconfig	2014-02-27 11:43:08.316013063 +0100
-+++ source_untangle/drivers/net/Kconfig	2014-02-27 11:43:08.308013044 +0100
-@@ -193,6 +193,125 @@
- 	depends on RIONET
- 	default "128"
+diff -uNr linux-3.2/drivers/net/Kconfig linux-3.2-imq/drivers/net/Kconfig
+--- linux-3.2/drivers/net/Kconfig	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.2-imq/drivers/net/Kconfig	2011-11-04 11:12:52.106390309 +0200
+@@ -90,6 +90,125 @@
+ 	  To compile this driver as a module, choose M here: the module
+ 	  will be called eql.  If unsure, say N.
  
 +config IMQ
 +	tristate "IMQ (intermediate queueing device) support"
@@ -980,22 +978,23 @@ Index: source_untangle/drivers/net/Kconfig
 +
 +	  If not sure leave the default settings alone.
 +
- config TUN
- 	tristate "Universal TUN/TAP device driver support"
- 	select CRC32
-Index: source_untangle/drivers/net/Makefile
-===================================================================
---- source_untangle.orig/drivers/net/Makefile	2014-02-27 11:43:08.316013063 +0100
-+++ source_untangle/drivers/net/Makefile	2014-02-27 11:43:08.308013044 +0100
-@@ -68,3 +68,4 @@
- obj-$(CONFIG_USB_CDC_PHONET)   += usb/
- 
- obj-$(CONFIG_HYPERV_NET) += hyperv/
+ config NET_FC
+ 	bool "Fibre Channel driver support"
+ 	depends on SCSI && PCI
+diff -uNr linux-3.2/drivers/net/Makefile linux-3.2-imq/drivers/net/Makefile
+--- linux-3.2/drivers/net/Makefile	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.2-imq/drivers/net/Makefile	2011-11-04 11:12:52.106390309 +0200
+@@ -8,6 +8,7 @@ 
+ obj-$(CONFIG_BONDING) += bonding/
+ obj-$(CONFIG_DUMMY) += dummy.o
+ obj-$(CONFIG_EQUALIZER) += eql.o
 +obj-$(CONFIG_IMQ) += imq.o
-Index: source_untangle/include/linux/imq.h
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ source_untangle/include/linux/imq.h	2014-02-27 11:43:08.308013044 +0100
+ obj-$(CONFIG_IFB) += ifb.o
+ obj-$(CONFIG_MACVLAN) += macvlan.o
+ obj-$(CONFIG_MACVTAP) += macvtap.o
+diff -uNr linux-3.2/include/linux/imq.h linux-3.2-imq/include/linux/imq.h
+--- linux-3.2/include/linux/imq.h	1970-01-01 02:00:00.000000000 +0200
++++ linux-3.2-imq/include/linux/imq.h	2011-11-04 11:12:52.109723710 +0200
 @@ -0,0 +1,13 @@
 +#ifndef _IMQ_H
 +#define _IMQ_H
@@ -1010,10 +1009,9 @@ Index: source_untangle/include/linux/imq.h
 +
 +#endif /* _IMQ_H */
 +
-Index: source_untangle/include/linux/netfilter/xt_IMQ.h
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ source_untangle/include/linux/netfilter/xt_IMQ.h	2014-02-27 11:43:08.308013044 +0100
+diff -uNr linux-3.2/include/linux/netfilter/xt_IMQ.h linux-3.2-imq/include/linux/netfilter/xt_IMQ.h
+--- linux-3.2/include/linux/netfilter/xt_IMQ.h	1970-01-01 02:00:00.000000000 +0200
++++ linux-3.2-imq/include/linux/netfilter/xt_IMQ.h	2011-11-04 11:12:52.109723710 +0200
 @@ -0,0 +1,9 @@
 +#ifndef _XT_IMQ_H
 +#define _XT_IMQ_H
@@ -1024,10 +1022,9 @@ Index: source_untangle/include/linux/netfilter/xt_IMQ.h
 +
 +#endif /* _XT_IMQ_H */
 +
-Index: source_untangle/include/linux/netfilter.h
-===================================================================
---- source_untangle.orig/include/linux/netfilter.h	2014-02-27 11:43:08.316013063 +0100
-+++ source_untangle/include/linux/netfilter.h	2014-02-27 11:43:08.308013044 +0100
+diff -uNr linux-3.2/include/linux/netfilter.h linux-3.2-imq/include/linux/netfilter.h
+--- linux-3.2/include/linux/netfilter.h	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.2-imq/include/linux/netfilter.h	2011-11-04 11:12:52.109723710 +0200
 @@ -22,7 +22,8 @@
  #define NF_QUEUE 3
  #define NF_REPEAT 4
@@ -1038,10 +1035,9 @@ Index: source_untangle/include/linux/netfilter.h
  
  /* we overload the higher bits for encoding auxiliary data such as the queue
   * number or errno values. Not nice, but better than additional function
-Index: source_untangle/include/linux/netfilter_ipv4/ipt_IMQ.h
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ source_untangle/include/linux/netfilter_ipv4/ipt_IMQ.h	2014-02-27 11:43:08.308013044 +0100
+diff -uNr linux-3.2/include/linux/netfilter_ipv4/ipt_IMQ.h linux-3.2-imq/include/linux/netfilter_ipv4/ipt_IMQ.h
+--- linux-3.2/include/linux/netfilter_ipv4/ipt_IMQ.h	1970-01-01 02:00:00.000000000 +0200
++++ linux-3.2-imq/include/linux/netfilter_ipv4/ipt_IMQ.h	2011-11-04 11:12:52.109723710 +0200
 @@ -0,0 +1,10 @@
 +#ifndef _IPT_IMQ_H
 +#define _IPT_IMQ_H
@@ -1053,10 +1049,9 @@ Index: source_untangle/include/linux/netfilter_ipv4/ipt_IMQ.h
 +
 +#endif /* _IPT_IMQ_H */
 +
-Index: source_untangle/include/linux/netfilter_ipv6/ip6t_IMQ.h
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ source_untangle/include/linux/netfilter_ipv6/ip6t_IMQ.h	2014-02-27 11:43:08.308013044 +0100
+diff -uNr linux-3.2/include/linux/netfilter_ipv6/ip6t_IMQ.h linux-3.2-imq/include/linux/netfilter_ipv6/ip6t_IMQ.h
+--- linux-3.2/include/linux/netfilter_ipv6/ip6t_IMQ.h	1970-01-01 02:00:00.000000000 +0200
++++ linux-3.2-imq/include/linux/netfilter_ipv6/ip6t_IMQ.h	2011-11-04 11:12:52.113057113 +0200
 @@ -0,0 +1,10 @@
 +#ifndef _IP6T_IMQ_H
 +#define _IP6T_IMQ_H
@@ -1068,21 +1063,20 @@ Index: source_untangle/include/linux/netfilter_ipv6/ip6t_IMQ.h
 +
 +#endif /* _IP6T_IMQ_H */
 +
-Index: source_untangle/include/linux/skbuff.h
-===================================================================
---- source_untangle.orig/include/linux/skbuff.h	2014-02-27 11:43:08.316013063 +0100
-+++ source_untangle/include/linux/skbuff.h	2014-02-27 11:43:08.308013044 +0100
-@@ -29,6 +29,9 @@
- #include <linux/rcupdate.h>
+diff -uNr linux-3.2/include/linux/skbuff.h linux-3.2-imq/include/linux/skbuff.h
+--- linux-3.2/include/linux/skbuff.h	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.2-imq/include/linux/skbuff.h	2011-11-04 11:12:52.116390515 +0200
+@@ -30,6 +30,9 @@
  #include <linux/dmaengine.h>
  #include <linux/hrtimer.h>
+ #include <linux/dma-mapping.h>
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
 +#include <linux/imq.h>
 +#endif
- #include <linux/dma-mapping.h>
  
  /* Don't change this without changing skb_csum_unnecessary! */
-@@ -383,6 +386,9 @@
+ #define CHECKSUM_NONE 0
+@@ -386,6 +389,9 @@
  	 * first. This is owned by whoever has the skb queued ATM.
  	 */
  	char			cb[48] __aligned(8);
@@ -1092,7 +1086,7 @@ Index: source_untangle/include/linux/skbuff.h
  
  	unsigned long		_skb_refdst;
  #ifdef CONFIG_XFRM
-@@ -421,6 +427,9 @@
+@@ -424,6 +430,9 @@
  #ifdef NET_SKBUFF_NF_DEFRAG_NEEDED
  	struct sk_buff		*nfct_reasm;
  #endif
@@ -1102,7 +1096,7 @@ Index: source_untangle/include/linux/skbuff.h
  #ifdef CONFIG_BRIDGE_NETFILTER
  	struct nf_bridge_info	*nf_bridge;
  #endif
-@@ -446,6 +455,10 @@
+@@ -449,6 +458,10 @@
  
  	/* 0/13 bit hole */
  
@@ -1113,7 +1107,7 @@ Index: source_untangle/include/linux/skbuff.h
  #ifdef CONFIG_NET_DMA
  	dma_cookie_t		dma_cookie;
  #endif
-@@ -538,6 +551,12 @@
+@@ -535,6 +548,12 @@
  	return (struct rtable *)skb_dst(skb);
  }
  
@@ -1126,7 +1120,7 @@ Index: source_untangle/include/linux/skbuff.h
  extern void kfree_skb(struct sk_buff *skb);
  extern void consume_skb(struct sk_buff *skb);
  extern void	       __kfree_skb(struct sk_buff *skb);
-@@ -2391,6 +2410,10 @@
+@@ -2368,6 +2387,10 @@
  	dst->nfct_reasm = src->nfct_reasm;
  	nf_conntrack_get_reasm(src->nfct_reasm);
  #endif
@@ -1137,10 +1131,9 @@ Index: source_untangle/include/linux/skbuff.h
  #ifdef CONFIG_BRIDGE_NETFILTER
  	dst->nf_bridge  = src->nf_bridge;
  	nf_bridge_get(src->nf_bridge);
-Index: source_untangle/include/net/netfilter/nf_queue.h
-===================================================================
---- source_untangle.orig/include/net/netfilter/nf_queue.h	2014-02-27 11:43:08.316013063 +0100
-+++ source_untangle/include/net/netfilter/nf_queue.h	2014-02-27 11:43:08.308013044 +0100
+diff -uNr linux-3.2/include/net/netfilter/nf_queue.h linux-3.2-imq/include/net/netfilter/nf_queue.h
+--- linux-3.2/include/net/netfilter/nf_queue.h	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.2-imq/include/net/netfilter/nf_queue.h	2011-11-04 11:12:52.116390515 +0200
 @@ -30,5 +30,11 @@
  				       const struct nf_queue_handler *qh);
  extern void nf_unregister_queue_handlers(const struct nf_queue_handler *qh);
@@ -1153,10 +1146,9 @@ Index: source_untangle/include/net/netfilter/nf_queue.h
 +#endif
  
  #endif /* _NF_QUEUE_H */
-Index: source_untangle/net/core/dev.c
-===================================================================
---- source_untangle.orig/net/core/dev.c	2014-02-27 11:43:08.316013063 +0100
-+++ source_untangle/net/core/dev.c	2014-02-27 11:43:08.312013054 +0100
+diff -uNr linux-3.2/net/core/dev.c linux-3.2-imq/net/core/dev.c
+--- linux-3.2/net/core/dev.c	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.2-imq/net/core/dev.c	2011-11-04 11:12:52.119723915 +0200
 @@ -98,6 +98,9 @@
  #include <net/net_namespace.h>
  #include <net/sock.h>
@@ -1167,7 +1159,7 @@ Index: source_untangle/net/core/dev.c
  #include <linux/proc_fs.h>
  #include <linux/seq_file.h>
  #include <linux/stat.h>
-@@ -2181,7 +2184,12 @@
+@@ -2185,7 +2188,12 @@
  		if (dev->priv_flags & IFF_XMIT_DST_RELEASE)
  			skb_dst_drop(skb);
  
@@ -1179,11 +1171,10 @@ Index: source_untangle/net/core/dev.c
 +#endif
  			dev_queue_xmit_nit(skb, dev);
  
- 		features = netif_skb_features(skb);
-Index: source_untangle/net/core/skbuff.c
-===================================================================
---- source_untangle.orig/net/core/skbuff.c	2014-02-27 11:43:08.316013063 +0100
-+++ source_untangle/net/core/skbuff.c	2014-02-27 11:43:08.312013054 +0100
+ 		skb_orphan_try(skb);
+diff -uNr linux-3.2/net/core/skbuff.c linux-3.2-imq/net/core/skbuff.c
+--- linux-3.2/net/core/skbuff.c	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.2-imq/net/core/skbuff.c	2011-11-04 11:12:52.123057315 +0200
 @@ -73,6 +73,9 @@
  
  static struct kmem_cache *skbuff_head_cache __read_mostly;
@@ -1314,7 +1305,7 @@ Index: source_untangle/net/core/skbuff.c
  	new->csum		= old->csum;
  	new->local_df		= old->local_df;
  	new->pkt_type		= old->pkt_type;
-@@ -2910,6 +3012,13 @@
+@@ -2907,6 +3009,13 @@
  						0,
  						SLAB_HWCACHE_ALIGN|SLAB_PANIC,
  						NULL);
@@ -1328,10 +1319,9 @@ Index: source_untangle/net/core/skbuff.c
  }
  
  /**
-Index: source_untangle/net/ipv6/ip6_output.c
-===================================================================
---- source_untangle.orig/net/ipv6/ip6_output.c	2014-02-27 11:43:08.316013063 +0100
-+++ source_untangle/net/ipv6/ip6_output.c	2014-02-27 11:43:08.312013054 +0100
+diff -uNr linux-3.2/net/ipv6/ip6_output.c linux-3.2-imq/net/ipv6/ip6_output.c
+--- linux-3.2/net/ipv6/ip6_output.c	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.2-imq/net/ipv6/ip6_output.c	2011-11-04 11:12:52.123057315 +0200
 @@ -102,9 +102,6 @@
  	struct net_device *dev = dst->dev;
  	struct neighbour *neigh;
@@ -1354,29 +1344,27 @@ Index: source_untangle/net/ipv6/ip6_output.c
  	return NF_HOOK_COND(NFPROTO_IPV6, NF_INET_POST_ROUTING, skb, NULL, dev,
  			    ip6_finish_output,
  			    !(IP6CB(skb)->flags & IP6SKB_REROUTED));
-Index: source_untangle/net/netfilter/core.c
-===================================================================
---- source_untangle.orig/net/netfilter/core.c	2014-02-27 11:43:08.316013063 +0100
-+++ source_untangle/net/netfilter/core.c	2014-02-27 11:45:57.212402998 +0100
+diff -uNr linux-3.2/net/netfilter/core.c linux-3.2-imq/net/netfilter/core.c
+--- linux-3.2/net/netfilter/core.c	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.2-imq/net/netfilter/core.c	2011-11-04 11:12:52.123057315 +0200
 @@ -179,9 +179,11 @@
  		ret = NF_DROP_GETERR(verdict);
  		if (ret == 0)
  			ret = -EPERM;
 -	} else if ((verdict & NF_VERDICT_MASK) == NF_QUEUE) {
-+	} else if ((verdict & NF_VERDICT_MASK) == NF_QUEUE || 
-+                   (verdict & NF_VERDICT_MASK) == NF_IMQ_QUEUE) {
++	} else if ((verdict & NF_VERDICT_MASK) == NF_QUEUE ||
++		   (verdict & NF_VERDICT_MASK) == NF_IMQ_QUEUE) {
  		int err = nf_queue(skb, elem, pf, hook, indev, outdev, okfn,
 -						verdict >> NF_VERDICT_QBITS);
-+                                   verdict >> NF_VERDICT_QBITS,
-+                                   verdict & NF_VERDICT_MASK);
++						verdict >> NF_VERDICT_QBITS,
++						verdict & NF_VERDICT_MASK);
  		if (err < 0) {
  			if (err == -ECANCELED)
  				goto next_hook;
-Index: source_untangle/net/netfilter/Kconfig
-===================================================================
---- source_untangle.orig/net/netfilter/Kconfig	2014-02-27 11:43:08.316013063 +0100
-+++ source_untangle/net/netfilter/Kconfig	2014-02-27 11:43:08.312013054 +0100
-@@ -514,6 +514,18 @@
+diff -uNr linux-3.2/net/netfilter/Kconfig linux-3.2-imq/net/netfilter/Kconfig
+--- linux-3.2/net/netfilter/Kconfig	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.2-imq/net/netfilter/Kconfig	2011-11-04 11:12:52.123057315 +0200
+@@ -506,6 +506,18 @@
  	  For more information on the LEDs available on your system, see
  	  Documentation/leds/leds-class.txt
  
@@ -1395,10 +1383,9 @@ Index: source_untangle/net/netfilter/Kconfig
  config NETFILTER_XT_TARGET_MARK
  	tristate '"MARK" target support'
  	depends on NETFILTER_ADVANCED
-Index: source_untangle/net/netfilter/Makefile
-===================================================================
---- source_untangle.orig/net/netfilter/Makefile	2014-02-27 11:43:08.316013063 +0100
-+++ source_untangle/net/netfilter/Makefile	2014-02-27 11:43:08.312013054 +0100
+diff -uNr linux-3.2/net/netfilter/Makefile linux-3.2-imq/net/netfilter/Makefile
+--- linux-3.2/net/netfilter/Makefile	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.2-imq/net/netfilter/Makefile	2011-11-04 11:12:52.123057315 +0200
 @@ -56,6 +56,7 @@
  obj-$(CONFIG_NETFILTER_XT_TARGET_CT) += xt_CT.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_DSCP) += xt_DSCP.o
@@ -1407,10 +1394,9 @@ Index: source_untangle/net/netfilter/Makefile
  obj-$(CONFIG_NETFILTER_XT_TARGET_LED) += xt_LED.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_NFLOG) += xt_NFLOG.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_NFQUEUE) += xt_NFQUEUE.o
-Index: source_untangle/net/netfilter/nf_internals.h
-===================================================================
---- source_untangle.orig/net/netfilter/nf_internals.h	2014-02-27 11:43:08.316013063 +0100
-+++ source_untangle/net/netfilter/nf_internals.h	2014-02-27 11:43:08.312013054 +0100
+diff -uNr linux-3.2/net/netfilter/nf_internals.h linux-3.2-imq/net/netfilter/nf_internals.h
+--- linux-3.2/net/netfilter/nf_internals.h	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.2-imq/net/netfilter/nf_internals.h	2011-11-04 11:12:52.123057315 +0200
 @@ -29,7 +29,7 @@
  		    struct net_device *indev,
  		    struct net_device *outdev,
@@ -1420,10 +1406,9 @@ Index: source_untangle/net/netfilter/nf_internals.h
  extern int __init netfilter_queue_init(void);
  
  /* nf_log.c */
-Index: source_untangle/net/netfilter/nf_queue.c
-===================================================================
---- source_untangle.orig/net/netfilter/nf_queue.c	2014-02-27 11:43:08.316013063 +0100
-+++ source_untangle/net/netfilter/nf_queue.c	2014-02-27 11:43:08.312013054 +0100
+diff -uNr linux-3.2/net/netfilter/nf_queue.c linux-3.2-imq/net/netfilter/nf_queue.c
+--- linux-3.2/net/netfilter/nf_queue.c	2011-10-24 10:10:05.000000000 +0300
++++ linux-3.2-imq/net/netfilter/nf_queue.c	2011-11-04 11:12:52.123057315 +0200
 @@ -22,6 +22,26 @@
  
  static DEFINE_MUTEX(queue_handler_mutex);
@@ -1538,10 +1523,9 @@ Index: source_untangle/net/netfilter/nf_queue.c
  		if (err < 0) {
  			if (err == -ECANCELED)
  				goto next_hook;
-Index: source_untangle/net/netfilter/xt_IMQ.c
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ source_untangle/net/netfilter/xt_IMQ.c	2014-02-27 11:43:08.312013054 +0100
+diff -uNr linux-3.2/net/netfilter/xt_IMQ.c linux-3.2-imq/net/netfilter/xt_IMQ.c
+--- linux-3.2/net/netfilter/xt_IMQ.c	1970-01-01 02:00:00.000000000 +0200
++++ linux-3.2-imq/net/netfilter/xt_IMQ.c	2011-11-04 11:12:52.123057315 +0200
 @@ -0,0 +1,74 @@
 +/*
 + * This target marks packets to be enqueued to an imq device
@@ -1612,7 +1596,7 @@ Index: source_untangle/net/netfilter/xt_IMQ.c
 +
 +MODULE_AUTHOR("http://www.linuximq.net");
 +MODULE_DESCRIPTION("Pseudo-driver for the intermediate queue device. "
-+		   "See http://www.linuximq.net/ for more information.");
++		   "See https://github.com/imq/linuximq/wiki for more information.");
 +MODULE_LICENSE("GPL");
 +MODULE_ALIAS("ipt_IMQ");
 +MODULE_ALIAS("ip6t_IMQ");
