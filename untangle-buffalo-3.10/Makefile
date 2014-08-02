@@ -8,7 +8,7 @@ CONCURRENCY_LEVEL := $(shell grep -c '^processor\s:' /proc/cpuinfo)
 UNTANGLE_PATCH_SERIES := patches/untangle/series
 DDWRT_PATCH_SERIES := patches/dd-wrt/series
 
-all: kernel uImage
+all: kernel
 
 extract: extract-stamp
 extract-stamp: $(TARBALL)
@@ -46,11 +46,6 @@ kernel: patch-stamp config
 kernel-package: patch-stamp config
 	cd $(KERNEL_DIR) ; \
 	MAKEFLAGS= MFLAGS= DEB_HOST_ARCH=armhf CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) fakeroot make-kpkg --arch arm --cross-compile arm-linux-gnueabihf- --initrd --revision=1+untangle1 kernel_image kernel_headers
-
-uImage: $(UIMAGE)
-$(UIMAGE): kernel-package
-	cd $(KERNEL_DIR) ; \
-	ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make uImage
 
 clean:
 	rm -fr $(KERNEL_DIR)
