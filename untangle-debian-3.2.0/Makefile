@@ -26,7 +26,7 @@ endif
 
 DOPTIONS = DEBIAN_KERNEL_JOBS=${NPROCEXP} DEB_BUILD_OPTIONS="parallel=${NPROCEXP}" CONCURRENCY_LEVEL=${NPROCEXP} AUTOBUILD=1
 
-all:	clean kpkg 
+all:	clean pkgs
 
 pkgs:	kpkg-arch kpkg-indep
 
