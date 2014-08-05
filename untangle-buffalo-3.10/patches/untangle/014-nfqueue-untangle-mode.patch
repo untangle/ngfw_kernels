@@ -106,9 +106,9 @@ diff -urN linux-3.10.49.orig/net/netfilter/nfnetlink_queue_core.c linux-3.10.49-
 +	if (queue->untangle_mode){
 +		ct = nf_ct_get(entskb, &ctinfo);
 +		if ( ct ) {
-+			NLA_PUT(skb, NFQA_CTINFO, sizeof(ctinfo), &ctinfo);
-+			NLA_PUT(skb, NFQA_CT_DIR_ORIGINAL, sizeof(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple),  &ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple);
-+			NLA_PUT(skb, NFQA_CT_DIR_REPLY, sizeof(ct->tuplehash[IP_CT_DIR_REPLY].tuple), &ct->tuplehash[IP_CT_DIR_REPLY].tuple);
++			nla_put(skb, NFQA_CTINFO, sizeof(ctinfo), &ctinfo);
++			nla_put(skb, NFQA_CT_DIR_ORIGINAL, sizeof(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple),  &ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple);
++			nla_put(skb, NFQA_CT_DIR_REPLY, sizeof(ct->tuplehash[IP_CT_DIR_REPLY].tuple), &ct->tuplehash[IP_CT_DIR_REPLY].tuple);
 +	  	}
 +	}
 +#endif
