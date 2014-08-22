@@ -1,20 +1,20 @@
 diff -urN linux-3.10.49.orig/brcm/arm/shared/siutils.c linux-3.10.49.gpio/brcm/arm/shared/siutils.c
 --- linux-3.10.49.orig/brcm/arm/shared/siutils.c	2014-08-22 12:12:31.000000000 -0700
-+++ linux-3.10.49.gpio/brcm/arm/shared/siutils.c	2014-08-22 12:14:10.000000000 -0700
++++ linux-3.10.49.gpio/brcm/arm/shared/siutils.c	2014-08-22 13:11:49.000000000 -0700
 @@ -3833,6 +3833,12 @@
  hc_sih = sih;
  }
  
-+#define set_gpio(m_pin,m_value) if (m_value) { \
-+				    si_gpioout(sih,1<<m_pin,1<<m_pin,GPIO_HI_PRIORITY); \
++#define set_gpio_early(m_pin,m_value) if (m_value) { \
++				    si_gpioout(hc_sih,1<<m_pin,1<<m_pin,GPIO_HI_PRIORITY); \
 +				} else { \
-+				    si_gpioout(sih,1<<m_pin,0,GPIO_HI_PRIORITY); \
++				    si_gpioout(hc_sih,1<<m_pin,0,GPIO_HI_PRIORITY); \
 +				}
 +
  void set_hc595_reset(void)
  {
  uint32 latch = 6;
-@@ -3840,17 +3846,17 @@
+@@ -3840,10 +3846,15 @@
  uint32 clk = 7;
  uint32 reset = 8;
  uint32 oe = 5;
@@ -25,15 +25,8 @@ diff -urN linux-3.10.49.orig/brcm/arm/shared/siutils.c linux-3.10.49.gpio/brcm/a
  val |= 1<<latch|1<<data|1<<clk|1<<reset|1<<oe;
  si_gpioouten(hc_sih,~0,val,GPIO_HI_PRIORITY); 
 +
-+set_gpio(usb3_power,0);   //diable pin 10
-+set_gpio(usb2_power,1);   //enable pin 9
++set_gpio_early(usb3_power,0);   //diable pin 10
++set_gpio_early(usb2_power,1);   //enable pin 9
  }
  
--#define set_gpio(m_pin,m_value) if (m_value) { \
--				    si_gpioout(sih,1<<m_pin,1<<m_pin,GPIO_HI_PRIORITY); \
--				} else { \
--				    si_gpioout(sih,1<<m_pin,0,GPIO_HI_PRIORITY); \
--				}
- 
- void set_hc595(uint32 pin, uint32 value)
- {
+ #define set_gpio(m_pin,m_value) if (m_value) { \
