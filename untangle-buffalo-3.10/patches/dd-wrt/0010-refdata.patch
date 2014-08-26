@@ -1,0 +1,22 @@
+--- linux-3.10.49/drivers/net/wireless/iwlwifi/pcie/drv.c.bak	2014-07-31 13:36:12.654042978 +0200
++++ linux-3.10.49/drivers/net/wireless/iwlwifi/pcie/drv.c	2014-07-31 13:36:26.700266400 +0200
+@@ -443,7 +443,7 @@
+ 
+ #endif
+ 
+-static struct pci_driver iwl_pci_driver = {
++static struct pci_driver iwl_pci_driver __refdata = {
+ 	.name = DRV_NAME,
+ 	.id_table = iwl_hw_card_ids,
+ 	.probe = iwl_pci_probe,
+--- linux-3.10.49/brcm/arm/et/sys/et_linux.c.bak	2014-07-31 13:35:10.090469092 +0200
++++ linux-3.10.49/brcm/arm/et/sys/et_linux.c	2014-07-31 13:35:27.566307917 +0200
+@@ -906,7 +906,7 @@
+ 	}
+ }
+ 
+-static struct pci_driver et_pci_driver = {
++static struct pci_driver et_pci_driver __refdata = {
+ 	name:		"et",
+ 	probe:		et_probe,
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 4, 6)
