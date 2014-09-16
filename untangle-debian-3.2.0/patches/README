@@ -1,3 +1,7 @@
+0001-SAREF-add-support-for-SA-selection-through-sendmsg.patch
+0002-SAREF-implement-IP_IPSEC_BINDREF.patch
+    Both of these are third party patches to enable xl2tpd to run in KLIPS mode with SAREF (bug #11878 for more info)
+
 006-bridgefib.patch
     This patche [appears] to provide a ioctl to query the location of a certain MAC address to determine the interface from the bridge FIB.
     XXX - This is no longer needed with 022-physdev. We are keeping it until it is verified that 022-physdev fulfills our needs and works as expected.

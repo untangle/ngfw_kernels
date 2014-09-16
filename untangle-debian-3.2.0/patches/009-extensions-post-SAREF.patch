@@ -1,0 +1,402 @@
+diff -urN source_untangle/include/linux/in.h source_untangle.modified/include/linux/in.h
+--- source_untangle/include/linux/in.h	2014-09-15 21:23:44.000000000 -0700
++++ source_untangle.modified/include/linux/in.h	2014-09-15 19:28:35.000000000 -0700
+@@ -89,6 +89,10 @@
+ #define IP_MINTTL       21
+ #define IP_NODEFRAG     22
+ 
++/* Extensions */
++#define IP_SADDR		24
++#define IP_SENDNFMARK	25
++
+ /* IP_MTU_DISCOVER values */
+ #define IP_PMTUDISC_DONT		0	/* Never send DF frames */
+ #define IP_PMTUDISC_WANT		1	/* Use per route hints	*/
+@@ -194,6 +198,10 @@
+ };
+ #define sin_zero	__pad		/* for BSD UNIX comp. -FvK	*/
+ 
++struct ip_sendnfmark_opts {
++	u_int32_t	on;
++	u_int32_t	mark;
++};
+ 
+ /*
+  * Definitions of the bits in an Internet address integer.
+@@ -248,7 +256,7 @@
+ 
+ 
+ /* <asm/byteorder.h> contains the htonl type stuff.. */
+-#include <asm/byteorder.h> 
++#include <asm/byteorder.h>
+ 
+ #ifdef __KERNEL__
+ 
+diff -urN source_untangle/include/linux/udp.h source_untangle.modified/include/linux/udp.h
+--- source_untangle/include/linux/udp.h	2013-09-09 17:57:42.000000000 -0700
++++ source_untangle.modified/include/linux/udp.h	2014-09-15 19:28:35.000000000 -0700
+@@ -30,6 +30,9 @@
+ #define UDP_CORK	1	/* Never send partially complete segments */
+ #define UDP_ENCAP	100	/* Set the socket to accept encapsulated packets */
+ 
++/* UDP ancillary data types */
++#define UDP_SPORT	1
++
+ /* UDP encapsulation types */
+ #define UDP_ENCAP_ESPINUDP_NON_IKE	1 /* draft-ietf-ipsec-nat-t-ike-00/01 */
+ #define UDP_ENCAP_ESPINUDP	2 /* draft-ietf-ipsec-udp-encaps-06 */
+diff -urN source_untangle/include/net/ip.h source_untangle.modified/include/net/ip.h
+--- source_untangle/include/net/ip.h	2014-09-15 21:23:43.000000000 -0700
++++ source_untangle.modified/include/net/ip.h	2014-09-15 19:30:06.000000000 -0700
+@@ -37,6 +37,10 @@
+ 	struct ip_options	opt;		/* Compiled IP options		*/
+ 	unsigned char		flags;
+ 
++	/* Extensions */
++	unsigned char		pkt_ip_ttl;
++	unsigned char		pkt_ip_tos;
++
+ #define IPSKB_FORWARDED		1
+ #define IPSKB_XFRM_TUNNEL_SIZE	2
+ #define IPSKB_XFRM_TRANSFORMED	4
+@@ -54,6 +58,13 @@
+ 	int			oif;
+ 	struct ip_options_rcu	*opt;
+ 	__u8			tx_flags;
++
++	/* Extensions */
++	u8		pkt_ip_ttl;
++	u8		pkt_ip_tos;
++	u16		pkt_udp_sport;
++	u32		nfmark;
++
+ #ifdef CONFIG_INET_IPSEC_SAREF
+ 	struct sec_path		*sp;
+ #endif
+@@ -141,13 +152,13 @@
+ }
+ 
+ /* datagram.c */
+-extern int		ip4_datagram_connect(struct sock *sk, 
++extern int		ip4_datagram_connect(struct sock *sk,
+ 					     struct sockaddr *uaddr, int addr_len);
+ 
+ /*
+  *	Map a multicast IP onto multicast MAC for type Token Ring.
+  *      This conforms to RFC1469 Option 2 Multicasting i.e.
+- *      using a functional address to transmit / receive 
++ *      using a functional address to transmit / receive
+  *      multicast packets.
+  */
+ 
+@@ -162,14 +173,14 @@
+ }
+ 
+ struct ip_reply_arg {
+-	struct kvec iov[1];   
++	struct kvec iov[1];
+ 	int	    flags;
+ 	__wsum 	    csum;
+ 	int	    csumoffset; /* u16 offset of csum in iov[0].iov_base */
+-				/* -1 if not needed */ 
++				/* -1 if not needed */
+ 	int	    bound_dev_if;
+ 	u8  	    tos;
+-}; 
++};
+ 
+ #define IP_REPLY_ARG_NOSRCCHECK 1
+ 
+@@ -428,13 +439,13 @@
+ /*
+  *	Functions provided by ip_forward.c
+  */
+- 
++
+ extern int ip_forward(struct sk_buff *skb);
+- 
++
+ /*
+  *	Functions provided by ip_options.c
+  */
+- 
++
+ extern void ip_options_build(struct sk_buff *skb, struct ip_options *opt,
+ 			     __be32 daddr, struct rtable *rt, int is_frag);
+ extern int ip_options_echo(struct ip_options *dopt, struct sk_buff *skb);
+@@ -466,7 +477,7 @@
+ extern int	ip_ra_control(struct sock *sk, unsigned char on, void (*destructor)(struct sock *));
+ 
+ extern int 	ip_recv_error(struct sock *sk, struct msghdr *msg, int len);
+-extern void	ip_icmp_error(struct sock *sk, struct sk_buff *skb, int err, 
++extern void	ip_icmp_error(struct sock *sk, struct sk_buff *skb, int err,
+ 			      __be16 port, u32 info, u8 *payload);
+ extern void	ip_local_error(struct sock *sk, int err, __be32 daddr, __be16 dport,
+ 			       u32 info);
+diff -urN source_untangle/net/ipv4/icmp.c source_untangle.modified/net/ipv4/icmp.c
+--- source_untangle/net/ipv4/icmp.c	2014-09-15 21:23:43.000000000 -0700
++++ source_untangle.modified/net/ipv4/icmp.c	2014-09-15 19:28:35.000000000 -0700
+@@ -600,6 +600,7 @@
+ 	icmp_param.skb	  = skb_in;
+ 	icmp_param.offset = skb_network_offset(skb_in);
+ 	inet_sk(sk)->tos = tos;
++
+ 	ipc.addr = iph->saddr;
+ 	ipc.opt = &icmp_param.replyopts.opt;
+ 	ipc.tx_flags = 0;
+diff -urN source_untangle/net/ipv4/ip_output.c source_untangle.modified/net/ipv4/ip_output.c
+--- source_untangle/net/ipv4/ip_output.c	2014-09-15 21:23:43.000000000 -0700
++++ source_untangle.modified/net/ipv4/ip_output.c	2014-09-15 20:16:00.000000000 -0700
+@@ -155,11 +155,15 @@
+ 	iph->version  = 4;
+ 	iph->ihl      = 5;
+ 	iph->tos      = inet->tos;
++	if (IPCB(skb)->pkt_ip_tos)
++		iph->tos = IPCB(skb)->pkt_ip_tos;
+ 	if (ip_dont_fragment(sk, &rt->dst))
+ 		iph->frag_off = htons(IP_DF);
+ 	else
+ 		iph->frag_off = 0;
+ 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
++	if (IPCB(skb)->pkt_ip_ttl)
++		iph->ttl = IPCB(skb)->pkt_ip_ttl;
+ 	iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
+ 	iph->saddr    = saddr;
+ 	iph->protocol = sk->sk_protocol;
+@@ -171,7 +175,7 @@
+ 	}
+ 
+ 	skb->priority = sk->sk_priority;
+-	skb->mark = sk->sk_mark;
++	skb->mark |= sk->sk_mark;
+ 
+ 	/* Send it out. */
+ 	return ip_local_out(skb);
+@@ -794,8 +798,7 @@
+ 			    struct inet_cork *cork,
+ 			    int getfrag(void *from, char *to, int offset,
+ 					int len, int odd, struct sk_buff *skb),
+-			    void *from, int length, int transhdrlen,
+-			    struct ipcm_cookie *ipc,
++			    void *from, int length, int transhdrlen, struct ipcm_cookie *ipc,
+ 			    unsigned int flags)
+ {
+ 	struct inet_sock *inet = inet_sk(sk);
+@@ -945,6 +948,17 @@
+ 						 fragheaderlen);
+ 			data += fragheaderlen + exthdrlen;
+ 
++			if (ipc->pkt_ip_ttl)
++				IPCB(skb)->pkt_ip_ttl = ipc->pkt_ip_ttl;
++			else
++				IPCB(skb)->pkt_ip_ttl = 0;
++			if (ipc->pkt_ip_tos)
++				IPCB(skb)->pkt_ip_tos = ipc->pkt_ip_tos;
++			else
++				IPCB(skb)->pkt_ip_tos = 0;
++
++			skb->mark = ipc->nfmark;
++
+ 			if (fraggap) {
+ 				skb->csum = skb_copy_and_csum_bits(
+ 					skb_prev, maxfraglen,
+@@ -1355,7 +1369,7 @@
+ 	}
+ 
+ 	skb->priority = sk->sk_priority;
+-	skb->mark = sk->sk_mark;
++	skb->mark |= sk->sk_mark;
+ 	/*
+ 	 * Steal rt from cork.dst to avoid a pair of atomic_inc/atomic_dec
+ 	 * on dst refcount
+diff -urN source_untangle/net/ipv4/ip_sockglue.c source_untangle.modified/net/ipv4/ip_sockglue.c
+--- source_untangle/net/ipv4/ip_sockglue.c	2014-09-15 21:23:44.000000000 -0700
++++ source_untangle.modified/net/ipv4/ip_sockglue.c	2014-09-15 21:31:03.000000000 -0700
+@@ -286,6 +286,36 @@
+ 			ipc->addr = info->ipi_spec_dst.s_addr;
+ 			break;
+ 		}
++		case IP_SADDR:
++		{
++			struct in_addr *in;
++			if (cmsg->cmsg_len != CMSG_LEN(sizeof(struct in_addr)))
++				return -EINVAL;
++			in = (struct in_addr *)CMSG_DATA(cmsg);
++			ipc->addr = in->s_addr;
++			break;
++		}
++		case IP_TTL:
++		{
++			if (cmsg->cmsg_len != CMSG_LEN(sizeof(unsigned char)))
++				return -EINVAL;
++			ipc->pkt_ip_ttl = *(u_char *)CMSG_DATA(cmsg);
++			break;
++			}
++		case IP_TOS:
++		{
++			if (cmsg->cmsg_len != CMSG_LEN(sizeof(unsigned char)))
++				return -EINVAL;
++			ipc->pkt_ip_tos = *(u_char *)CMSG_DATA(cmsg);
++			break;
++		}
++		case IP_SENDNFMARK:
++		{
++			if (cmsg->cmsg_len != CMSG_LEN(sizeof(u_int32_t)))
++				return -EINVAL;
++			ipc->nfmark = *(u_int32_t *)CMSG_DATA(cmsg);
++			break;
++		}
+ 
+ #ifdef CONFIG_INET_IPSEC_SAREF
+ 		case IP_IPSEC_REFINFO:
+@@ -299,6 +329,7 @@
+ #endif
+ 
+ 		default:
++			printk("Unknown cmsg_type: %i\n",cmsg->cmsg_type);
+ 			return -EINVAL;
+ 		}
+ 	}
+@@ -668,6 +699,24 @@
+ 		else
+ 			inet->cmsg_flags &= ~IP_CMSG_ORIGDSTADDR;
+ 		break;
++
++	case IP_SENDNFMARK:
++		{
++			struct ip_sendnfmark_opts nfopt;
++
++			if (optlen != sizeof(struct ip_sendnfmark_opts))
++				goto e_inval;
++			if (copy_from_user(&nfopt, optval, sizeof(struct ip_sendnfmark_opts))) {
++				err = -EFAULT;
++				break;
++			}
++		/* Changed semantics for version 2.6.32 and above -- reset to 0 when not 'on' */
++			if (nfopt.on)
++				sk->sk_mark = nfopt.mark;
++			else
++				sk->sk_mark = 0;
++			break;
++		}
+ #ifdef CONFIG_INET_IPSEC_SAREF
+ 	case IP_IPSEC_REFINFO:
+ 		if (val)
+@@ -1254,6 +1303,23 @@
+ 	case IP_RECVORIGDSTADDR:
+ 		val = (inet->cmsg_flags & IP_CMSG_ORIGDSTADDR) != 0;
+ 		break;
++	case IP_SENDNFMARK:
++	{
++		struct ip_sendnfmark_opts opts;
++
++		/* Changed semantics for version 2.6.32 and above -- always on */
++		opts.on = 1;
++		opts.mark =  sk->sk_mark;
++		release_sock(sk);
++
++		if (len < sizeof(struct ip_sendnfmark_opts)) {
++			return -EINVAL;
++			}
++		if(copy_to_user(optval, &opts, sizeof(struct ip_sendnfmark_opts))) {
++			return -EFAULT;
++			}
++		return 0;
++	}
+ 	case IP_TOS:
+ 		val = inet->tos;
+ 		break;
+diff -urN source_untangle/net/ipv4/udp.c source_untangle.modified/net/ipv4/udp.c
+--- source_untangle/net/ipv4/udp.c	2014-09-15 21:23:43.000000000 -0700
++++ source_untangle.modified/net/ipv4/udp.c	2014-09-15 19:28:35.000000000 -0700
+@@ -442,6 +442,32 @@
+ 	return result;
+ }
+ 
++static int udp_cmsg_send(struct net *net, struct msghdr *msg, struct ipcm_cookie *ipc)
++{
++	struct cmsghdr *cmsg;
++
++	for (cmsg = CMSG_FIRSTHDR(msg); cmsg;
++		cmsg = CMSG_NXTHDR(msg, cmsg)) {
++
++		if (cmsg->cmsg_level == SOL_UDP) {
++			switch (cmsg->cmsg_type) {
++
++			case UDP_SPORT:
++				if (cmsg->cmsg_len != CMSG_LEN(sizeof(u_short)))
++					return -EINVAL;
++				ipc->pkt_udp_sport = *(u_short*)CMSG_DATA(cmsg);
++				break;
++
++			default:
++				printk("Unknown cmsg_type: %i\n",cmsg->cmsg_type);
++				return -EINVAL;
++			}
++		}
++	}
++
++	return ip_cmsg_send(net,msg,ipc);
++}
++
+ /* UDP is nearly always wildcards out the wazoo, it makes no sense to try
+  * harder than this. -DaveM
+  */
+@@ -722,7 +748,8 @@
+ 	 * Create a UDP header
+ 	 */
+ 	uh = udp_hdr(skb);
+-	uh->source = inet->inet_sport;
++//	uh->source = inet->inet_sport;
++	uh->source = fl4->fl4_sport;
+ 	uh->dest = fl4->fl4_dport;
+ 	uh->len = htons(len);
+ 	uh->check = 0;
+@@ -800,7 +827,7 @@
+ 	int free = 0;
+ 	int connected = 0;
+ 	__be32 daddr, faddr, saddr;
+-	__be16 dport;
++	__be16 dport, sport;
+ 	u8  tos;
+ 	int err, is_udplite = IS_UDPLITE(sk);
+ 	int corkreq = up->corkflag || msg->msg_flags&MSG_MORE;
+@@ -876,7 +903,7 @@
+ 	if (err)
+ 		return err;
+ 	if (msg->msg_controllen) {
+-		err = ip_cmsg_send(sock_net(sk), msg, &ipc);
++		err = udp_cmsg_send(sock_net(sk), msg, &ipc); /* also calls ip_cmsg_send */
+ 		if (err)
+ 			return err;
+ 		if (ipc.opt)
+@@ -896,6 +923,11 @@
+ 		rcu_read_unlock();
+ 	}
+ 
++	sport = inet->inet_sport;
++
++	if (ipc.pkt_udp_sport)
++		sport = ipc.pkt_udp_sport;
++
+ 	saddr = ipc.addr;
+ 	ipc.addr = faddr = daddr;
+ 
+@@ -931,7 +963,7 @@
+ 		flowi4_init_output(fl4, ipc.oif, sk->sk_mark, tos,
+ 				   RT_SCOPE_UNIVERSE, sk->sk_protocol,
+ 				   inet_sk_flowi_flags(sk)|FLOWI_FLAG_CAN_SLEEP,
+-				   faddr, saddr, dport, inet->inet_sport);
++				   faddr, saddr, dport, sport);
+ 
+ 		security_sk_classify_flow(sk, flowi4_to_flowi(fl4));
+ 		rt = ip_route_output_flow(net, fl4, sk);
+@@ -987,7 +1019,7 @@
+ 	fl4->daddr = daddr;
+ 	fl4->saddr = saddr;
+ 	fl4->fl4_dport = dport;
+-	fl4->fl4_sport = inet->inet_sport;
++	fl4->fl4_sport = sport;
+ 	up->pending = AF_INET;
+ 
+ do_append_data:
