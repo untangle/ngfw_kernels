@@ -45,7 +45,7 @@ kernel: patch-stamp config
 
 kernel-package: patch-stamp config
 	cd $(KERNEL_DIR) ; \
-	MAKEFLAGS= MFLAGS= DEB_HOST_ARCH=armhf CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) fakeroot make-kpkg --arch arm --cross-compile arm-linux-gnueabihf- --initrd --revision=1+untangle1 kernel_image kernel_headers
+	MAKEFLAGS= MFLAGS= DEB_HOST_ARCH=armhf CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) fakeroot make-kpkg --arch arm --cross-compile arm-linux-gnueabihf- --revision=1+untangle1 kernel_image kernel_headers
 
 clean:
 	rm -fr $(KERNEL_DIR)
