@@ -1,0 +1,301 @@
+diff -urN linux-3.10.49.orig/drivers/net/bonding/bonding.h linux-3.10.49/drivers/net/bonding/bonding.h
+--- linux-3.10.49.orig/drivers/net/bonding/bonding.h	2014-10-29 22:25:11.028668423 -0600
++++ linux-3.10.49/drivers/net/bonding/bonding.h	2014-10-29 22:34:11.518657431 -0600
+@@ -177,8 +177,6 @@
+ 	struct slave *prev;
+ 	struct bonding *bond; /* our master */
+ 	int    delay;
+-	unsigned int  weight_tokens;
+-	unsigned int  weight;
+ 	unsigned long jiffies;
+ 	unsigned long last_arp_rx;
+ 	s8     link;    /* one of BOND_LINK_XXXX */
+diff -urN linux-3.10.49.orig/drivers/net/bonding/bond_main.c linux-3.10.49/drivers/net/bonding/bond_main.c
+--- linux-3.10.49.orig/drivers/net/bonding/bond_main.c	2014-10-29 22:25:11.028668423 -0600
++++ linux-3.10.49/drivers/net/bonding/bond_main.c	2014-10-29 22:31:45.809941222 -0600
+@@ -133,7 +133,7 @@
+ MODULE_PARM_DESC(mode, "Mode of operation; 0 for balance-rr, "
+ 		       "1 for active-backup, 2 for balance-xor, "
+ 		       "3 for broadcast, 4 for 802.3ad, 5 for balance-tlb, "
+-		       "6 for balance-alb, 7 for weighted-rr, 8 duplex, 9 duplex-slave");
++		       "6 for balance-alb");
+ module_param(primary, charp, 0);
+ MODULE_PARM_DESC(primary, "Primary network device to use");
+ module_param(primary_reselect, charp, 0);
+@@ -206,9 +206,6 @@
+ {	"802.3ad",		BOND_MODE_8023AD},
+ {	"balance-tlb",		BOND_MODE_TLB},
+ {	"balance-alb",		BOND_MODE_ALB},
+-{	"weighted-rr",		BOND_MODE_WEIGHTED_RR},
+-{	"duplex",		BOND_MODE_DUPLEX},
+-{	"duplex-slave",		BOND_MODE_DUPLEX_SLAVE},
+ {	NULL,			-1},
+ };
+ 
+@@ -265,9 +262,6 @@
+ 		[BOND_MODE_8023AD] = "IEEE 802.3ad Dynamic link aggregation",
+ 		[BOND_MODE_TLB] = "transmit load balancing",
+ 		[BOND_MODE_ALB] = "adaptive load balancing",
+-		[BOND_MODE_WEIGHTED_RR] = "weighted round robin (weighted-rr)",
+-		[BOND_MODE_DUPLEX] = "duplex master mode",
+-		[BOND_MODE_DUPLEX_SLAVE] = "duplex slave mode",
+ 	};
+ 
+ 	if (mode < 0 || mode > BOND_MODE_ALB)
+@@ -1382,25 +1376,6 @@
+ 	return features;
+ }
+ 
+-int bond_set_weight(struct net_device *bond_dev, struct net_device *slave_dev,
+-		u16 weight)
+-{
+-	struct slave* slave;
+-	slave = bond_get_slave_by_dev(netdev_priv(bond_dev), slave_dev);
+-	if (!slave) {
+-		return -EINVAL;
+-	}
+-
+-	slave->weight = weight;
+-
+-	if (weight) {
+-		slave->link = BOND_LINK_UP;
+-		bond_set_active_slave(slave);
+-	}
+-	return 0;
+-}
+-
+-
+ #define BOND_VLAN_FEATURES	(NETIF_F_ALL_CSUM | NETIF_F_SG | \
+ 				 NETIF_F_FRAGLIST | NETIF_F_ALL_TSO | \
+ 				 NETIF_F_HIGHDMA | NETIF_F_LRO)
+@@ -1692,9 +1667,6 @@
+ 		goto err_free;
+ 	}
+ 
+-	/* slave default weight = 1 */
+-	new_slave->weight = 1;
+-
+ 	/*
+ 	 * Save slave's original ("permanent") mac address for modes
+ 	 * that need it, and for restoring it upon release, and then
+@@ -3673,10 +3645,7 @@
+ 		return -EPERM;
+ 
+ 
+- 	if (cmd != SIOCBONDSETWEIGHT)
+-		slave_dev = dev_get_by_name(net, ifr->ifr_slave);
+- 	else
+- 		slave_dev = dev_get_by_name(net, ifr->ifr_weight_slave);
++	slave_dev = dev_get_by_name(net, ifr->ifr_slave);
+ 
+ 	pr_debug("slave_dev=%p:\n", slave_dev);
+ 
+@@ -3702,9 +3671,6 @@
+ 		case SIOCBONDCHANGEACTIVE:
+ 			res = bond_ioctl_change_active(bond_dev, slave_dev);
+ 			break;
+-		case SIOCBONDSETWEIGHT:
+-			res = bond_set_weight(bond_dev, slave_dev, ifr->ifr_weight_weight);
+-			break;
+ 		default:
+ 			res = -EOPNOTSUPP;
+ 		}
+@@ -4048,120 +4014,6 @@
+ 	return NETDEV_TX_OK;
+ }
+ 
+-static int bond_xmit_weighted_rr(struct sk_buff *skb, struct net_device *bond_dev)
+-{
+-	struct bonding *bond = netdev_priv(bond_dev);
+-	struct slave *slave, *start_at;
+-	int i;
+-	int res = 1;
+-	int were_weight_tokens_recharged = 0;
+-
+-
+-
+-	read_lock(&bond->curr_slave_lock);
+-	slave = start_at = bond->curr_active_slave;
+-	read_unlock(&bond->curr_slave_lock);
+-
+-	if (!slave) {
+-		goto out;
+-	}
+-
+-try_send:
+-	bond_for_each_slave_from(bond, slave, i, start_at) {
+-		if (IS_UP(slave->dev) &&
+-		    (slave->weight_tokens > 0) &&
+-			(slave->link == BOND_LINK_UP) &&
+-		    (bond_is_active_slave(slave))) {
+-			
+-			res = bond_dev_queue_xmit(bond, skb, slave->dev);
+-			(slave->weight_tokens)--;
+-			write_lock(&bond->curr_slave_lock);
+-			bond->curr_active_slave = slave->next;
+-			write_unlock(&bond->curr_slave_lock);
+-
+-			goto out;
+-		}
+-	}
+-	
+-	if (were_weight_tokens_recharged == 0) {
+-		read_lock(&bond->curr_slave_lock);
+-		slave = start_at = bond->curr_active_slave;
+-		read_unlock(&bond->curr_slave_lock);
+-
+-		bond_for_each_slave_from(bond, slave, i, start_at) {
+-			slave->weight_tokens = slave->weight;
+-		}
+-
+-		were_weight_tokens_recharged = 1;
+-		goto try_send;
+-	}
+-
+-out:
+-	if (res) {
+-		/* no suitable interface, frame not sent */
+-		dev_kfree_skb(skb);
+-	}
+-	return 0;
+-}
+-
+-
+-static int bond_xmit_duplex_master(struct sk_buff *skb, struct net_device *bond_dev)
+-{
+-	struct bonding *bond = netdev_priv(bond_dev);
+-	struct slave *slave;
+-	int count=0;
+-	int i;
+-	int res = 1;
+-
+-
+-
+-
+-	bond_for_each_slave(bond, slave, i) {
+-		if ((count % 2)==1 && IS_UP(slave->dev) &&
+-			(slave->link == BOND_LINK_UP) &&
+-		    (bond_is_active_slave(slave))) {
+-			
+-			res = bond_dev_queue_xmit(bond, skb, slave->dev);
+-			goto out;
+-		}
+-		count++;
+-	}
+-out:
+-	if (res) {
+-		/* no suitable interface, frame not sent */
+-		dev_kfree_skb(skb);
+-	}
+-	return 0;
+-}
+-
+-static int bond_xmit_duplex_slave(struct sk_buff *skb, struct net_device *bond_dev)
+-{
+-	struct bonding *bond = netdev_priv(bond_dev);
+-	struct slave *slave;
+-	int count=0;
+-	int i;
+-	int res = 1;
+-
+-
+-
+-	bond_for_each_slave(bond, slave, i) {
+-		if ((count % 2)==0 && IS_UP(slave->dev) &&
+-			(slave->link == BOND_LINK_UP) &&
+-		    (bond_is_active_slave(slave))) {
+-			res = bond_dev_queue_xmit(bond, skb, slave->dev);
+-			goto out;
+-		}
+-		count++;
+-	}
+-out:
+-	if (res) {
+-		/* no suitable interface, frame not sent */
+-		dev_kfree_skb(skb);
+-	}
+-	return 0;
+-}
+-
+-
+ /*
+  * in active-backup mode, we know that bond->curr_active_slave is always valid if
+  * the bond has a usable interface.
+@@ -4373,13 +4225,6 @@
+ 	case BOND_MODE_ALB:
+ 	case BOND_MODE_TLB:
+ 		return bond_alb_xmit(skb, dev);
+-	case BOND_MODE_WEIGHTED_RR:
+-		return bond_xmit_weighted_rr(skb, dev);
+-	case BOND_MODE_DUPLEX:
+-		return bond_xmit_duplex_master(skb, dev);
+-	case BOND_MODE_DUPLEX_SLAVE:
+-		return bond_xmit_duplex_slave(skb, dev);
+-
+ 	default:
+ 		/* Should never happen, mode already checked */
+ 		pr_err("%s: Error: Unknown bonding mode %d\n",
+diff -urN linux-3.10.49.orig/drivers/net/bonding/bond_sysfs.c linux-3.10.49/drivers/net/bonding/bond_sysfs.c
+--- linux-3.10.49.orig/drivers/net/bonding/bond_sysfs.c	2014-10-29 22:25:11.028668423 -0600
++++ linux-3.10.49/drivers/net/bonding/bond_sysfs.c	2014-10-29 22:33:43.470510282 -0600
+@@ -222,12 +222,7 @@
+ 			res += sprintf(buf + res, "++more++ ");
+ 			break;
+ 		}
+-		if (bond->params.mode == BOND_MODE_WEIGHTED_RR) {
+-			res += sprintf(buf + res, "%s %d ", slave->dev->name,
+-					slave->weight);
+-		} else {
+-			res += sprintf(buf + res, "%s ", slave->dev->name);
+-		}
++		res += sprintf(buf + res, "%s ", slave->dev->name);
+ 	}
+ 	read_unlock(&bond->lock);
+ 	if (res)
+diff -urN linux-3.10.49.orig/include/uapi/linux/if_bonding.h linux-3.10.49/include/uapi/linux/if_bonding.h
+--- linux-3.10.49.orig/include/uapi/linux/if_bonding.h	2014-10-29 22:25:11.320669178 -0600
++++ linux-3.10.49/include/uapi/linux/if_bonding.h	2014-10-29 22:35:37.463128615 -0600
+@@ -70,9 +70,6 @@
+ #define BOND_MODE_8023AD        4
+ #define BOND_MODE_TLB           5
+ #define BOND_MODE_ALB		6 /* TLB + RLB (receive load balancing) */
+-#define BOND_MODE_WEIGHTED_RR   7
+-#define BOND_MODE_DUPLEX   8
+-#define BOND_MODE_DUPLEX_SLAVE   9
+ 
+ /* each slave's link has 4 states */
+ #define BOND_LINK_UP    0           /* link is up and running */
+diff -urN linux-3.10.49.orig/include/uapi/linux/if.h linux-3.10.49/include/uapi/linux/if.h
+--- linux-3.10.49.orig/include/uapi/linux/if.h	2014-10-29 22:25:11.320669178 -0600
++++ linux-3.10.49/include/uapi/linux/if.h	2014-10-29 22:35:17.543017000 -0600
+@@ -197,10 +197,6 @@
+ 		char	ifru_newname[IFNAMSIZ];
+ 		void __user *	ifru_data;
+ 		struct	if_settings ifru_settings;
+-		struct {
+-			__u16 weight;
+-			char slave[IFNAMSIZ];	
+-		} ifru_weight;
+ 	} ifr_ifru;
+ };
+ 
+@@ -209,8 +205,6 @@
+ #define	ifr_addr	ifr_ifru.ifru_addr	/* address		*/
+ #define	ifr_dstaddr	ifr_ifru.ifru_dstaddr	/* other end of p-p lnk	*/
+ #define	ifr_broadaddr	ifr_ifru.ifru_broadaddr	/* broadcast address	*/
+-#define	ifr_weight_weight ifr_ifru.ifru_weight.weight /* bonding weight*/
+-#define	ifr_weight_slave  ifr_ifru.ifru_weight.slave  /* bonding weight slave */
+ #define	ifr_netmask	ifr_ifru.ifru_netmask	/* interface net mask	*/
+ #define	ifr_flags	ifr_ifru.ifru_flags	/* flags		*/
+ #define	ifr_metric	ifr_ifru.ifru_ivalue	/* metric		*/
+diff -urN linux-3.10.49.orig/include/uapi/linux/sockios.h linux-3.10.49/include/uapi/linux/sockios.h
+--- linux-3.10.49.orig/include/uapi/linux/sockios.h	2014-10-29 22:25:11.320669178 -0600
++++ linux-3.10.49/include/uapi/linux/sockios.h	2014-10-29 22:36:43.679508197 -0600
+@@ -117,7 +117,6 @@
+ #define SIOCBONDSLAVEINFOQUERY 0x8993   /* rtn info about slave state   */
+ #define SIOCBONDINFOQUERY      0x8994	/* rtn info about bond state    */
+ #define SIOCBONDCHANGEACTIVE   0x8995   /* update to a new active slave */
+-#define SIOCBONDSETWEIGHT      0x899e   /* update weight */
+ 			
+ /* bridge calls */
+ #define SIOCBRADDBR     0x89a0		/* create new bridge device     */
