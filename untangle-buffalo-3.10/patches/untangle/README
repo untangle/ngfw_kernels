@@ -27,7 +27,7 @@
 025-gpio-defaults.patch
     This is a patch specific for untangle ARM based device. It enabled the USB port on boot. So, system can use USB drive as its filesystem. 
 
-027-ifconfig.patch
+029-ifconfig.patch
     This remove dd-wrt specific patch (http://svn.dd-wrt.com/changeset/10887) on bonding interface. 
     With this patch included in kernel source, in if.h file ifreq structure size will be 4 bytes bigger than use space same structure as we use standard Linux package on ifconfig.  
     And the running system will pop up kernel warning "Loading kernel module for a network device with CAP_SYS_MODULE (deprecated). Use CAP_NET_ADMIN and alias netdev- instead." when type ifconfig command     
