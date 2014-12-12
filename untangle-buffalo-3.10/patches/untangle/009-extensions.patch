@@ -1,6 +1,6 @@
 diff -urN linux-3.10.49.orig/include/linux/in.h linux-3.10.49-009/include/linux/in.h
---- linux-3.10.49.orig/include/linux/in.h	2014-07-28 19:35:34.000000000 -0700
-+++ linux-3.10.49-009/include/linux/in.h	2014-07-28 19:50:56.000000000 -0700
+--- linux-3.10.49.orig/include/linux/in.h	2014-12-12 13:19:40.259884659 -0700
++++ linux-3.10.49-009/include/linux/in.h	2014-12-12 13:22:07.235881673 -0700
 @@ -18,6 +18,12 @@
  #ifndef _LINUX_IN_H
  #define _LINUX_IN_H
@@ -15,8 +15,8 @@ diff -urN linux-3.10.49.orig/include/linux/in.h linux-3.10.49-009/include/linux/
  #include <linux/errno.h>
  #include <uapi/linux/in.h>
 diff -urN linux-3.10.49.orig/include/net/ip.h linux-3.10.49-009/include/net/ip.h
---- linux-3.10.49.orig/include/net/ip.h	2014-07-28 19:35:34.000000000 -0700
-+++ linux-3.10.49-009/include/net/ip.h	2014-07-28 19:50:56.000000000 -0700
+--- linux-3.10.49.orig/include/net/ip.h	2014-12-12 13:19:40.311884658 -0700
++++ linux-3.10.49-009/include/net/ip.h	2014-12-12 13:22:07.239881673 -0700
 @@ -37,6 +37,10 @@
  	struct ip_options	opt;		/* Compiled IP options		*/
  	unsigned char		flags;
@@ -45,8 +45,8 @@ diff -urN linux-3.10.49.orig/include/net/ip.h linux-3.10.49-009/include/net/ip.h
  
  #define IPCB(skb) ((struct inet_skb_parm*)((skb)->cb))
 diff -urN linux-3.10.49.orig/include/uapi/linux/in.h linux-3.10.49-009/include/uapi/linux/in.h
---- linux-3.10.49.orig/include/uapi/linux/in.h	2014-07-28 19:35:34.000000000 -0700
-+++ linux-3.10.49-009/include/uapi/linux/in.h	2014-07-28 19:51:41.000000000 -0700
+--- linux-3.10.49.orig/include/uapi/linux/in.h	2014-12-12 13:19:40.287884659 -0700
++++ linux-3.10.49-009/include/uapi/linux/in.h	2014-12-12 13:22:07.239881673 -0700
 @@ -87,6 +87,10 @@
  #define IP_MINTTL       21
  #define IP_NODEFRAG     22
@@ -59,8 +59,8 @@ diff -urN linux-3.10.49.orig/include/uapi/linux/in.h linux-3.10.49-009/include/u
  #define IP_PMTUDISC_DONT		0	/* Never send DF frames */
  #define IP_PMTUDISC_WANT		1	/* Use per route hints	*/
 diff -urN linux-3.10.49.orig/include/uapi/linux/udp.h linux-3.10.49-009/include/uapi/linux/udp.h
---- linux-3.10.49.orig/include/uapi/linux/udp.h	2014-07-28 19:35:34.000000000 -0700
-+++ linux-3.10.49-009/include/uapi/linux/udp.h	2014-07-28 19:52:13.000000000 -0700
+--- linux-3.10.49.orig/include/uapi/linux/udp.h	2014-12-12 13:19:40.291884658 -0700
++++ linux-3.10.49-009/include/uapi/linux/udp.h	2014-12-12 13:22:07.239881673 -0700
 @@ -30,6 +30,9 @@
  #define UDP_CORK	1	/* Never send partially complete segments */
  #define UDP_ENCAP	100	/* Set the socket to accept encapsulated packets */
@@ -72,8 +72,8 @@ diff -urN linux-3.10.49.orig/include/uapi/linux/udp.h linux-3.10.49-009/include/
  #define UDP_ENCAP_ESPINUDP_NON_IKE	1 /* draft-ietf-ipsec-nat-t-ike-00/01 */
  #define UDP_ENCAP_ESPINUDP	2 /* draft-ietf-ipsec-udp-encaps-06 */
 diff -urN linux-3.10.49.orig/net/ipv4/icmp.c linux-3.10.49-009/net/ipv4/icmp.c
---- linux-3.10.49.orig/net/ipv4/icmp.c	2014-07-28 19:35:34.000000000 -0700
-+++ linux-3.10.49-009/net/ipv4/icmp.c	2014-07-28 19:50:56.000000000 -0700
+--- linux-3.10.49.orig/net/ipv4/icmp.c	2014-12-12 13:19:41.155884641 -0700
++++ linux-3.10.49-009/net/ipv4/icmp.c	2014-12-12 13:22:07.239881673 -0700
 @@ -346,6 +346,8 @@
  		return;
  	inet = inet_sk(sk);
@@ -92,8 +92,8 @@ diff -urN linux-3.10.49.orig/net/ipv4/icmp.c linux-3.10.49-009/net/ipv4/icmp.c
  	ipc.opt = &icmp_param.replyopts.opt;
  	ipc.tx_flags = 0;
 diff -urN linux-3.10.49.orig/net/ipv4/ip_output.c linux-3.10.49-009/net/ipv4/ip_output.c
---- linux-3.10.49.orig/net/ipv4/ip_output.c	2014-07-28 19:35:34.000000000 -0700
-+++ linux-3.10.49-009/net/ipv4/ip_output.c	2014-07-28 19:56:26.000000000 -0700
+--- linux-3.10.49.orig/net/ipv4/ip_output.c	2014-12-12 13:19:41.159884641 -0700
++++ linux-3.10.49-009/net/ipv4/ip_output.c	2014-12-12 13:25:41.351877323 -0700
 @@ -140,11 +140,15 @@
  	iph->version  = 4;
  	iph->ihl      = 5;
@@ -164,6 +164,15 @@ diff -urN linux-3.10.49.orig/net/ipv4/ip_output.c linux-3.10.49-009/net/ipv4/ip_
  }
  
  ssize_t	ip_append_page(struct sock *sk, struct flowi4 *fl4, struct page *page,
+@@ -1340,7 +1355,7 @@
+ 	}
+ 
+ 	skb->priority = sk->sk_priority;
+-	skb->mark = sk->sk_mark;
++	skb->mark |= sk->sk_mark;
+ 	/*
+ 	 * Steal rt from cork.dst to avoid a pair of atomic_inc/atomic_dec
+ 	 * on dst refcount
 @@ -1430,7 +1445,7 @@
  
  	err = __ip_append_data(sk, fl4, &queue, &cork,
@@ -182,8 +191,8 @@ diff -urN linux-3.10.49.orig/net/ipv4/ip_output.c linux-3.10.49-009/net/ipv4/ip_
  	ipc.opt = NULL;
  	ipc.tx_flags = 0;
 diff -urN linux-3.10.49.orig/net/ipv4/ip_sockglue.c linux-3.10.49-009/net/ipv4/ip_sockglue.c
---- linux-3.10.49.orig/net/ipv4/ip_sockglue.c	2014-07-28 19:35:34.000000000 -0700
-+++ linux-3.10.49-009/net/ipv4/ip_sockglue.c	2014-07-28 19:50:56.000000000 -0700
+--- linux-3.10.49.orig/net/ipv4/ip_sockglue.c	2014-12-12 13:19:41.155884641 -0700
++++ linux-3.10.49-009/net/ipv4/ip_sockglue.c	2014-12-12 13:22:07.239881673 -0700
 @@ -215,7 +215,38 @@
  			ipc->addr = info->ipi_spec_dst.s_addr;
  			break;
@@ -273,8 +282,8 @@ diff -urN linux-3.10.49.orig/net/ipv4/ip_sockglue.c linux-3.10.49-009/net/ipv4/i
  		val = inet->tos;
  		break;
 diff -urN linux-3.10.49.orig/net/ipv4/raw.c linux-3.10.49-009/net/ipv4/raw.c
---- linux-3.10.49.orig/net/ipv4/raw.c	2014-07-28 19:35:34.000000000 -0700
-+++ linux-3.10.49-009/net/ipv4/raw.c	2014-07-28 19:50:56.000000000 -0700
+--- linux-3.10.49.orig/net/ipv4/raw.c	2014-12-12 13:19:41.155884641 -0700
++++ linux-3.10.49-009/net/ipv4/raw.c	2014-12-12 13:22:07.239881673 -0700
 @@ -514,6 +514,8 @@
  		daddr = inet->inet_daddr;
  	}
@@ -285,8 +294,8 @@ diff -urN linux-3.10.49.orig/net/ipv4/raw.c linux-3.10.49-009/net/ipv4/raw.c
  	ipc.opt = NULL;
  	ipc.tx_flags = 0;
 diff -urN linux-3.10.49.orig/net/ipv4/udp.c linux-3.10.49-009/net/ipv4/udp.c
---- linux-3.10.49.orig/net/ipv4/udp.c	2014-07-28 19:35:34.000000000 -0700
-+++ linux-3.10.49-009/net/ipv4/udp.c	2014-07-28 19:50:56.000000000 -0700
+--- linux-3.10.49.orig/net/ipv4/udp.c	2014-12-12 13:19:41.155884641 -0700
++++ linux-3.10.49-009/net/ipv4/udp.c	2014-12-12 13:23:48.275879620 -0700
 @@ -462,6 +462,33 @@
  	return result;
  }
@@ -321,7 +330,17 @@ diff -urN linux-3.10.49.orig/net/ipv4/udp.c linux-3.10.49-009/net/ipv4/udp.c
  /* UDP is nearly always wildcards out the wazoo, it makes no sense to try
   * harder than this. -DaveM
   */
-@@ -837,7 +864,7 @@
+@@ -759,7 +786,8 @@
+ 	 * Create a UDP header
+ 	 */
+ 	uh = udp_hdr(skb);
+-	uh->source = inet->inet_sport;
++	//uh->source = inet->inet_sport;
++        uh->source = fl4->fl4_sport;
+ 	uh->dest = fl4->fl4_dport;
+ 	uh->len = htons(len);
+ 	uh->check = 0;
+@@ -837,7 +865,7 @@
  	int free = 0;
  	int connected = 0;
  	__be32 daddr, faddr, saddr;
@@ -330,7 +349,7 @@ diff -urN linux-3.10.49.orig/net/ipv4/udp.c linux-3.10.49-009/net/ipv4/udp.c
  	u8  tos;
  	int err, is_udplite = IS_UDPLITE(sk);
  	int corkreq = up->corkflag || msg->msg_flags&MSG_MORE;
-@@ -855,6 +882,7 @@
+@@ -855,6 +883,7 @@
  	if (msg->msg_flags & MSG_OOB) /* Mirror BSD error message compatibility */
  		return -EOPNOTSUPP;
  
@@ -338,7 +357,7 @@ diff -urN linux-3.10.49.orig/net/ipv4/udp.c linux-3.10.49-009/net/ipv4/udp.c
  	ipc.opt = NULL;
  	ipc.tx_flags = 0;
  
-@@ -917,7 +945,7 @@
+@@ -917,7 +946,7 @@
  	sock_tx_timestamp(sk, &ipc.tx_flags);
  
  	if (msg->msg_controllen) {
@@ -347,7 +366,7 @@ diff -urN linux-3.10.49.orig/net/ipv4/udp.c linux-3.10.49-009/net/ipv4/udp.c
  		if (err)
  			return err;
  		if (ipc.opt)
-@@ -937,6 +965,11 @@
+@@ -937,6 +966,11 @@
  		rcu_read_unlock();
  	}
  
@@ -359,7 +378,7 @@ diff -urN linux-3.10.49.orig/net/ipv4/udp.c linux-3.10.49-009/net/ipv4/udp.c
  	saddr = ipc.addr;
  	ipc.addr = faddr = daddr;
  
-@@ -973,7 +1006,7 @@
+@@ -973,7 +1007,7 @@
  		flowi4_init_output(fl4, ipc.oif, sk->sk_mark, tos,
  				   RT_SCOPE_UNIVERSE, sk->sk_protocol,
  				   inet_sk_flowi_flags(sk)|FLOWI_FLAG_CAN_SLEEP,
@@ -368,7 +387,7 @@ diff -urN linux-3.10.49.orig/net/ipv4/udp.c linux-3.10.49-009/net/ipv4/udp.c
  
  		security_sk_classify_flow(sk, flowi4_to_flowi(fl4));
  		rt = ip_route_output_flow(net, fl4, sk);
-@@ -1029,7 +1062,7 @@
+@@ -1029,7 +1063,7 @@
  	fl4->daddr = daddr;
  	fl4->saddr = saddr;
  	fl4->fl4_dport = dport;
