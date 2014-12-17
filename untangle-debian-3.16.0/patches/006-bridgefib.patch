@@ -1,0 +1,51 @@
+diff -urN linux-3.0.35.orig//include/linux/if_bridge.h linux-3.0.35/include/linux/if_bridge.h
+--- linux-3.0.35.orig//include/linux/if_bridge.h	2014-01-24 09:59:13.000000000 -0800
++++ linux-3.0.35/include/linux/if_bridge.h	2014-01-24 09:59:27.000000000 -0800
+@@ -42,6 +42,7 @@
+ #define BRCTL_SET_PORT_PRIORITY 16
+ #define BRCTL_SET_PATH_COST 17
+ #define BRCTL_GET_FDB_ENTRIES 18
++#define BRCTL_GET_DEVNAME 19
+ 
+ #define BR_STATE_DISABLED 0
+ #define BR_STATE_LISTENING 1
+diff -urN linux-3.0.35.orig//net/bridge/br_ioctl.c linux-3.0.35/net/bridge/br_ioctl.c
+--- linux-3.0.35.orig//net/bridge/br_ioctl.c	2014-01-24 09:59:14.000000000 -0800
++++ linux-3.0.35/net/bridge/br_ioctl.c	2014-01-24 09:59:27.000000000 -0800
+@@ -235,6 +235,36 @@
+ 		return 0;
+ 	}
+ 
++ 	case BRCTL_GET_DEVNAME:
++ 	{
++ 		struct net_device *dev;
++ 		struct net_bridge *br;
++ 		unsigned char dest[ETH_HLEN];
++ 		char brname[IFNAMSIZ];
++ 		struct net_bridge_fdb_entry *dst;
++
++		if (copy_from_user(dest, (void __user *)args[2], ETH_HLEN))
++			return -EFAULT;
++ 		if (copy_from_user(brname, (void __user *)args[1], IFNAMSIZ))
++			return -EFAULT;
++ 		dev = __dev_get_by_name(&init_net, brname);
++ 		br = netdev_priv(dev);
++ 
++ 		rcu_read_lock();
++                 dst = __br_fdb_get(br, dest);
++                 
++ 		if (dst != NULL) {
++                         memcpy(brname, dst->dst->dev->name, IFNAMSIZ);
++                         rcu_read_unlock();
++			 if (copy_to_user((void __user *)args[1], brname, IFNAMSIZ))
++			         return -EFAULT;
++                         return dst->dst->dev->ifindex;
++ 		} else {
++                         rcu_read_unlock();
++ 			return -EINVAL;
++ 		}
++ 	}
++ 
+ 	case BRCTL_SET_BRIDGE_STP_STATE:
+ 		if (!capable(CAP_NET_ADMIN))
+ 			return -EPERM;
