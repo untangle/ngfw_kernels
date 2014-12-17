@@ -24,13 +24,30 @@ diff -u -N -r ./debian/config/amd64/defines ./debian/config/amd64/defines
 diff -u -N -r ./debian/config/amd64/untangle/defines ./debian/config/amd64/untangle/defines
 --- ./debian/config/amd64/untangle/defines	1969-12-31 16:00:00.000000000 -0800
 +++ ./debian/config/amd64/untangle/defines	2014-12-11 05:33:37.000000000 -0800
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,23 @@
 +[base]
 +flavours:
 + amd64
++[build]
++debug-info: true
++image-file: arch/x86/boot/bzImage
++
++[image]
++bootloaders: grub-pc grub-efi extlinux
++configs:
++install-stem: vmlinuz
++
++[relations]
++headers%gcc-4.8: linux-compiler-gcc-4.8-x86
++
++[amd64_description]
++hardware: 64-bit PCs
++hardware-long: PCs with AMD64, Intel 64 or VIA Nano processors
 +
 +[amd64_image]
 +provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle, linux-image-3.2-untangle-amd64
++configs:
++ kernelarch-x86/config-arch-64
 diff -u -N -r ./debian/config/armel/defines ./debian/config/armel/defines
 --- ./debian/config/armel/defines	2014-09-07 21:58:07.000000000 -0700
 +++ ./debian/config/armel/defines	2014-12-11 05:33:37.000000000 -0800
@@ -44,13 +61,71 @@ diff -u -N -r ./debian/config/armel/defines ./debian/config/armel/defines
 diff -u -N -r ./debian/config/armel/untangle/defines ./debian/config/armel/untangle/defines
 --- ./debian/config/armel/untangle/defines	1969-12-31 16:00:00.000000000 -0800
 +++ ./debian/config/armel/untangle/defines	2014-12-11 05:33:37.000000000 -0800
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,64 @@
 +[base]
 +flavours:
++ ixp4xx
++ kirkwood
++ orion5x
 + versatile
++kernel-arch: arm
++
++[build]
++image-file: arch/arm/boot/zImage
++
++[image]
++suggests: fdutils
++configs:
++ kernelarch-arm/config
++ armel/config
++install-stem: vmlinuz
++
++[relations]
++headers%gcc-4.8: linux-compiler-gcc-4.8-arm
++
++[ixp4xx_description]
++hardware: IXP4xx
++hardware-long: IXP4xx based systems (Linksys NSLU2, etc)
++
++[ixp4xx_image]
++provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle
++# Linksys NSLU2: 1441792 - 16 - 16 = 1441760
++check-size: 1441760
++configs:
++ armel/config-reduced
++ armel/config.ixp4xx
++
++[kirkwood_description]
++hardware: Marvell Kirkwood
++hardware-long: Marvell Kirkwood based systems (SheevaPlug, QNAP TS-119/TS-219, etc)
++
++[kirkwood_image]
++provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle
++recommends: uboot-mkimage
++# SheevaPlug: 4194304 - 8 - 64 = 4194232
++# QNAP TS-119/TS-219: 2097152 - 8 - 64 = 2097080
++check-size: 2097080
++
++[orion5x_description]
++hardware: Marvell Orion
++hardware-long: Marvell Orion 5181, 5182 and 5281 based systems (QNAP TS-109/TS-209, etc)
++
++[orion5x_image]
++provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle
++# D-Link DNS-323: 1572864 - 8 - 64 = 1572792
++# HP Media Vault mv2120: ca 2 MB
++# QNAP TS-109/TS-209 & TS-409: 2097152 - 8 - 64 = 2097080
++check-size: 1572792
++configs:
++ armel/config-reduced
++ armel/config.orion5x
++
++[versatile_description]
++hardware: Versatile
++hardware-long: Versatile systems (PB, AB, Qemu)
 +
 +[versatile_image]
-+provides: untangle-linux-image, linux-untangle
++provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle
 diff -u -N -r ./debian/config/armhf/defines ./debian/config/armhf/defines
 --- ./debian/config/armhf/defines	2014-09-07 21:58:05.000000000 -0700
 +++ ./debian/config/armhf/defines	2014-12-11 05:33:37.000000000 -0800
@@ -64,64 +139,35 @@ diff -u -N -r ./debian/config/armhf/defines ./debian/config/armhf/defines
 diff -u -N -r ./debian/config/armhf/untangle/defines ./debian/config/armhf/untangle/defines
 --- ./debian/config/armhf/untangle/defines	1969-12-31 16:00:00.000000000 -0800
 +++ ./debian/config/armhf/untangle/defines	2014-12-11 05:33:37.000000000 -0800
-@@ -0,0 +1,57 @@
+@@ -0,0 +1,28 @@
 +[base]
 +flavours:
-+ mx5
-+ omap
-+ vexpress
 +kernel-arch: arm
++
++[build]
++image-file: arch/arm/boot/zImage
 +
 +[image]
 +suggests: fdutils
 +configs:
-+ armel/config
++ kernelarch-arm/config
 + armhf/config
++install-stem: vmlinuz
 +
-+[mx5_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-armhf
-+configs:
-+ armel/config
-+ armhf/config
-+ armhf/config.mx5
++[relations]
++headers%gcc-4.8: linux-compiler-gcc-4.8-arm
 +
-+[mx5_build]
-+image-file: arch/arm/boot/zImage
++[armmp_description]
++hardware: ARMv7 multiplatform compatible SoCs
++hardware-long: ARMv7 multiplatform kernel. See
++  https://wiki.debian.org/DebianKernel/ARMMP for details of supported
++  platforms
 +
-+[mx5_description]
-+hardware: Freescale i.MX51/53
-+hardware-long: Freescale i.MX51 or i.MX53 based systems
-+
-+[omap_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-armhf
-+configs:
-+ armel/config
-+ armhf/config
-+ armhf/config.omap
-+
-+[omap_build]
-+image-file: arch/arm/boot/zImage
-+
-+[omap_description]
-+hardware: TI OMAP3+
-+hardware-long: Texas Instruments OMAP3 or OMAP4 based systems
-+
-+[omap_image]
-+recommends: uboot-mkimage
-+
-+[vexpress_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-2.6-untangle, linux-image-2.6-untangle-armhf
-+configs:
-+ armel/config
-+ armhf/config
-+ armhf/config.vexpress
-+
-+[vexpress_build]
-+image-file: arch/arm/boot/zImage
-+
-+[vexpress_description]
-+hardware: ARM Ltd. Versatile Express
-+hardware-long: ARM Ltd. Versatile Express family of processors
++[armmp-lpae_description]
++hardware: ARMv7 multiplatform compatible SoCs supporting LPAE
++hardware-long: ARMv7 multiplatform kernel supporting LPAE. See
++  https://wiki.debian.org/DebianKernel/ARMMP for details of supported
++  platforms.
 diff -u -N -r ./debian/config/defines ./debian/config/defines
 --- ./debian/config/defines	2014-10-30 17:30:43.000000000 -0700
 +++ ./debian/config/defines	2014-12-11 05:33:37.000000000 -0800
@@ -193,12 +239,61 @@ diff -u -N -r ./debian/config/i386/defines ./debian/config/i386/defines
 diff -u -N -r ./debian/config/i386/untangle/defines ./debian/config/i386/untangle/defines
 --- ./debian/config/i386/untangle/defines	1969-12-31 16:00:00.000000000 -0800
 +++ ./debian/config/i386/untangle/defines	2014-12-11 05:33:37.000000000 -0800
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,57 @@
 +[base]
 +flavours:
 + 686-pae
 +
++kernel-arch: x86
++
++[build]
++image-file: arch/x86/boot/bzImage
++
++[description]
++part-long-pae: This kernel requires PAE (Physical Address Extension).
++ This feature is supported by the Intel Pentium Pro/II/III/4/4M/D, Xeon,
++ Core and Atom; AMD Geode NX, Athlon (K7), Duron, Opteron, Sempron,
++ Turion or Phenom; Transmeta Efficeon; VIA C7; and some other processors.
++
++[image]
++bootloaders: grub-pc extlinux
++configs:
++install-stem: vmlinuz
++
++[relations]
++headers%gcc-4.8: linux-compiler-gcc-4.8-x86
++
++[586_description]
++hardware: older PCs
++hardware-long: PCs with a single processor not supporting PAE
++parts: up
++
++[586_image]
++configs:
++ kernelarch-x86/config-arch-32
++ i386/config.586
++
++[686-pae_build]
++debug-info: true
++
++[686-pae_description]
++hardware: modern PCs
++hardware-long: PCs with one or more processors supporting PAE
++parts: pae
++
 +[686-pae_image]
 +provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle, linux-image-3.2-untangle-686-pae
 +configs:
-+  i386/none/config.686-pae
++ kernelarch-x86/config-arch-32
++ i386/config.686-pae
++recommends: libc6-i686
++
++[amd64_description]
++hardware: 64-bit PCs
++hardware-long: PCs with AMD64, Intel 64 or VIA Nano processors
++parts: xen
++
++[amd64_image]
++configs:
++ kernelarch-x86/config-arch-64
++recommends: libc6-i686
