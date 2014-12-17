@@ -1,4 +1,4 @@
-BUILDDEPS=debhelper cpio module-init-tools python libelf-dev binutils-dev asciidoc xmlto gcc-4.6 quilt kernel-wedge
+BUILDDEPS=debhelper cpio module-init-tools python libelf-dev binutils-dev asciidoc xmlto quilt kernel-wedge kmod python python-six lzma patchutils bc gcc-4.8 xz-utils
 
 REPOSITORY=wheezy
 
@@ -31,7 +31,7 @@ all:	clean pkgs
 pkgs:	kpkg-arch kpkg-indep
 
 deps:	force
-	sudo aptitude install ${BUILDDEPS} || echo "unable to run sudo"
+	sudo apt-get install ${BUILDDEPS} || echo "unable to run sudo"
 
 kpkg-arch: control-real force
 	cd ${WORKDIR}; ${DOPTIONS} fakeroot make -j ${NPROCEXP} -f debian/rules.gen binary-arch_${MACHINE}_untangle
