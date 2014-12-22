@@ -1,10 +1,10 @@
 --- tmp/net/ipv4/tcp_ipv4.c	2014-12-17 17:06:24.262831341 -0700
-+++ linux-3.2.51/net/ipv4/tcp_ipv4.c	2014-12-19 01:10:47.684485475 -0700
++++ linux-3.2.51/net/ipv4/tcp_ipv4.c	2014-12-21 23:51:16.071316264 -0700
 @@ -1710,6 +1710,7 @@
  		goto discard_and_relse;
  	}
  
-+        if (skb->mark)
++        if (!(skb->mark|0x10000000))
  	if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb))
  		goto discard_and_relse;
  	nf_reset(skb);
@@ -12,7 +12,7 @@
  	return ret;
  
  no_tcp_socket:
-+        if (skb->mark)
++        if (!(skb->mark|0x10000000))
  	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb))
  		goto discard_it;
  
@@ -20,7 +20,7 @@
  	goto discard_it;
  
  do_time_wait:
-+        if (skb->mark)
++        if (!(skb->mark|0x10000000))
  	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb)) {
  		inet_twsk_put(inet_twsk(sk));
  		goto discard_it;
