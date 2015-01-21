@@ -8,6 +8,9 @@
     This provides extensions to cmsg so that special fields like TTL, TOS, NFMARK, and SADDR can be specified in cmsg ancilarry data options in recvfrom and sendmsg.
     This is used in libnetcap to send and receive UDP packets.
 
+010-ipsec-policy-bypass.patch
+    This patch bypass the xfrm check on tcp receive path for reinjected packets from UVM. reference http://bugzilla.untangle.com/show_bug.cgi?id=8948 for more detail
+
 013-iptables_tune.patch
     This adds the "tune" table in netfilter which comes at the very end which is used for various tasks in our networking setup.
 
