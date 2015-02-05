@@ -1,7 +1,7 @@
-diff -urN linux-3.0.35.orig//net/netfilter/xt_socket.c linux-3.0.35//net/netfilter/xt_socket.c
---- linux-3.0.35.orig//net/netfilter/xt_socket.c	2014-01-24 11:48:41.000000000 -0800
-+++ linux-3.0.35//net/netfilter/xt_socket.c	2014-01-24 11:54:30.000000000 -0800
-@@ -102,7 +102,7 @@
+diff -ruN linux-3.16.7.orig/net/netfilter/xt_socket.c linux-3.16.7/net/netfilter/xt_socket.c
+--- linux-3.16.7.orig/net/netfilter/xt_socket.c	2015-01-22 09:41:47.751819325 -0700
++++ linux-3.16.7/net/netfilter/xt_socket.c	2015-01-22 10:20:32.443149242 -0700
+@@ -130,7 +130,7 @@
  }
  
  static bool
@@ -10,7 +10,7 @@ diff -urN linux-3.0.35.orig//net/netfilter/xt_socket.c linux-3.0.35//net/netfilt
  	     const struct xt_socket_mtinfo1 *info)
  {
  	const struct iphdr *iph = ip_hdr(skb);
-@@ -184,6 +184,14 @@
+@@ -218,6 +218,14 @@
  		 &daddr, ntohs(dport),
  		 &iph->daddr, hp ? ntohs(hp->dest) : 0, sk);
  
