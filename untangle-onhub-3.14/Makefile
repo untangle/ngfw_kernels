@@ -1,4 +1,5 @@
 BUILD_DEPS := gcc-5-arm-linux-gnueabihf device-tree-compiler u-boot-tools cgpt vboot-kernel-utils
+
 TARBALL := chromeos-3.14.tar.bz2
 KERNEL_DIR := chromeos-3.14
 ITF_IMAGE := $(KERNEL_DIR)/arch/arm/boot/vmlinux.itf
@@ -36,7 +37,7 @@ $(CONFIG_DEST): extract-stamp $(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG)
 kernel: patch-stamp config
 	cd $(KERNEL_DIR) ; \
 	export WIFIVERSION=-3.18 ; \
-	MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make
+	MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make -j $(CONCURRENCY_LEVEL)
 
 kernel-package: patch-stamp config
 	cd $(KERNEL_DIR) ; \
