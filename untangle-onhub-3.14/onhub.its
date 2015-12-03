@@ -6,7 +6,7 @@
   images {
     kernel@1{
       description = "kernel";
-      data = /incbin/("arch/arm/boot/zImage");
+      data = /incbin/("chromeos-3.14/arch/arm/boot/zImage");
       type = "kernel_noload";
       arch = "arm";
       os = "linux";
@@ -16,7 +16,7 @@
     };
     fdt@1{
       description = "qcom-ipq8064-whirlwind-sp5.dtb";
-      data = /incbin/("linux-3.10.49/arch/arm/boot/dts/qcom-ipq8064-whirlwind-sp5.dtb");
+      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-ipq8064-whirlwind-sp5.dtb");
       type = "flat_dt";
       arch = "arm";
       compression = "none";

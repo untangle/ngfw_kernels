@@ -2,6 +2,7 @@ BUILD_DEPS := gcc-5-arm-linux-gnueabihf device-tree-compiler u-boot-tools cgpt v
 
 TARBALL := chromeos-3.14.tar.bz2
 KERNEL_DIR := chromeos-3.14
+KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
 ITF_IMAGE := $(KERNEL_DIR)/arch/arm/boot/vmlinux.itf
 VIMAGE := $(KERNEL_DIR)/vimage
 CONFIG_ORIG := config_chromiumos-ipq806x.config
@@ -34,28 +35,34 @@ $(CONFIG_DEST): extract-stamp $(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG)
 #	cat $(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $@
 	cat $(CONFIG_ORIG) >| $@
 
-kernel: patch-stamp config
+kernel: $(KERNEL_IMAGE)
+$(KERNEL_IMAGE): patch-stamp config
 	cd $(KERNEL_DIR) ; \
 	export WIFIVERSION=-3.18 ; \
 	MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make -j $(CONCURRENCY_LEVEL)
 
 kernel-package: patch-stamp config
 	cd $(KERNEL_DIR) ; \
+	export WIFIVERSION=-3.18 ; \
 	MAKEFLAGS= MFLAGS= DEB_HOST_ARCH=armhf CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) fakeroot make-kpkg --arch arm --cross-compile arm-linux-gnueabihf- --revision=1+untangle1 kernel_image kernel_headers
 
 dtb: dtb-stamp
-dtb-stamp: kernel-package
+dtb-stamp: kernel
+	cd $(KERNEL_DIR) ; \
+	export WIFIVERSION=-3.18 ; \
 	MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make dtbs
 	touch $@
 
-itf: $(ITF_IMAGE) dtb
-$(ITF_IMAGE): kernel-package-stamp
-	cd $(KERNEL_DIR) ; \
-	mkimage -D '-I dts -O dtb -p 1024' -f ../onhub.its $(ITF_IMAGE)
+itf: $(ITF_IMAGE)
+$(ITF_IMAGE): dtb
+	mkimage -D '-I dts -O dtb -p 1024' -f onhub.its $(ITF_IMAGE)
 
 vimage: $(VIMAGE)
 $(VIMAGE): itf
-	vbutil_kernel --pack $(VIMAGE) --keyblock /usr/share/vboot/devkeys/kernel.keyblock --version 1 --signprivate /usr/share/vboot/devkeys/kernel_data_key.vbprivk --config ../cmdline.txt --vmlinuz $(ITF_IMAGE) --arch arm
+	vbutil_kernel --verbose --pack $(VIMAGE) --keyblock /usr/share/vboot/devkeys/kernel.keyblock --version 1 --signprivate /usr/share/vboot/devkeys/kernel_data_key.vbprivk --config cmdline.txt --vmlinuz $(ITF_IMAGE) --arch arm
+
+verify: vimage
+	vbutil_kernel --verbose --verify $(VIMAGE)
 
 modules: $(MODULES_TARBALL)
 $(MODULES_TARBALL): kernel-package-stamp
