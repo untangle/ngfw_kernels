@@ -1,18 +1,18 @@
-diff -urN linux-3.0.35.orig//net/netfilter/xt_socket.c linux-3.0.35//net/netfilter/xt_socket.c
---- linux-3.0.35.orig//net/netfilter/xt_socket.c	2014-01-24 11:48:41.000000000 -0800
-+++ linux-3.0.35//net/netfilter/xt_socket.c	2014-01-24 11:54:30.000000000 -0800
-@@ -102,7 +102,7 @@
- }
+diff -ruN v3.14.orig/net/netfilter/xt_socket.c v3.14/net/netfilter/xt_socket.c
+--- v3.14.orig/net/netfilter/xt_socket.c	2015-11-15 18:03:19.272833996 -0700
++++ v3.14/net/netfilter/xt_socket.c	2015-11-15 18:24:20.406547303 -0700
+@@ -199,7 +199,7 @@
+ EXPORT_SYMBOL(xt_socket_get4_sk);
  
  static bool
 -socket_match(const struct sk_buff *skb, struct xt_action_param *par,
 +socket_match(struct sk_buff *skb, struct xt_action_param *par,
  	     const struct xt_socket_mtinfo1 *info)
  {
- 	const struct iphdr *iph = ip_hdr(skb);
-@@ -184,6 +184,14 @@
- 		 &daddr, ntohs(dport),
- 		 &iph->daddr, hp ? ntohs(hp->dest) : 0, sk);
+ 	struct sock *sk;
+@@ -232,6 +232,14 @@
+ 			sk = NULL;
+ 	}
  
 +    /* Untangle hack - or the socket mark to the packet if found
 +     * We do this because there is no conntrack, and it is necessary

@@ -1,7 +1,6 @@
-diff -urN linux-3.10.49.orig/net/bridge/br_input.c linux-3.10.49-007/net/bridge/br_input.c
---- linux-3.10.49.orig/net/bridge/br_input.c	2014-07-28 19:35:34.000000000 -0700
-+++ linux-3.10.49-007/net/bridge/br_input.c	2014-07-28 19:49:02.000000000 -0700
-@@ -177,6 +177,13 @@
+--- v3.14.orig/net/bridge/br_input.c	2015-11-15 18:03:19.296834177 -0700
++++ v3.14/net/bridge/br_input.c	2015-11-15 17:32:21.644277256 -0700
+@@ -176,6 +176,13 @@
  
  	p = br_port_get_rcu(skb->dev);
  
@@ -9,9 +8,9 @@ diff -urN linux-3.10.49.orig/net/bridge/br_input.c linux-3.10.49-007/net/bridge/
 +            p->state == BR_STATE_FORWARDING) {
 +               u16 vid = 0;
 +               br_vlan_get_tag(skb, &vid);
-+		br_fdb_update(p->br, p, eth_hdr(skb)->h_source, vid);
-+             }
-+    
++               br_fdb_update(p->br, p, eth_hdr(skb)->h_source, vid, false);
++        }
++
  	if (unlikely(is_link_local_ether_addr(dest))) {
  		/*
  		 * See IEEE 802.1D Table 7-10 Reserved addresses

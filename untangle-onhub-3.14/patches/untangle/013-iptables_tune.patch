@@ -1,7 +1,7 @@
-diff -urN linux-3.10.49.orig/include/net/netns/ipv4.h linux-3.10.49-013/include/net/netns/ipv4.h
---- linux-3.10.49.orig/include/net/netns/ipv4.h	2014-07-28 19:35:34.000000000 -0700
-+++ linux-3.10.49-013/include/net/netns/ipv4.h	2014-07-28 19:58:36.000000000 -0700
-@@ -48,6 +48,7 @@
+diff -ruN v3.14.orig/include/net/netns/ipv4.h v3.14/include/net/netns/ipv4.h
+--- v3.14.orig/include/net/netns/ipv4.h	2015-11-15 18:03:19.200833454 -0700
++++ v3.14/include/net/netns/ipv4.h	2015-11-15 18:10:56.996257884 -0700
+@@ -52,6 +52,7 @@
  	struct xt_table		*iptable_filter;
  	struct xt_table		*iptable_mangle;
  	struct xt_table		*iptable_raw;
@@ -9,9 +9,9 @@ diff -urN linux-3.10.49.orig/include/net/netns/ipv4.h linux-3.10.49-013/include/
  	struct xt_table		*arptable_filter;
  #ifdef CONFIG_SECURITY
  	struct xt_table		*iptable_security;
-diff -urN linux-3.10.49.orig/include/uapi/linux/netfilter_ipv4.h linux-3.10.49-013/include/uapi/linux/netfilter_ipv4.h
---- linux-3.10.49.orig/include/uapi/linux/netfilter_ipv4.h	2014-07-28 19:35:34.000000000 -0700
-+++ linux-3.10.49-013/include/uapi/linux/netfilter_ipv4.h	2014-07-28 19:59:29.000000000 -0700
+diff -ruN v3.14.orig/include/uapi/linux/netfilter_ipv4.h v3.14/include/uapi/linux/netfilter_ipv4.h
+--- v3.14.orig/include/uapi/linux/netfilter_ipv4.h	2015-11-15 18:03:19.256833876 -0700
++++ v3.14/include/uapi/linux/netfilter_ipv4.h	2015-11-15 18:10:56.996257884 -0700
 @@ -67,7 +67,8 @@
  	NF_IP_PRI_NAT_SRC = 100,
  	NF_IP_PRI_SELINUX_LAST = 225,
@@ -22,108 +22,65 @@ diff -urN linux-3.10.49.orig/include/uapi/linux/netfilter_ipv4.h linux-3.10.49-0
  	NF_IP_PRI_LAST = INT_MAX,
  };
  
-diff -urN linux-3.10.49.orig/net/ipv4/netfilter/iptable_tune.c linux-3.10.49-013/net/ipv4/netfilter/iptable_tune.c
---- linux-3.10.49.orig/net/ipv4/netfilter/iptable_tune.c	1969-12-31 16:00:00.000000000 -0800
-+++ linux-3.10.49-013/net/ipv4/netfilter/iptable_tune.c	2014-07-28 19:58:36.000000000 -0700
-@@ -0,0 +1,139 @@
-+/*
-+ * 'tune' table, which is the last hooked in at POST_ROUTING and LOCAL_OUT .
+diff -ruN v3.14.orig/net/ipv4/netfilter/iptable_tune.c v3.14/net/ipv4/netfilter/iptable_tune.c
+--- v3.14.orig/net/ipv4/netfilter/iptable_tune.c	1969-12-31 17:00:00.000000000 -0700
++++ v3.14/net/ipv4/netfilter/iptable_tune.c	2015-11-15 18:10:56.996257884 -0700
+@@ -0,0 +1,95 @@
++/* 
++ * 
++ * (C) 2015 David Han <dhan@untangle.com>
 + *
-+ * Copyright (C) 2003 Jozsef Kadlecsik <kadlec@blackhole.kfki.hu>
++ * Port old version tune table to kernel 3.16 version
 + */
++
 +#include <linux/module.h>
++#include <linux/netfilter.h>
++#include <linux/netfilter_ipv4.h>
 +#include <linux/netfilter_ipv4/ip_tables.h>
++#include <linux/ip.h>
 +#include <net/ip.h>
 +
 +#define TUNE_VALID_HOOKS ((1 << NF_INET_POST_ROUTING) | (1 << NF_INET_LOCAL_OUT))
 +
-+static struct
-+{
-+	struct ipt_replace repl;
-+	struct ipt_standard entries[2];
-+	struct ipt_error term;
-+} initial_table __initdata = {
-+	.repl = {
-+		.name = "tune",
-+		.valid_hooks = TUNE_VALID_HOOKS,
-+		.num_entries = 3,
-+		.size = sizeof(struct ipt_standard) * 2 + sizeof(struct ipt_error),
-+		.hook_entry = {
-+			[NF_INET_POST_ROUTING] = 0,
-+			[NF_INET_LOCAL_OUT] = sizeof(struct ipt_standard)
-+		},
-+		.underflow = {
-+			[NF_INET_POST_ROUTING] = 0,
-+			[NF_INET_LOCAL_OUT]  = sizeof(struct ipt_standard)
-+		},
-+	},
-+	.entries = {
-+		IPT_STANDARD_INIT(NF_ACCEPT),	/* PRE_ROUTING */
-+		IPT_STANDARD_INIT(NF_ACCEPT),	/* LOCAL_OUT */
-+	},
-+	.term = IPT_ERROR_INIT,			/* ERROR */
++static struct nf_hook_ops *tune_ops __read_mostly;
++
++static const struct xt_table packet_tuner = {
++	.name		= "tune",
++	.valid_hooks	= TUNE_VALID_HOOKS,
++	.me		= THIS_MODULE,
++	.af		= NFPROTO_IPV4,
++	.priority = NF_IP_PRI_TUNE,
 +};
 +
-+static struct xt_table packet_tuner = {
-+	.name = "tune",
-+	.valid_hooks =  TUNE_VALID_HOOKS,
-+	.me = THIS_MODULE,
-+	.af = AF_INET,
-+};
-+
-+/* The work comes in here from netfilter.c. */
 +static unsigned int
-+ipt_hook(unsigned int hook,
-+	 struct sk_buff *skb,
-+	 const struct net_device *in,
-+	 const struct net_device *out,
-+	 int (*okfn)(struct sk_buff *))
++iptable_tune_hook(const struct nf_hook_ops *ops, struct sk_buff *skb,
++		 const struct net_device *in, const struct net_device *out,
++		 int (*okfn)(struct sk_buff *))
 +{
-+	return ipt_do_table(skb, hook, in, out, dev_net(out)->ipv4.iptable_tune);
-+}
++	const struct net *net;
++	net = dev_net(out);
 +
-+static unsigned int
-+ipt_local_hook(unsigned int hook,
-+	       struct sk_buff *skb,
-+	       const struct net_device *in,
-+	       const struct net_device *out,
-+	       int (*okfn)(struct sk_buff *))
-+{
-+	/* root is playing with raw sockets. */
-+	if (skb->len < sizeof(struct iphdr) ||
-+	    ip_hdrlen(skb) < sizeof(struct iphdr)) {
-+		if (net_ratelimit())
-+			printk("iptable_tune: ignoring short packet.\n");
++	if (ops->hooknum == NF_INET_LOCAL_OUT &&
++		(skb->len < sizeof(struct iphdr) ||
++		 ip_hdrlen(skb) < sizeof(struct iphdr)))
 +		return NF_ACCEPT;
-+	}
-+	return ipt_do_table(skb, hook, in, out, dev_net(out)->ipv4.iptable_tune);
++	
++	net = dev_net(out);
++	return ipt_do_table(skb, ops->hooknum, in, out, net->ipv4.iptable_tune);
 +}
 +
-+static struct nf_hook_ops ipt_ops[] = {
-+	{
-+		.hook = ipt_hook,
-+		.pf = PF_INET,
-+		.hooknum = NF_INET_POST_ROUTING,
-+		.priority = NF_IP_PRI_TUNE,
-+		.owner = THIS_MODULE,
-+	},
-+	{
-+		.hook = ipt_local_hook,
-+		.pf = PF_INET,
-+		.hooknum = NF_INET_LOCAL_OUT,
-+		.priority = NF_IP_PRI_TUNE,
-+		.owner = THIS_MODULE,
-+	},
-+};
 +
 +static int __net_init iptable_tune_net_init(struct net *net)
 +{
-+	/* Register table */
-+	net->ipv4.iptable_tune =
-+		ipt_register_table(net, &packet_tuner, &initial_table.repl);
-+	if (IS_ERR(net->ipv4.iptable_tune))
-+		return PTR_ERR(net->ipv4.iptable_tune);
-+	return 0;
++	struct ipt_replace *repl;
++
++	repl = ipt_alloc_initial_table(&packet_tuner);
++	if (repl == NULL)
++		return -ENOMEM;
++
++	net->ipv4.iptable_tune = ipt_register_table(net, &packet_tuner, repl);
++	kfree(repl);
++	return PTR_ERR_OR_ZERO(net->ipv4.iptable_tune);
 +}
 +
 +static void __net_exit iptable_tune_net_exit(struct net *net)
@@ -132,8 +89,8 @@ diff -urN linux-3.10.49.orig/net/ipv4/netfilter/iptable_tune.c linux-3.10.49-013
 +}
 +
 +static struct pernet_operations iptable_tune_net_ops = {
-+	.init = iptable_tune_net_init,
-+	.exit = iptable_tune_net_exit,
++	.init	= iptable_tune_net_init,
++	.exit	= iptable_tune_net_exit,
 +};
 +
 +static int __init iptable_tune_init(void)
@@ -145,30 +102,29 @@ diff -urN linux-3.10.49.orig/net/ipv4/netfilter/iptable_tune.c linux-3.10.49-013
 +		return ret;
 +
 +	/* Register hooks */
-+	ret = nf_register_hooks(ipt_ops, ARRAY_SIZE(ipt_ops));
-+	if (ret < 0)
-+		goto cleanup_table;
++	tune_ops = xt_hook_link(&packet_tuner, iptable_tune_hook);
++	if (IS_ERR(tune_ops)) {
++		ret = PTR_ERR(tune_ops);
++		unregister_pernet_subsys(&iptable_tune_net_ops);
++	}
 +
-+	return ret;
-+
-+ cleanup_table:
-+	unregister_pernet_subsys(&iptable_tune_net_ops);
 +	return ret;
 +}
 +
-+static void __exit iptable_tune_fini(void)
++static void __exit iptable_tune_exit(void)
 +{
-+        nf_unregister_hooks(ipt_ops, ARRAY_SIZE(ipt_ops));
++	xt_hook_unlink(&packet_tuner, tune_ops);
 +	unregister_pernet_subsys(&iptable_tune_net_ops);
 +}
 +
 +module_init(iptable_tune_init);
-+module_exit(iptable_tune_fini);
++module_exit(iptable_tune_exit);
++
 +MODULE_LICENSE("GPL");
-diff -urN linux-3.10.49.orig/net/ipv4/netfilter/Kconfig linux-3.10.49-013/net/ipv4/netfilter/Kconfig
---- linux-3.10.49.orig/net/ipv4/netfilter/Kconfig	2014-07-28 19:35:34.000000000 -0700
-+++ linux-3.10.49-013/net/ipv4/netfilter/Kconfig	2014-07-28 19:58:36.000000000 -0700
-@@ -346,3 +346,15 @@
+diff -ruN v3.14.orig/net/ipv4/netfilter/Kconfig v3.14/net/ipv4/netfilter/Kconfig
+--- v3.14.orig/net/ipv4/netfilter/Kconfig	2015-11-15 18:03:19.284834087 -0700
++++ v3.14/net/ipv4/netfilter/Kconfig	2015-11-15 18:10:56.996257884 -0700
+@@ -371,3 +371,15 @@
  
  endmenu
  
@@ -184,10 +140,10 @@ diff -urN linux-3.10.49.orig/net/ipv4/netfilter/Kconfig linux-3.10.49-013/net/ip
 +	  If you want to compile it as a module, say M here and read
 +	  <file:Documentation/modules.txt>.  If unsure, say `N'.
 +
-diff -urN linux-3.10.49.orig/net/ipv4/netfilter/Makefile linux-3.10.49-013/net/ipv4/netfilter/Makefile
---- linux-3.10.49.orig/net/ipv4/netfilter/Makefile	2014-07-28 19:35:34.000000000 -0700
-+++ linux-3.10.49-013/net/ipv4/netfilter/Makefile	2014-07-28 19:58:36.000000000 -0700
-@@ -36,6 +36,7 @@
+diff -ruN v3.14.orig/net/ipv4/netfilter/Makefile v3.14/net/ipv4/netfilter/Makefile
+--- v3.14.orig/net/ipv4/netfilter/Makefile	2015-11-15 18:03:19.284834087 -0700
++++ v3.14/net/ipv4/netfilter/Makefile	2015-11-15 18:10:57.000257913 -0700
+@@ -41,6 +41,7 @@
  obj-$(CONFIG_IP_NF_MANGLE) += iptable_mangle.o
  obj-$(CONFIG_NF_NAT_IPV4) += iptable_nat.o
  obj-$(CONFIG_IP_NF_RAW) += iptable_raw.o

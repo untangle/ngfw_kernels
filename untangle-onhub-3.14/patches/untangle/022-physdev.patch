@@ -1,6 +1,6 @@
-diff -urN linux-3.10.49.orig/net/bridge/br_netfilter.c linux-3.10.49-022/net/bridge/br_netfilter.c
---- linux-3.10.49.orig/net/bridge/br_netfilter.c	2014-07-31 13:23:41.000000000 -0700
-+++ linux-3.10.49-022/net/bridge/br_netfilter.c	2014-08-05 01:05:32.000000000 -0700
+diff -ruN v3.14.orig/net/bridge/br_netfilter.c v3.14/net/bridge/br_netfilter.c
+--- v3.14.orig/net/bridge/br_netfilter.c	2015-11-15 18:03:19.296834177 -0700
++++ v3.14/net/bridge/br_netfilter.c	2015-11-15 18:34:01.719266702 -0700
 @@ -35,6 +35,7 @@
  #include <net/ip.h>
  #include <net/ipv6.h>
@@ -9,9 +9,9 @@ diff -urN linux-3.10.49.orig/net/bridge/br_netfilter.c linux-3.10.49-022/net/bri
  
  #include <asm/uaccess.h>
  #include "br_private.h"
-@@ -1012,3 +1013,49 @@
- 	unregister_net_sysctl_table(brnf_sysctl_header);
+@@ -1094,3 +1095,49 @@
  #endif
+ 	dst_entries_destroy(&fake_dst_ops);
  }
 +
 +
@@ -59,9 +59,9 @@ diff -urN linux-3.10.49.orig/net/bridge/br_netfilter.c linux-3.10.49-022/net/bri
 +}
 +
 +EXPORT_SYMBOL(get_outdev);
-diff -urN linux-3.10.49.orig/net/netfilter/xt_physdev.c linux-3.10.49-022/net/netfilter/xt_physdev.c
---- linux-3.10.49.orig/net/netfilter/xt_physdev.c	2014-07-31 13:23:41.000000000 -0700
-+++ linux-3.10.49-022/net/netfilter/xt_physdev.c	2014-08-05 01:04:24.000000000 -0700
+diff -ruN v3.14.orig/net/netfilter/xt_physdev.c v3.14/net/netfilter/xt_physdev.c
+--- v3.14.orig/net/netfilter/xt_physdev.c	2015-11-15 18:03:19.272833996 -0700
++++ v3.14/net/netfilter/xt_physdev.c	2015-11-15 18:34:01.719266702 -0700
 @@ -20,6 +20,7 @@
  MODULE_ALIAS("ipt_physdev");
  MODULE_ALIAS("ip6t_physdev");
