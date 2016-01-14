@@ -6,7 +6,7 @@
   images {
     kernel@1{
       description = "kernel";
-      data = /incbin/("chromeos-3.14/arch/arm/boot/Image");
+      data = /incbin/("chromeos-3.14/arch/arm/boot/zImage");
       type = "kernel_noload";
       arch = "arm";
       os = "linux";
