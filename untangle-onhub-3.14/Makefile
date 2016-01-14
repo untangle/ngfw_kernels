@@ -7,6 +7,8 @@ ITF_IMAGE := $(KERNEL_DIR)/arch/arm/boot/vmlinux.itf
 MODULES_PATH=/tmp/mods-3.14.0
 MODULES_TARBALL := $(KERNEL_DIR)/modules.tar.bz2
 VIMAGE := $(KERNEL_DIR)/vimage
+#CMDLINE := cmdline.txt
+CMDLINE := cmdline-untangle.txt
 CONFIG_ORIG := config_chromiumos-ipq806x.config
 CONFIG_UNTANGLE_ORIG := untangle.config
 CONFIG_DEST := $(KERNEL_DIR)/.config
@@ -61,7 +63,7 @@ $(ITF_IMAGE): dtb
 
 vimage: $(VIMAGE)
 $(VIMAGE): itf
-	vbutil_kernel --verbose --pack $(VIMAGE) --keyblock /usr/share/vboot/devkeys/recovery_kernel.keyblock --version 1 --signprivate /usr/share/vboot/devkeys/recovery_kernel_data_key.vbprivk --config cmdline.txt --vmlinuz $(ITF_IMAGE) --arch arm --bootloader bootloader.bin
+	vbutil_kernel --verbose --pack $(VIMAGE) --keyblock /usr/share/vboot/devkeys/recovery_kernel.keyblock --version 1 --signprivate /usr/share/vboot/devkeys/recovery_kernel_data_key.vbprivk --config $(CMDLINE) --vmlinuz $(ITF_IMAGE) --arch arm --bootloader bootloader.bin
 
 verify: vimage
 	vbutil_kernel --verbose --debug --verify $(VIMAGE)
@@ -70,7 +72,8 @@ modules: $(MODULES_TARBALL)
 $(MODULES_TARBALL): kernel
 	rm -fr $(MODULES_PATH)
 	mkdir -p $(MODULES_PATH)
-	export WIFIVERSION=-3.18 && cd $(KERNEL_DIR) && MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) INSTALL_MOD_PATH=$(MODULES_PATH) make -j $(CONCURRENCY_LEVEL) modules modules_install
+	export WIFIVERSION=-3.18 && cd $(KERNEL_DIR) && MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) INSTALL_MOD_PATH=$(MODULES_PATH) make -j $(CONCURRENCY_LEVEL) modules
+	export WIFIVERSION=-3.18 && cd $(KERNEL_DIR) && MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) INSTALL_MOD_PATH=$(MODULES_PATH) make -j $(CONCURRENCY_LEVEL) modules_install
 	tar -C $(MODULES_PATH) -cjf $@ .
 
 clean:
