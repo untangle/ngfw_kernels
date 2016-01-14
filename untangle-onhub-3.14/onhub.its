@@ -15,8 +15,8 @@
       entry = <0>;
     };
     fdt@1{
-      description = "qcom-ipq8064-whirlwind-sp5.dtb";
-      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-ipq8064-whirlwind-sp5.dtb");
+      description = "qcom-apq8064-ifc6410.dtb";
+      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-apq8064-ifc6410.dtb");
       type = "flat_dt";
       arch = "arm";
       compression = "none";
@@ -25,8 +25,8 @@
       };
     };
     fdt@2{
-      description = "qcom-ipq8064-whirlwind-sp3.dtb";
-      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-ipq8064-whirlwind-sp3.dtb");
+      description = "qcom-apq8074-dragonboard.dtb";
+      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-apq8074-dragonboard.dtb");
       type = "flat_dt";
       arch = "arm";
       compression = "none";
@@ -35,8 +35,8 @@
       };
     };
     fdt@3{
-      description = "qcom-msm8660-surf.dtb";
-      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-msm8660-surf.dtb");
+      description = "qcom-apq8084-mtp.dtb";
+      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-apq8084-mtp.dtb");
       type = "flat_dt";
       arch = "arm";
       compression = "none";
@@ -45,8 +45,8 @@
       };
     };
     fdt@4{
-      description = "qcom-msm8960-cdp.dtb";
-      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-msm8960-cdp.dtb");
+      description = "qcom-ipq8064-ap148.dtb";
+      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-ipq8064-ap148.dtb");
       type = "flat_dt";
       arch = "arm";
       compression = "none";
@@ -65,8 +65,8 @@
       };
     };
     fdt@6{
-      description = "qcom-ipq8064-ap148.dtb";
-      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-ipq8064-ap148.dtb");
+      description = "qcom-ipq8064-whirlwind-sp3.dtb";
+      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-ipq8064-whirlwind-sp3.dtb");
       type = "flat_dt";
       arch = "arm";
       compression = "none";
@@ -75,8 +75,8 @@
       };
     };
     fdt@7{
-      description = "qcom-apq8084-mtp.dtb";
-      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-apq8084-mtp.dtb");
+      description = "qcom-ipq8064-whirlwind-sp5.dtb";
+      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-ipq8064-whirlwind-sp5.dtb");
       type = "flat_dt";
       arch = "arm";
       compression = "none";
@@ -85,8 +85,8 @@
       };
     };
     fdt@8{
-      description = "qcom-apq8074-dragonboard.dtb";
-      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-apq8074-dragonboard.dtb");
+      description = "qcom-msm8660-surf.dtb";
+      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-msm8660-surf.dtb");
       type = "flat_dt";
       arch = "arm";
       compression = "none";
@@ -95,8 +95,8 @@
       };
     };
     fdt@9{
-      description = "qcom-apq8064-ifc6410.dtb";
-      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-apq8064-ifc6410.dtb");
+      description = "qcom-msm8960-cdp.dtb";
+      data = /incbin/("chromeos-3.14/arch/arm/boot/dts/qcom-msm8960-cdp.dtb");
       type = "flat_dt";
       arch = "arm";
       compression = "none";
