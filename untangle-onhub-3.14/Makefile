@@ -4,6 +4,8 @@ TARBALL := chromeos-3.14.tar.bz2
 KERNEL_DIR := chromeos-3.14
 KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
 ITF_IMAGE := $(KERNEL_DIR)/arch/arm/boot/vmlinux.itf
+MODULES_PATH=/tmp/mods-3.14.0
+MODULES_TARBALL := $(KERNEL_DIR)/modules.tar.bz2
 VIMAGE := $(KERNEL_DIR)/vimage
 CONFIG_ORIG := config_chromiumos-ipq806x.config
 CONFIG_UNTANGLE_ORIG := untangle.config
@@ -11,7 +13,7 @@ CONFIG_DEST := $(KERNEL_DIR)/.config
 CONCURRENCY_LEVEL := $(shell grep -c '^processor\s:' /proc/cpuinfo)
 UNTANGLE_PATCH_SERIES := patches/untangle/series
 
-all: kernel-package vimage modules
+all: kernel vimage modules
 
 extract: extract-stamp
 extract-stamp: $(TARBALL)
@@ -39,7 +41,7 @@ kernel: $(KERNEL_IMAGE)
 $(KERNEL_IMAGE): patch-stamp config
 	cd $(KERNEL_DIR) ; \
 	export WIFIVERSION=-3.18 ; \
-	MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make -j $(CONCURRENCY_LEVEL)
+	MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make -j $(CONCURRENCY_LEVEL) zImage
 
 kernel-package: patch-stamp config
 	cd $(KERNEL_DIR) ; \
@@ -59,14 +61,17 @@ $(ITF_IMAGE): dtb
 
 vimage: $(VIMAGE)
 $(VIMAGE): itf
-	vbutil_kernel --verbose --pack $(VIMAGE) --keyblock /usr/share/vboot/devkeys/kernel.keyblock --version 1 --signprivate /usr/share/vboot/devkeys/kernel_data_key.vbprivk --config cmdline.txt --vmlinuz $(ITF_IMAGE) --arch arm
+	vbutil_kernel --verbose --pack $(VIMAGE) --keyblock /usr/share/vboot/devkeys/recovery_kernel.keyblock --version 1 --signprivate /usr/share/vboot/devkeys/recovery_kernel_data_key.vbprivk --config cmdline.txt --vmlinuz $(ITF_IMAGE) --arch arm --bootloader bootloader.bin
 
 verify: vimage
-	vbutil_kernel --verbose --verify $(VIMAGE)
+	vbutil_kernel --verbose --debug --verify $(VIMAGE)
 
 modules: $(MODULES_TARBALL)
-$(MODULES_TARBALL): kernel-package-stamp
-	tar -C $(KERNEL_DIR)/debian/linux-image-3.14-chromeos*/lib/modules -cjf $@ .
+$(MODULES_TARBALL): kernel
+	rm -fr $(MODULES_PATH)
+	mkdir -p $(MODULES_PATH)
+	export WIFIVERSION=-3.18 && cd $(KERNEL_DIR) && MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) INSTALL_MOD_PATH=$(MODULES_PATH) make -j $(CONCURRENCY_LEVEL) modules modules_install
+	tar -C $(MODULES_PATH) -cjf $@ .
 
 clean:
 	rm -fr $(KERNEL_DIR)
