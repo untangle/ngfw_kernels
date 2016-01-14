@@ -1,0 +1,1 @@
+untangle=1 netconsole=4444@172.16.123.1/eth0,4444@172.16.123.123/00:00:24:cc:ea:4a loglevel=7 init=/sbin/init root=/dev/sda13 rootwait rw debug
