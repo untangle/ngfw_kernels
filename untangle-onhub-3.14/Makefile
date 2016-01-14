@@ -23,7 +23,7 @@ extract-stamp: $(TARBALL)
 	touch $@
 
 patch: patch-stamp
-patch-stamp: # patch-untangle
+patch-stamp: patch-untangle
 	touch $@
 
 patch-untangle: patch-untangle-stamp
@@ -36,8 +36,7 @@ patch-untangle-stamp: extract-stamp patches/untangle/*
 
 config: $(CONFIG_DEST)
 $(CONFIG_DEST): extract-stamp $(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG)
-#	cat $(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $@
-	cat $(CONFIG_ORIG) >| $@
+	cat $(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $@
 
 kernel: $(KERNEL_IMAGE)
 $(KERNEL_IMAGE): patch-stamp config
