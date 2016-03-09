@@ -1,0 +1,191 @@
+diff -ruN linux-3.16.7.orig/net/bridge/br_netfilter.c linux-3.16.7.new/net/bridge/br_netfilter.c
+--- linux-3.16.7.orig/net/bridge/br_netfilter.c	2015-12-27 17:24:56.697380370 -0800
++++ linux-3.16.7.new/net/bridge/br_netfilter.c	2016-01-03 23:35:11.668455596 -0800
+@@ -35,6 +35,7 @@
+ #include <net/ip.h>
+ #include <net/ipv6.h>
+ #include <net/route.h>
++#include <net/arp.h>
+ 
+ #include <asm/uaccess.h>
+ #include "br_private.h"
+@@ -1094,3 +1095,80 @@
+ #endif
+ 	dst_entries_destroy(&fake_dst_ops);
+ }
++
++
++struct net_bridge_fdb_entry *br_fdb_get(struct net_bridge *br,
++					unsigned char *addr)
++{
++	struct net_bridge_fdb_entry *fdb;
++
++	rcu_read_lock();
++	fdb = __br_fdb_get(br, addr, 0 /* vid ??? FIXME */ );
++	rcu_read_unlock();
++	return fdb;
++}
++
++static void ngfw_arp_send(struct net_device *out_dev,
++			  __be32 dest_ip, __be32 src_ip)
++{
++	struct sk_buff *skb;
++
++	skb = arp_create(ARPOP_REQUEST, ETH_P_ARP, dest_ip, out_dev, src_ip,
++			 NULL, out_dev->dev_addr, NULL);
++
++	if (!skb) {
++		return;
++	}
++
++	arp_xmit(skb);
++}
++
++void get_outdev(const struct sk_buff* skb, const struct net_device *out, struct net_device *m_out)
++{
++	struct neighbour *neigh;
++	struct nf_bridge_info *nf_bridge;
++	const unsigned char *dest;
++	struct net_bridge_fdb_entry *fdb;
++	struct dst_entry *dst = skb_dst(skb);
++	struct rtable *rt = (struct rtable *)dst;
++	struct net_device *dev = dst->dev;
++	u32 src_ip = 0;
++
++	nf_bridge = skb->nf_bridge;
++	if ((nf_bridge && nf_bridge->physoutdev) ||
++	    !out || out->netdev_ops->ndo_start_xmit != br_dev_xmit)
++		return;
++
++	if (!nf_bridge && !(nf_bridge = nf_bridge_alloc(skb)))
++		return;
++	nf_bridge->physoutdev = out;
++
++	u32 nexthop = (__force u32) rt_nexthop(rt, ip_hdr(skb)->daddr);
++	neigh = __ipv4_neigh_lookup_noref(dev, nexthop);
++	if (unlikely(!neigh)){
++        neigh = __neigh_create(&arp_tbl, &nexthop, dev, false);
++        if (dev)
++            src_ip = inet_select_addr(dev, nexthop, RT_SCOPE_LINK);
++        ngfw_arp_send(m_out,nexthop,src_ip);
++		return;
++    }
++	if (neigh_event_send(neigh, NULL)) {
++		return;
++    }
++
++	dest = neigh->ha;
++	if (!is_multicast_ether_addr(dest)) {
++        fdb = br_fdb_get(netdev_priv(out), dest);
++
++        if (fdb) {
++            nf_bridge->physoutdev = fdb->dst->dev;
++        }
++        else {
++            if (dev)
++                src_ip = inet_select_addr(dev, nexthop, RT_SCOPE_LINK);
++            ngfw_arp_send(m_out,nexthop,src_ip);
++        }
++    }
++}
++
++EXPORT_SYMBOL(get_outdev);
+diff -ruN linux-3.16.7.orig/net/netfilter/xt_physdev.c linux-3.16.7.new/net/netfilter/xt_physdev.c
+--- linux-3.16.7.orig/net/netfilter/xt_physdev.c	2015-12-27 17:24:56.721380544 -0800
++++ linux-3.16.7.new/net/netfilter/xt_physdev.c	2015-12-30 22:12:26.700981554 -0800
+@@ -20,6 +20,7 @@
+ MODULE_ALIAS("ipt_physdev");
+ MODULE_ALIAS("ip6t_physdev");
+ 
++void get_outdev(const struct sk_buff* skb, const struct net_device *out, struct net_device *m_dev);
+ 
+ static bool
+ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
+@@ -29,6 +30,7 @@
+ 	unsigned long ret;
+ 	const char *indev, *outdev;
+ 	const struct nf_bridge_info *nf_bridge;
++    struct net_device  *m_dev;
+ 
+ 	/* Not a bridged IP packet or no info available yet:
+ 	 * LOCAL_OUT/mangle and LOCAL_OUT/nat don't know if
+@@ -41,16 +43,10 @@
+ 		if ((info->bitmask & XT_PHYSDEV_OP_ISIN) &&
+ 		    !(info->invert & XT_PHYSDEV_OP_ISIN))
+ 			return false;
+-		if ((info->bitmask & XT_PHYSDEV_OP_ISOUT) &&
+-		    !(info->invert & XT_PHYSDEV_OP_ISOUT))
+-			return false;
+ 		if ((info->bitmask & XT_PHYSDEV_OP_IN) &&
+ 		    !(info->invert & XT_PHYSDEV_OP_IN))
+ 			return false;
+-		if ((info->bitmask & XT_PHYSDEV_OP_OUT) &&
+-		    !(info->invert & XT_PHYSDEV_OP_OUT))
+-			return false;
+-		return true;
++		goto match_outdev;
+ 	}
+ 
+ 	/* This only makes sense in the FORWARD and POSTROUTING chains */
+@@ -60,9 +56,7 @@
+ 		return false;
+ 
+ 	if ((info->bitmask & XT_PHYSDEV_OP_ISIN &&
+-	    (!nf_bridge->physindev ^ !!(info->invert & XT_PHYSDEV_OP_ISIN))) ||
+-	    (info->bitmask & XT_PHYSDEV_OP_ISOUT &&
+-	    (!nf_bridge->physoutdev ^ !!(info->invert & XT_PHYSDEV_OP_ISOUT))))
++	    (!nf_bridge->physindev ^ !!(info->invert & XT_PHYSDEV_OP_ISIN))))
+ 		return false;
+ 
+ 	if (!(info->bitmask & XT_PHYSDEV_OP_IN))
+@@ -74,12 +68,30 @@
+ 		return false;
+ 
+ match_outdev:
+-	if (!(info->bitmask & XT_PHYSDEV_OP_OUT))
++	if (!(info->bitmask & (XT_PHYSDEV_OP_ISOUT | XT_PHYSDEV_OP_OUT)))
+ 		return true;
++
++	m_dev = dev_get_by_name(&init_net, info->physoutdev );
++
++	get_outdev(skb, par->out, m_dev);
++	if (!(nf_bridge = skb->nf_bridge)) {
++		if ((info->bitmask & XT_PHYSDEV_OP_ISOUT) &&
++		    !(info->invert & XT_PHYSDEV_OP_ISOUT))
++			return false;
++		if ((info->bitmask & XT_PHYSDEV_OP_OUT) &&
++		    !(info->invert & XT_PHYSDEV_OP_OUT))
++			return false;
++		return true;
++	}
++
++	if (info->bitmask & XT_PHYSDEV_OP_ISOUT &&
++	    (!nf_bridge->physoutdev ^ !!(info->invert & XT_PHYSDEV_OP_ISOUT)))
++		return false;
+ 	outdev = nf_bridge->physoutdev ?
+ 		 nf_bridge->physoutdev->name : nulldevname;
+-	ret = ifname_compare_aligned(outdev, info->physoutdev, info->out_mask);
+ 
++
++	ret = ifname_compare_aligned(outdev, info->physoutdev, info->out_mask);
+ 	return (!!ret ^ !(info->invert & XT_PHYSDEV_OP_OUT));
+ }
+ 
+@@ -90,17 +102,6 @@
+ 	if (!(info->bitmask & XT_PHYSDEV_OP_MASK) ||
+ 	    info->bitmask & ~XT_PHYSDEV_OP_MASK)
+ 		return -EINVAL;
+-	if (info->bitmask & XT_PHYSDEV_OP_OUT &&
+-	    (!(info->bitmask & XT_PHYSDEV_OP_BRIDGED) ||
+-	     info->invert & XT_PHYSDEV_OP_BRIDGED) &&
+-	    par->hook_mask & ((1 << NF_INET_LOCAL_OUT) |
+-	    (1 << NF_INET_FORWARD) | (1 << NF_INET_POST_ROUTING))) {
+-		pr_info("using --physdev-out in the OUTPUT, FORWARD and "
+-			"POSTROUTING chains for non-bridged traffic is not "
+-			"supported anymore.\n");
+-		if (par->hook_mask & (1 << NF_INET_LOCAL_OUT))
+-			return -EINVAL;
+-	}
+ 	return 0;
+ }
+ 
