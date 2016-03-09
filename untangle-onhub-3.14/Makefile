@@ -42,7 +42,7 @@ kernel: $(KERNEL_IMAGE)
 $(KERNEL_IMAGE): patch-stamp config
 	cd $(KERNEL_DIR) ; \
 	export WIFIVERSION=-3.18 ; \
-	MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make -j $(CONCURRENCY_LEVEL) zImage
+	MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make -j $(CONCURRENCY_LEVEL) zImage modules
 
 kernel-package: patch-stamp config
 	cd $(KERNEL_DIR) ; \
@@ -58,7 +58,8 @@ dtb-stamp: kernel
 
 itf: $(ITF_IMAGE)
 $(ITF_IMAGE): dtb
-	mkimage -D '-I dts -O dtb -p 1024' -f onhub.its $(ITF_IMAGE)
+#	mkimage -D '-I dts -O dtb -p 1024' -f onhub.its $(ITF_IMAGE)
+	mkimage -f onhub.its $(ITF_IMAGE)
 
 vimage: $(VIMAGE)
 $(VIMAGE): itf
