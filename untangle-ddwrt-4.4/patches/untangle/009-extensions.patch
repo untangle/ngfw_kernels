@@ -1,6 +1,6 @@
-diff -ruN linux-3.16.7.orig/include/linux/in.h linux-3.16.7.new/include/linux/in.h
---- linux-3.16.7.orig/include/linux/in.h	2015-01-31 14:43:43.499129437 -0700
-+++ linux-3.16.7.new/include/linux/in.h	2015-02-02 15:08:50.630301076 -0700
+diff -ruN linux-4.4.6.orig/include/linux/in.h linux-4.4.6/include/linux/in.h
+--- linux-4.4.6.orig/include/linux/in.h	2016-03-17 23:32:01.069731036 -0700
++++ linux-4.4.6/include/linux/in.h	2016-03-19 22:42:14.393134456 -0700
 @@ -18,6 +18,12 @@
  #ifndef _LINUX_IN_H
  #define _LINUX_IN_H
@@ -14,21 +14,21 @@ diff -ruN linux-3.16.7.orig/include/linux/in.h linux-3.16.7.new/include/linux/in
  
  #include <linux/errno.h>
  #include <uapi/linux/in.h>
-diff -ruN linux-3.16.7.orig/include/net/ip.h linux-3.16.7.new/include/net/ip.h
---- linux-3.16.7.orig/include/net/ip.h	2015-01-31 14:43:43.487129354 -0700
-+++ linux-3.16.7.new/include/net/ip.h	2015-02-02 15:10:55.711146141 -0700
+diff -ruN linux-4.4.6.orig/include/net/ip.h linux-4.4.6/include/net/ip.h
+--- linux-4.4.6.orig/include/net/ip.h	2016-03-17 23:32:05.549773433 -0700
++++ linux-4.4.6/include/net/ip.h	2016-03-19 22:46:20.731303360 -0700
 @@ -38,6 +38,10 @@
+ struct inet_skb_parm {
  	struct ip_options	opt;		/* Compiled IP options		*/
  	unsigned char		flags;
- 
-+	/* Extensions */
-+	unsigned char    pkt_ip_ttl;
-+	unsigned char    pkt_ip_tos;
++    /* Extensions */
++    unsigned char    pkt_ip_ttl;
++    unsigned char    pkt_ip_tos;
 +
- #define IPSKB_FORWARDED		1
- #define IPSKB_XFRM_TUNNEL_SIZE	2
- #define IPSKB_XFRM_TRANSFORMED	4
-@@ -56,6 +60,11 @@
+ 
+ #define IPSKB_FORWARDED		BIT(0)
+ #define IPSKB_XFRM_TUNNEL_SIZE	BIT(1)
+@@ -59,6 +63,11 @@
  	__be32			addr;
  	int			oif;
  	struct ip_options_rcu	*opt;
@@ -40,12 +40,47 @@ diff -ruN linux-3.16.7.orig/include/net/ip.h linux-3.16.7.new/include/net/ip.h
  	__u8			tx_flags;
  	__u8			ttl;
  	__s16			tos;
-diff -ruN linux-3.16.7.orig/include/uapi/linux/in.h linux-3.16.7.new/include/uapi/linux/in.h
---- linux-3.16.7.orig/include/uapi/linux/in.h	2015-01-31 14:43:43.579129981 -0700
-+++ linux-3.16.7.new/include/uapi/linux/in.h	2015-02-02 15:08:50.630301076 -0700
-@@ -110,6 +110,10 @@
- #define IP_MINTTL       21
- #define IP_NODEFRAG     22
+@@ -163,14 +172,14 @@
+ void ip4_datagram_release_cb(struct sock *sk);
+ 
+ struct ip_reply_arg {
+-	struct kvec iov[1];   
++	struct kvec iov[1];
+ 	int	    flags;
+ 	__wsum 	    csum;
+ 	int	    csumoffset; /* u16 offset of csum in iov[0].iov_base */
+-				/* -1 if not needed */ 
++				/* -1 if not needed */
+ 	int	    bound_dev_if;
+ 	u8  	    tos;
+-}; 
++};
+ 
+ #define IP_REPLY_ARG_NOSRCCHECK 1
+ 
+@@ -520,13 +529,13 @@
+ /*
+  *	Functions provided by ip_forward.c
+  */
+- 
++
+ int ip_forward(struct sk_buff *skb);
+- 
++
+ /*
+  *	Functions provided by ip_options.c
+  */
+- 
++
+ void ip_options_build(struct sk_buff *skb, struct ip_options *opt,
+ 		      __be32 daddr, struct rtable *rt, int is_frag);
+ 
+diff -ruN linux-4.4.6.orig/include/uapi/linux/in.h linux-4.4.6/include/uapi/linux/in.h
+--- linux-4.4.6.orig/include/uapi/linux/in.h	2016-03-17 23:32:06.057778239 -0700
++++ linux-4.4.6/include/uapi/linux/in.h	2016-03-19 22:42:14.393134456 -0700
+@@ -118,6 +118,10 @@
+ #define IP_CHECKSUM	23
+ #define IP_BIND_ADDRESS_NO_PORT	24
  
 +/* Extensions */
 +#define IP_SADDR	24
@@ -54,9 +89,9 @@ diff -ruN linux-3.16.7.orig/include/uapi/linux/in.h linux-3.16.7.new/include/uap
  /* IP_MTU_DISCOVER values */
  #define IP_PMTUDISC_DONT		0	/* Never send DF frames */
  #define IP_PMTUDISC_WANT		1	/* Use per route hints	*/
-diff -ruN linux-3.16.7.orig/include/uapi/linux/udp.h linux-3.16.7.new/include/uapi/linux/udp.h
---- linux-3.16.7.orig/include/uapi/linux/udp.h	2015-01-31 14:43:43.591130063 -0700
-+++ linux-3.16.7.new/include/uapi/linux/udp.h	2015-02-02 15:08:50.630301076 -0700
+diff -ruN linux-4.4.6.orig/include/uapi/linux/udp.h linux-4.4.6/include/uapi/linux/udp.h
+--- linux-4.4.6.orig/include/uapi/linux/udp.h	2016-03-17 23:32:06.061778278 -0700
++++ linux-4.4.6/include/uapi/linux/udp.h	2016-03-19 22:42:14.393134456 -0700
 @@ -32,6 +32,9 @@
  #define UDP_NO_CHECK6_TX 101	/* Disable sending checksum for UDP6X */
  #define UDP_NO_CHECK6_RX 102	/* Disable accpeting checksum for UDP6 */
@@ -67,10 +102,10 @@ diff -ruN linux-3.16.7.orig/include/uapi/linux/udp.h linux-3.16.7.new/include/ua
  /* UDP encapsulation types */
  #define UDP_ENCAP_ESPINUDP_NON_IKE	1 /* draft-ietf-ipsec-nat-t-ike-00/01 */
  #define UDP_ENCAP_ESPINUDP	2 /* draft-ietf-ipsec-udp-encaps-06 */
-diff -ruN linux-3.16.7.orig/net/ipv4/icmp.c linux-3.16.7.new/net/ipv4/icmp.c
---- linux-3.16.7.orig/net/ipv4/icmp.c	2015-01-31 14:43:43.691130742 -0700
-+++ linux-3.16.7.new/net/ipv4/icmp.c	2015-02-02 15:08:50.630301076 -0700
-@@ -347,6 +347,8 @@
+diff -ruN linux-4.4.6.orig/net/ipv4/icmp.c linux-4.4.6/net/ipv4/icmp.c
+--- linux-4.4.6.orig/net/ipv4/icmp.c	2016-03-17 23:31:49.101617768 -0700
++++ linux-4.4.6/net/ipv4/icmp.c	2016-03-19 22:42:14.393134456 -0700
+@@ -405,6 +405,8 @@
  		return;
  	inet = inet_sk(sk);
  
@@ -79,7 +114,7 @@ diff -ruN linux-3.16.7.orig/net/ipv4/icmp.c linux-3.16.7.new/net/ipv4/icmp.c
  	icmp_param->data.icmph.checksum = 0;
  
  	inet->tos = ip_hdr(skb)->tos;
-@@ -615,6 +617,7 @@
+@@ -695,6 +697,7 @@
  	icmp_param->offset = skb_network_offset(skb_in);
  	inet_sk(sk)->tos = tos;
  	sk->sk_mark = mark;
@@ -87,26 +122,25 @@ diff -ruN linux-3.16.7.orig/net/ipv4/icmp.c linux-3.16.7.new/net/ipv4/icmp.c
  	ipc.addr = iph->saddr;
  	ipc.opt = &icmp_param->replyopts.opt;
  	ipc.tx_flags = 0;
-diff -ruN linux-3.16.7.orig/net/ipv4/ip_output.c linux-3.16.7.new/net/ipv4/ip_output.c
---- linux-3.16.7.orig/net/ipv4/ip_output.c	2015-01-31 14:43:43.691130742 -0700
-+++ linux-3.16.7.new/net/ipv4/ip_output.c	2015-02-02 15:14:39.728677050 -0700
-@@ -140,11 +140,15 @@
+diff -ruN linux-4.4.6.orig/net/ipv4/ip_output.c linux-4.4.6/net/ipv4/ip_output.c
+--- linux-4.4.6.orig/net/ipv4/ip_output.c	2016-03-17 23:31:49.101617768 -0700
++++ linux-4.4.6/net/ipv4/ip_output.c	2016-03-19 22:50:03.509265853 -0700
+@@ -147,8 +147,14 @@
  	iph->version  = 4;
  	iph->ihl      = 5;
  	iph->tos      = inet->tos;
-+	if (IPCB(skb)->pkt_ip_tos) 
-+		iph->tos = IPCB(skb)->pkt_ip_tos;
- 	if (ip_dont_fragment(sk, &rt->dst))
- 		iph->frag_off = htons(IP_DF);
- 	else
- 		iph->frag_off = 0;
++    if (IPCB(skb)->pkt_ip_tos)
++        iph->tos = IPCB(skb)->pkt_ip_tos;
++
  	iph->ttl      = ip_select_ttl(inet, &rt->dst);
-+	if (IPCB(skb)->pkt_ip_ttl) 
-+		iph->ttl = IPCB(skb)->pkt_ip_ttl;
  	iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
++    if (IPCB(skb)->pkt_ip_ttl)
++        iph->ttl = IPCB(skb)->pkt_ip_ttl;
++
  	iph->saddr    = saddr;
  	iph->protocol = sk->sk_protocol;
-@@ -156,7 +160,7 @@
+ 	if (ip_dont_fragment(sk, &rt->dst)) {
+@@ -165,7 +171,7 @@
  	}
  
  	skb->priority = sk->sk_priority;
@@ -114,17 +148,17 @@ diff -ruN linux-3.16.7.orig/net/ipv4/ip_output.c linux-3.16.7.new/net/ipv4/ip_ou
 +	skb->mark |= sk->sk_mark;
  
  	/* Send it out. */
- 	return ip_local_out(skb);
-@@ -434,7 +438,7 @@
+ 	return ip_local_out(net, skb->sk, skb);
+@@ -453,7 +459,7 @@
  
  	/* TODO : should we use skb->sk here instead of sk ? */
  	skb->priority = sk->sk_priority;
 -	skb->mark = sk->sk_mark;
 +	skb->mark |= sk->sk_mark;
  
- 	res = ip_local_out(skb);
+ 	res = ip_local_out(net, sk, skb);
  	rcu_read_unlock();
-@@ -839,7 +843,7 @@
+@@ -869,7 +875,7 @@
  			    struct page_frag *pfrag,
  			    int getfrag(void *from, char *to, int offset,
  					int len, int odd, struct sk_buff *skb),
@@ -133,26 +167,26 @@ diff -ruN linux-3.16.7.orig/net/ipv4/ip_output.c linux-3.16.7.new/net/ipv4/ip_ou
  			    unsigned int flags)
  {
  	struct inet_sock *inet = inet_sk(sk);
-@@ -987,6 +991,18 @@
+@@ -1024,6 +1030,18 @@
  						 fragheaderlen);
  			data += fragheaderlen + exthdrlen;
  
 +			if (ipc->ttl)
 +				IPCB(skb)->pkt_ip_ttl = ipc->ttl;
-+			else 
++			else
 +				IPCB(skb)->pkt_ip_ttl = 0;
 +
 +			if (ipc->tos)
 +				IPCB(skb)->pkt_ip_ttl = ipc->tos;
-+			else 
++			else
 +				IPCB(skb)->pkt_ip_ttl = 0;
 +
 +			skb->mark = ipc->nfmark;
-+            
++
  			if (fraggap) {
  				skb->csum = skb_copy_and_csum_bits(
  					skb_prev, maxfraglen,
-@@ -1149,7 +1165,7 @@
+@@ -1186,7 +1204,7 @@
  
  	return __ip_append_data(sk, fl4, &sk->sk_write_queue, &inet->cork.base,
  				sk_page_frag(sk), getfrag,
@@ -161,7 +195,7 @@ diff -ruN linux-3.16.7.orig/net/ipv4/ip_output.c linux-3.16.7.new/net/ipv4/ip_ou
  }
  
  ssize_t	ip_append_page(struct sock *sk, struct flowi4 *fl4, struct page *page,
-@@ -1386,7 +1402,7 @@
+@@ -1417,7 +1435,7 @@
  	}
  
  	skb->priority = (cork->tos != -1) ? cork->priority: sk->sk_priority;
@@ -170,7 +204,7 @@ diff -ruN linux-3.16.7.orig/net/ipv4/ip_output.c linux-3.16.7.new/net/ipv4/ip_ou
  	/*
  	 * Steal rt from cork.dst to avoid a pair of atomic_inc/atomic_dec
  	 * on dst refcount
-@@ -1476,7 +1492,7 @@
+@@ -1507,7 +1525,7 @@
  
  	err = __ip_append_data(sk, fl4, &queue, &cork,
  			       &current->task_frag, getfrag,
@@ -179,18 +213,18 @@ diff -ruN linux-3.16.7.orig/net/ipv4/ip_output.c linux-3.16.7.new/net/ipv4/ip_ou
  	if (err) {
  		__ip_flush_pending_frames(sk, &queue, &cork);
  		return ERR_PTR(err);
-@@ -1532,6 +1548,7 @@
- 	if (ip_options_echo(&replyopts.opt.opt, skb))
+@@ -1551,6 +1569,7 @@
+ 	if (__ip_options_echo(&replyopts.opt.opt, skb, sopt))
  		return;
  
 +	memset(&ipc, 0, sizeof(ipc));
  	ipc.addr = daddr;
  	ipc.opt = NULL;
  	ipc.tx_flags = 0;
-diff -ruN linux-3.16.7.orig/net/ipv4/ip_sockglue.c linux-3.16.7.new/net/ipv4/ip_sockglue.c
---- linux-3.16.7.orig/net/ipv4/ip_sockglue.c	2015-01-31 14:43:43.691130742 -0700
-+++ linux-3.16.7.new/net/ipv4/ip_sockglue.c	2015-02-03 00:16:07.936661068 -0700
-@@ -248,6 +248,23 @@
+diff -ruN linux-4.4.6.orig/net/ipv4/ip_sockglue.c linux-4.4.6/net/ipv4/ip_sockglue.c
+--- linux-4.4.6.orig/net/ipv4/ip_sockglue.c	2016-03-17 23:31:49.101617768 -0700
++++ linux-4.4.6/net/ipv4/ip_sockglue.c	2016-03-19 22:42:14.393134456 -0700
+@@ -283,6 +283,23 @@
  			ipc->tos = val;
  			ipc->priority = rt_tos2priority(ipc->tos);
  			break;
@@ -214,9 +248,9 @@ diff -ruN linux-3.16.7.orig/net/ipv4/ip_sockglue.c linux-3.16.7.new/net/ipv4/ip_
  
  		default:
  			return -EINVAL;
-@@ -610,6 +627,25 @@
- 		else
- 			inet->cmsg_flags &= ~IP_CMSG_ORIGDSTADDR;
+@@ -712,6 +729,25 @@
+ 			}
+ 		}
  		break;
 +
 +	case IP_SENDNFMARK:
@@ -240,9 +274,9 @@ diff -ruN linux-3.16.7.orig/net/ipv4/ip_sockglue.c linux-3.16.7.new/net/ipv4/ip_
  	case IP_TOS:	/* This sets both TOS and Precedence */
  		if (sk->sk_type == SOCK_STREAM) {
  			val &= ~INET_ECN_MASK;
-@@ -1213,6 +1249,23 @@
- 	case IP_RECVORIGDSTADDR:
- 		val = (inet->cmsg_flags & IP_CMSG_ORIGDSTADDR) != 0;
+@@ -1338,6 +1374,23 @@
+ 	case IP_CHECKSUM:
+ 		val = (inet->cmsg_flags & IP_CMSG_CHECKSUM) != 0;
  		break;
 +        case IP_SENDNFMARK:
 +        {
@@ -264,10 +298,10 @@ diff -ruN linux-3.16.7.orig/net/ipv4/ip_sockglue.c linux-3.16.7.new/net/ipv4/ip_
  	case IP_TOS:
  		val = inet->tos;
  		break;
-diff -ruN linux-3.16.7.orig/net/ipv4/raw.c linux-3.16.7.new/net/ipv4/raw.c
---- linux-3.16.7.orig/net/ipv4/raw.c	2015-01-31 14:43:43.683130688 -0700
-+++ linux-3.16.7.new/net/ipv4/raw.c	2015-02-02 15:08:50.634301103 -0700
-@@ -516,6 +516,8 @@
+diff -ruN linux-4.4.6.orig/net/ipv4/raw.c linux-4.4.6/net/ipv4/raw.c
+--- linux-4.4.6.orig/net/ipv4/raw.c	2016-03-17 23:31:49.085617617 -0700
++++ linux-4.4.6/net/ipv4/raw.c	2016-03-19 22:42:14.393134456 -0700
+@@ -538,6 +538,8 @@
  		daddr = inet->inet_daddr;
  	}
  
@@ -276,36 +310,36 @@ diff -ruN linux-3.16.7.orig/net/ipv4/raw.c linux-3.16.7.new/net/ipv4/raw.c
  	ipc.addr = inet->inet_saddr;
  	ipc.opt = NULL;
  	ipc.tx_flags = 0;
-diff -ruN linux-3.16.7.orig/net/ipv4/udp.c linux-3.16.7.new/net/ipv4/udp.c
---- linux-3.16.7.orig/net/ipv4/udp.c	2015-01-31 14:43:43.683130688 -0700
-+++ linux-3.16.7.new/net/ipv4/udp.c	2015-02-02 15:08:50.634301103 -0700
-@@ -472,6 +472,33 @@
+diff -ruN linux-4.4.6.orig/net/ipv4/udp.c linux-4.4.6/net/ipv4/udp.c
+--- linux-4.4.6.orig/net/ipv4/udp.c	2016-03-17 23:31:49.077617540 -0700
++++ linux-4.4.6/net/ipv4/udp.c	2016-03-19 22:52:08.346365972 -0700
+@@ -489,6 +489,33 @@
  	return result;
  }
  
 +static int udp_cmsg_send(struct net *net, struct msghdr *msg, struct ipcm_cookie *ipc)
 +{
 +    struct cmsghdr *cmsg;
-+ 
++
 +    for (cmsg = CMSG_FIRSTHDR(msg); cmsg;
 +         cmsg = CMSG_NXTHDR(msg, cmsg)) {
-+ 
++
 +        if (cmsg->cmsg_level == SOL_UDP) {
 +            switch (cmsg->cmsg_type) {
-+ 
++
 +            case UDP_SPORT:
 +                if (cmsg->cmsg_len != CMSG_LEN(sizeof(u_short)))
 +                    return -EINVAL;
 +                ipc->pkt_udp_sport = *(u_short*)CMSG_DATA(cmsg);
 +                break;
-+                 
++
 +            default:
 +                printk("Unknown cmsg_type: %i\n",cmsg->cmsg_type);
 +                return -EINVAL;
 +            }
 +        }
 +    }
-+ 
++
 +    return ip_cmsg_send(net,msg,ipc, false);
 +}
 +
@@ -313,7 +347,7 @@ diff -ruN linux-3.16.7.orig/net/ipv4/udp.c linux-3.16.7.new/net/ipv4/udp.c
  /* UDP is nearly always wildcards out the wazoo, it makes no sense to try
   * harder than this. -DaveM
   */
-@@ -815,7 +842,8 @@
+@@ -811,7 +838,8 @@
  	 * Create a UDP header
  	 */
  	uh = udp_hdr(skb);
@@ -323,7 +357,7 @@ diff -ruN linux-3.16.7.orig/net/ipv4/udp.c linux-3.16.7.new/net/ipv4/udp.c
  	uh->dest = fl4->fl4_dport;
  	uh->len = htons(len);
  	uh->check = 0;
-@@ -893,7 +921,7 @@
+@@ -888,7 +916,7 @@
  	int free = 0;
  	int connected = 0;
  	__be32 daddr, faddr, saddr;
@@ -332,7 +366,7 @@ diff -ruN linux-3.16.7.orig/net/ipv4/udp.c linux-3.16.7.new/net/ipv4/udp.c
  	u8  tos;
  	int err, is_udplite = IS_UDPLITE(sk);
  	int corkreq = up->corkflag || msg->msg_flags&MSG_MORE;
-@@ -911,6 +939,7 @@
+@@ -906,6 +934,7 @@
  	if (msg->msg_flags & MSG_OOB) /* Mirror BSD error message compatibility */
  		return -EOPNOTSUPP;
  
@@ -340,17 +374,19 @@ diff -ruN linux-3.16.7.orig/net/ipv4/udp.c linux-3.16.7.new/net/ipv4/udp.c
  	ipc.opt = NULL;
  	ipc.tx_flags = 0;
  	ipc.ttl = 0;
-@@ -969,8 +998,7 @@
+@@ -964,8 +993,9 @@
  	sock_tx_timestamp(sk, &ipc.tx_flags);
  
  	if (msg->msg_controllen) {
 -		err = ip_cmsg_send(sock_net(sk), msg, &ipc,
 -				   sk->sk_family == AF_INET6);
-+		err = udp_cmsg_send(sock_net(sk), msg, &ipc);
- 		if (err)
++		/*err = ip_cmsg_send(sock_net(sk), msg, &ipc,
++				   sk->sk_family == AF_INET6);*/
++        err = udp_cmsg_send(sock_net(sk), msg, &ipc);
+ 		if (unlikely(err)) {
+ 			kfree(ipc.opt);
  			return err;
- 		if (ipc.opt)
-@@ -990,6 +1018,11 @@
+@@ -987,6 +1017,11 @@
  		rcu_read_unlock();
  	}
  
@@ -362,16 +398,16 @@ diff -ruN linux-3.16.7.orig/net/ipv4/udp.c linux-3.16.7.new/net/ipv4/udp.c
  	saddr = ipc.addr;
  	ipc.addr = faddr = daddr;
  
-@@ -1026,7 +1059,7 @@
+@@ -1025,7 +1060,7 @@
  		flowi4_init_output(fl4, ipc.oif, sk->sk_mark, tos,
  				   RT_SCOPE_UNIVERSE, sk->sk_protocol,
- 				   inet_sk_flowi_flags(sk),
+ 				   flow_flags,
 -				   faddr, saddr, dport, inet->inet_sport);
-+				   faddr, saddr, dport, sport);
++                   faddr, saddr, dport, sport);
  
- 		security_sk_classify_flow(sk, flowi4_to_flowi(fl4));
- 		rt = ip_route_output_flow(net, fl4, sk);
-@@ -1082,7 +1115,7 @@
+ 		if (!saddr && ipc.oif) {
+ 			err = l3mdev_get_saddr(net, ipc.oif, fl4);
+@@ -1087,7 +1122,7 @@
  	fl4->daddr = daddr;
  	fl4->saddr = saddr;
  	fl4->fl4_dport = dport;

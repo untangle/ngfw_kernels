@@ -1,16 +1,33 @@
-diff -ruN linux-3.16.7.orig/net/bridge/br_netfilter.c linux-3.16.7.new/net/bridge/br_netfilter.c
---- linux-3.16.7.orig/net/bridge/br_netfilter.c	2015-12-27 17:24:56.697380370 -0800
-+++ linux-3.16.7.new/net/bridge/br_netfilter.c	2016-01-03 23:35:11.668455596 -0800
-@@ -35,6 +35,7 @@
- #include <net/ip.h>
- #include <net/ipv6.h>
+diff -ruN linux-4.4.6.orig/net/bridge/br_nf_core.c linux-4.4.6/net/bridge/br_nf_core.c
+--- linux-4.4.6.orig/net/bridge/br_nf_core.c	2016-03-17 23:31:50.337629464 -0700
++++ linux-4.4.6/net/bridge/br_nf_core.c	2016-03-27 21:12:21.115268911 -0700
+@@ -19,12 +19,24 @@
+ #include <linux/in_route.h>
+ #include <linux/inetdevice.h>
  #include <net/route.h>
 +#include <net/arp.h>
  
- #include <asm/uaccess.h>
  #include "br_private.h"
-@@ -1094,3 +1095,80 @@
+ #ifdef CONFIG_SYSCTL
+ #include <linux/sysctl.h>
  #endif
+ 
++static inline struct nf_bridge_info *nf_bridge_alloc(struct sk_buff *skb)
++{
++        skb->nf_bridge = kzalloc(sizeof(struct nf_bridge_info), GFP_ATOMIC);
++
++            if (likely(skb->nf_bridge))
++                        atomic_set(&(skb->nf_bridge->use), 1);
++
++                return skb->nf_bridge;
++
++}
++
+ static void fake_update_pmtu(struct dst_entry *dst, struct sock *sk,
+ 			     struct sk_buff *skb, u32 mtu)
+ {
+@@ -93,3 +105,81 @@
+ {
  	dst_entries_destroy(&fake_dst_ops);
  }
 +
@@ -41,16 +58,17 @@ diff -ruN linux-3.16.7.orig/net/bridge/br_netfilter.c linux-3.16.7.new/net/bridg
 +	arp_xmit(skb);
 +}
 +
-+void get_outdev(const struct sk_buff* skb, const struct net_device *out, struct net_device *m_out)
++void get_outdev(struct sk_buff* skb, struct net_device *out, struct net_device *m_out)
 +{
 +	struct neighbour *neigh;
 +	struct nf_bridge_info *nf_bridge;
-+	const unsigned char *dest;
++	unsigned char *dest;
 +	struct net_bridge_fdb_entry *fdb;
 +	struct dst_entry *dst = skb_dst(skb);
 +	struct rtable *rt = (struct rtable *)dst;
 +	struct net_device *dev = dst->dev;
 +	u32 src_ip = 0;
++    u32 nexthop;
 +
 +	nf_bridge = skb->nf_bridge;
 +	if ((nf_bridge && nf_bridge->physoutdev) ||
@@ -61,7 +79,7 @@ diff -ruN linux-3.16.7.orig/net/bridge/br_netfilter.c linux-3.16.7.new/net/bridg
 +		return;
 +	nf_bridge->physoutdev = out;
 +
-+	u32 nexthop = (__force u32) rt_nexthop(rt, ip_hdr(skb)->daddr);
++	nexthop = (__force u32) rt_nexthop(rt, ip_hdr(skb)->daddr);
 +	neigh = __ipv4_neigh_lookup_noref(dev, nexthop);
 +	if (unlikely(!neigh)){
 +        neigh = __neigh_create(&arp_tbl, &nexthop, dev, false);
@@ -90,26 +108,28 @@ diff -ruN linux-3.16.7.orig/net/bridge/br_netfilter.c linux-3.16.7.new/net/bridg
 +}
 +
 +EXPORT_SYMBOL(get_outdev);
-diff -ruN linux-3.16.7.orig/net/netfilter/xt_physdev.c linux-3.16.7.new/net/netfilter/xt_physdev.c
---- linux-3.16.7.orig/net/netfilter/xt_physdev.c	2015-12-27 17:24:56.721380544 -0800
-+++ linux-3.16.7.new/net/netfilter/xt_physdev.c	2015-12-30 22:12:26.700981554 -0800
-@@ -20,6 +20,7 @@
- MODULE_ALIAS("ipt_physdev");
- MODULE_ALIAS("ip6t_physdev");
+diff -ruN linux-4.4.6.orig/net/netfilter/xt_physdev.c linux-4.4.6/net/netfilter/xt_physdev.c
+--- linux-4.4.6.orig/net/netfilter/xt_physdev.c	2016-03-17 23:31:51.113636812 -0700
++++ linux-4.4.6/net/netfilter/xt_physdev.c	2016-03-27 21:13:33.067841475 -0700
+@@ -15,6 +15,8 @@
+ #include <linux/netfilter/x_tables.h>
+ #include <net/netfilter/br_netfilter.h>
  
 +void get_outdev(const struct sk_buff* skb, const struct net_device *out, struct net_device *m_dev);
- 
- static bool
- physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
-@@ -29,6 +30,7 @@
++
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Bart De Schuymer <bdschuym@pandora.be>");
+ MODULE_DESCRIPTION("Xtables: Bridge physical device match");
+@@ -29,6 +31,8 @@
+ 	const struct net_device *physdev;
  	unsigned long ret;
  	const char *indev, *outdev;
- 	const struct nf_bridge_info *nf_bridge;
++    struct nf_bridge_info *nf_bridge;
 +    struct net_device  *m_dev;
  
  	/* Not a bridged IP packet or no info available yet:
  	 * LOCAL_OUT/mangle and LOCAL_OUT/nat don't know if
-@@ -41,16 +43,10 @@
+@@ -41,16 +45,10 @@
  		if ((info->bitmask & XT_PHYSDEV_OP_ISIN) &&
  		    !(info->invert & XT_PHYSDEV_OP_ISIN))
  			return false;
@@ -123,28 +143,28 @@ diff -ruN linux-3.16.7.orig/net/netfilter/xt_physdev.c linux-3.16.7.new/net/netf
 -		    !(info->invert & XT_PHYSDEV_OP_OUT))
 -			return false;
 -		return true;
-+		goto match_outdev;
++        goto match_outdev;
  	}
  
- 	/* This only makes sense in the FORWARD and POSTROUTING chains */
-@@ -60,9 +56,7 @@
- 		return false;
+ 	physdev = nf_bridge_get_physoutdev(skb);
+@@ -65,9 +63,7 @@
+ 	indev = physdev ? physdev->name : NULL;
  
  	if ((info->bitmask & XT_PHYSDEV_OP_ISIN &&
--	    (!nf_bridge->physindev ^ !!(info->invert & XT_PHYSDEV_OP_ISIN))) ||
+-	    (!indev ^ !!(info->invert & XT_PHYSDEV_OP_ISIN))) ||
 -	    (info->bitmask & XT_PHYSDEV_OP_ISOUT &&
--	    (!nf_bridge->physoutdev ^ !!(info->invert & XT_PHYSDEV_OP_ISOUT))))
-+	    (!nf_bridge->physindev ^ !!(info->invert & XT_PHYSDEV_OP_ISIN))))
+-	    (!outdev ^ !!(info->invert & XT_PHYSDEV_OP_ISOUT))))
++	    (!indev ^ !!(info->invert & XT_PHYSDEV_OP_ISIN))))
  		return false;
  
  	if (!(info->bitmask & XT_PHYSDEV_OP_IN))
-@@ -74,12 +68,30 @@
- 		return false;
+@@ -82,8 +78,25 @@
+ 	}
  
  match_outdev:
 -	if (!(info->bitmask & XT_PHYSDEV_OP_OUT))
-+	if (!(info->bitmask & (XT_PHYSDEV_OP_ISOUT | XT_PHYSDEV_OP_OUT)))
- 		return true;
++    if (!(info->bitmask & (XT_PHYSDEV_OP_ISOUT | XT_PHYSDEV_OP_OUT)))
++		return true;
 +
 +	m_dev = dev_get_by_name(&init_net, info->physoutdev );
 +
@@ -156,22 +176,16 @@ diff -ruN linux-3.16.7.orig/net/netfilter/xt_physdev.c linux-3.16.7.new/net/netf
 +		if ((info->bitmask & XT_PHYSDEV_OP_OUT) &&
 +		    !(info->invert & XT_PHYSDEV_OP_OUT))
 +			return false;
-+		return true;
+ 		return true;
 +	}
 +
 +	if (info->bitmask & XT_PHYSDEV_OP_ISOUT &&
 +	    (!nf_bridge->physoutdev ^ !!(info->invert & XT_PHYSDEV_OP_ISOUT)))
 +		return false;
- 	outdev = nf_bridge->physoutdev ?
- 		 nf_bridge->physoutdev->name : nulldevname;
--	ret = ifname_compare_aligned(outdev, info->physoutdev, info->out_mask);
  
-+
-+	ret = ifname_compare_aligned(outdev, info->physoutdev, info->out_mask);
- 	return (!!ret ^ !(info->invert & XT_PHYSDEV_OP_OUT));
- }
- 
-@@ -90,17 +102,6 @@
+ 	if (!outdev)
+ 		return false;
+@@ -102,17 +115,7 @@
  	if (!(info->bitmask & XT_PHYSDEV_OP_MASK) ||
  	    info->bitmask & ~XT_PHYSDEV_OP_MASK)
  		return -EINVAL;
@@ -186,6 +200,7 @@ diff -ruN linux-3.16.7.orig/net/netfilter/xt_physdev.c linux-3.16.7.new/net/netf
 -		if (par->hook_mask & (1 << NF_INET_LOCAL_OUT))
 -			return -EINVAL;
 -	}
++
  	return 0;
  }
  

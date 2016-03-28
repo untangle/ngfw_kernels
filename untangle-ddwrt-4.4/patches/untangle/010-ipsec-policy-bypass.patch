@@ -1,14 +1,15 @@
---- linux-3.16.7.orig/net/ipv4/tcp_ipv4.c	2015-01-22 09:41:47.799819643 -0700
-+++ linux-3.16.7/net/ipv4/tcp_ipv4.c	2015-01-22 10:13:22.236195367 -0700
-@@ -1750,6 +1750,7 @@
+diff -ruN linux-4.4.6.orig/net/ipv4/tcp_ipv4.c linux-4.4.6-10/net/ipv4/tcp_ipv4.c
+--- linux-4.4.6.orig/net/ipv4/tcp_ipv4.c	2016-03-17 23:31:49.101617768 -0700
++++ linux-4.4.6-10/net/ipv4/tcp_ipv4.c	2016-03-19 23:38:32.630322371 -0700
+@@ -1626,6 +1626,7 @@
  		goto discard_and_relse;
  	}
  
 +        if (!(skb->mark&0x10000000))
  	if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb))
  		goto discard_and_relse;
- 	nf_reset(skb);
-@@ -1788,6 +1789,7 @@
+ 
+@@ -1666,6 +1667,7 @@
  	return ret;
  
  no_tcp_socket:
@@ -16,7 +17,7 @@
  	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb))
  		goto discard_it;
  
-@@ -1810,6 +1812,7 @@
+@@ -1688,6 +1690,7 @@
  	goto discard_it;
  
  do_time_wait:

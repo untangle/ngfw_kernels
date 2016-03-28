@@ -1,7 +1,7 @@
-diff -urN source_untangle.orig/include/net/netns/ipv6.h source_untangle/include/net/netns/ipv6.h
---- source_untangle.orig/include/net/netns/ipv6.h	2015-05-13 02:57:54.093897191 -0600
-+++ source_untangle/include/net/netns/ipv6.h	2015-05-13 03:00:00.753894618 -0600
-@@ -43,6 +43,7 @@
+diff -ruN linux-4.4.6.orig/include/net/netns/ipv6.h linux-4.4.6-18/include/net/netns/ipv6.h
+--- linux-4.4.6.orig/include/net/netns/ipv6.h	2016-03-17 23:32:05.549773433 -0700
++++ linux-4.4.6-18/include/net/netns/ipv6.h	2016-03-27 23:20:26.447654110 -0700
+@@ -48,6 +48,7 @@
  	struct xt_table		*ip6table_filter;
  	struct xt_table		*ip6table_mangle;
  	struct xt_table		*ip6table_raw;
@@ -9,9 +9,9 @@ diff -urN source_untangle.orig/include/net/netns/ipv6.h source_untangle/include/
  #ifdef CONFIG_SECURITY
  	struct xt_table		*ip6table_security;
  #endif
-diff -urN source_untangle.orig/include/uapi/linux/netfilter_ipv6.h source_untangle/include/uapi/linux/netfilter_ipv6.h
---- source_untangle.orig/include/uapi/linux/netfilter_ipv6.h	2015-05-13 02:57:54.069897191 -0600
-+++ source_untangle/include/uapi/linux/netfilter_ipv6.h	2015-05-13 11:05:00.017303409 -0600
+diff -ruN linux-4.4.6.orig/include/uapi/linux/netfilter_ipv6.h linux-4.4.6-18/include/uapi/linux/netfilter_ipv6.h
+--- linux-4.4.6.orig/include/uapi/linux/netfilter_ipv6.h	2016-03-17 23:32:06.061778278 -0700
++++ linux-4.4.6-18/include/uapi/linux/netfilter_ipv6.h	2016-03-27 23:20:26.447654110 -0700
 @@ -72,6 +72,7 @@
  	NF_IP6_PRI_NAT_SRC = 100,
  	NF_IP6_PRI_SELINUX_LAST = 225,
@@ -20,10 +20,10 @@ diff -urN source_untangle.orig/include/uapi/linux/netfilter_ipv6.h source_untang
  	NF_IP6_PRI_LAST = INT_MAX,
  };
  
-diff -urN source_untangle.orig/net/ipv6/netfilter/ip6table_tune.c source_untangle/net/ipv6/netfilter/ip6table_tune.c
---- source_untangle.orig/net/ipv6/netfilter/ip6table_tune.c	1969-12-31 17:00:00.000000000 -0700
-+++ source_untangle/net/ipv6/netfilter/ip6table_tune.c	2015-05-13 14:10:52.449076826 -0600
-@@ -0,0 +1,95 @@
+diff -ruN linux-4.4.6.orig/net/ipv6/netfilter/ip6table_tune.c linux-4.4.6-18/net/ipv6/netfilter/ip6table_tune.c
+--- linux-4.4.6.orig/net/ipv6/netfilter/ip6table_tune.c	1969-12-31 16:00:00.000000000 -0800
++++ linux-4.4.6-18/net/ipv6/netfilter/ip6table_tune.c	2016-03-27 23:20:53.527894557 -0700
+@@ -0,0 +1,87 @@
 +/* 
 + * 
 + * (C) 2015 David Han <dhan@untangle.com>
@@ -51,21 +51,13 @@ diff -urN source_untangle.orig/net/ipv6/netfilter/ip6table_tune.c source_untangl
 +};
 +
 +static unsigned int
-+ip6table_tune_hook(const struct nf_hook_ops *ops, struct sk_buff *skb,
-+		 const struct net_device *in, const struct net_device *out,
-+		 int (*okfn)(struct sk_buff *))
++ip6table_tune_hook(void *priv, struct sk_buff *skb,
++		     const struct nf_hook_state *state)
 +{
-+	const struct net *net;
-+	net = dev_net(out);
-+
-+	if (ops->hooknum == NF_INET_LOCAL_OUT &&
-+		(skb->len < sizeof(struct iphdr) ||
-+		 ip_hdrlen(skb) < sizeof(struct iphdr)))
-+		return NF_ACCEPT;
-+	
-+	net = dev_net(out);
-+	return ip6t_do_table(skb, ops->hooknum, in, out, net->ipv6.ip6table_tune);
++	return ip6t_do_table(skb, state, state->net->ipv6.ip6table_tune);
 +}
++
++static struct nf_hook_ops *tune_ops __read_mostly;
 +
 +
 +static int __net_init ip6table_tune_net_init(struct net *net)
@@ -119,10 +111,10 @@ diff -urN source_untangle.orig/net/ipv6/netfilter/ip6table_tune.c source_untangl
 +module_exit(ip6table_tune_exit);
 +
 +MODULE_LICENSE("GPL");
-diff -urN source_untangle.orig/net/ipv6/netfilter/Kconfig source_untangle/net/ipv6/netfilter/Kconfig
---- source_untangle.orig/net/ipv6/netfilter/Kconfig	2015-05-13 02:57:54.833897176 -0600
-+++ source_untangle/net/ipv6/netfilter/Kconfig	2015-05-13 14:15:15.245071486 -0600
-@@ -216,6 +216,19 @@
+diff -ruN linux-4.4.6.orig/net/ipv6/netfilter/Kconfig linux-4.4.6-18/net/ipv6/netfilter/Kconfig
+--- linux-4.4.6.orig/net/ipv6/netfilter/Kconfig	2016-03-17 23:31:50.773633590 -0700
++++ linux-4.4.6-18/net/ipv6/netfilter/Kconfig	2016-03-27 23:20:26.447654110 -0700
+@@ -283,6 +283,19 @@
  	  If you want to compile it as a module, say M here and read
  	  <file:Documentation/kbuild/modules.txt>.  If unsure, say `N'.
  
@@ -142,14 +134,14 @@ diff -urN source_untangle.orig/net/ipv6/netfilter/Kconfig source_untangle/net/ip
  # security table for MAC policy
  config IP6_NF_SECURITY
         tristate "Security table"
-diff -urN source_untangle.orig/net/ipv6/netfilter/Makefile source_untangle/net/ipv6/netfilter/Makefile
---- source_untangle.orig/net/ipv6/netfilter/Makefile	2015-05-13 02:57:54.833897176 -0600
-+++ source_untangle/net/ipv6/netfilter/Makefile	2015-05-13 14:15:49.585070789 -0600
+diff -ruN linux-4.4.6.orig/net/ipv6/netfilter/Makefile linux-4.4.6-18/net/ipv6/netfilter/Makefile
+--- linux-4.4.6.orig/net/ipv6/netfilter/Makefile	2016-03-17 23:31:50.773633590 -0700
++++ linux-4.4.6-18/net/ipv6/netfilter/Makefile	2016-03-27 23:20:26.447654110 -0700
 @@ -7,6 +7,7 @@
  obj-$(CONFIG_IP6_NF_FILTER) += ip6table_filter.o
  obj-$(CONFIG_IP6_NF_MANGLE) += ip6table_mangle.o
  obj-$(CONFIG_IP6_NF_RAW) += ip6table_raw.o
 +obj-$(CONFIG_IP6_NF_TUNE) += ip6table_tune.o
  obj-$(CONFIG_IP6_NF_SECURITY) += ip6table_security.o
- obj-$(CONFIG_NF_NAT_IPV6) += ip6table_nat.o
+ obj-$(CONFIG_IP6_NF_NAT) += ip6table_nat.o
  

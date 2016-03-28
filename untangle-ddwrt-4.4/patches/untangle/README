@@ -18,14 +18,10 @@
     This changes the "-m socket" iptables match to modify the packet with the socket's mark if a socket is found.
     This is a total hack as an iptable match shouldn't modify the packet, but the issue is that there is no conntrack entry for packets returning to nonlocal sockets
     So we have no way to restore the QoS/bandwidth control mark so TCP ingress QoS doesn't work without this hack.
-     
-020-imq.patch
-    This adds IMQ (intermediate queue device) which allows for ingress QoS filtering on WAN interfaces. Patch from http://www.linuximq.net. Added support for Kernel 3.16 
 
 022-physdev.patch
     The patch is trying to find the bridge port in bridge fdb inside xt_physdev module, so the physoutdev field can match in the FORWARD chain.
     The kernel without patch can't find the bridge port as the patcket hasn't reach the Bridge code internal yet. 
-    If physoutdev does not exist in fdb, will try to send an arp request and look up again. 
     Back to Linux kernel 2.6.18, the kernel is trying to make packet go through bridge forwarding desicion first and then go through forwarding chain. 
     Follwoing two patchs are original changes in kernel tree at timeframe about 2.6.18 that removed the physoutdev matching in the FORWARD chain.
     https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/patch/net/netfilter/xt_physdev.c?id=10ea6ac895418bd0d23900e3330daa6ba0836d26
