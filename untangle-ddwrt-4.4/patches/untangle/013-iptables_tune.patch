@@ -1,6 +1,6 @@
-diff -ruN linux-4.4.6.orig/include/net/netns/ipv4.h linux-4.4.6-13/include/net/netns/ipv4.h
---- linux-4.4.6.orig/include/net/netns/ipv4.h	2016-03-17 23:32:05.549773433 -0700
-+++ linux-4.4.6-13/include/net/netns/ipv4.h	2016-03-19 23:42:20.136431622 -0700
+diff -ruN linux-4.4-orig/include/net/netns/ipv4.h linux-4.4/include/net/netns/ipv4.h
+--- linux-4.4-orig/include/net/netns/ipv4.h	2016-04-01 01:45:42.495884499 -0700
++++ linux-4.4/include/net/netns/ipv4.h	2016-04-01 21:33:34.306150904 -0700
 @@ -61,6 +61,7 @@
  	struct xt_table		*iptable_filter;
  	struct xt_table		*iptable_mangle;
@@ -9,9 +9,9 @@ diff -ruN linux-4.4.6.orig/include/net/netns/ipv4.h linux-4.4.6-13/include/net/n
  	struct xt_table		*arptable_filter;
  #ifdef CONFIG_SECURITY
  	struct xt_table		*iptable_security;
-diff -ruN linux-4.4.6.orig/include/uapi/linux/netfilter_ipv4.h linux-4.4.6-13/include/uapi/linux/netfilter_ipv4.h
---- linux-4.4.6.orig/include/uapi/linux/netfilter_ipv4.h	2016-03-17 23:32:06.061778278 -0700
-+++ linux-4.4.6-13/include/uapi/linux/netfilter_ipv4.h	2016-03-19 23:42:20.152431770 -0700
+diff -ruN linux-4.4-orig/include/uapi/linux/netfilter_ipv4.h linux-4.4/include/uapi/linux/netfilter_ipv4.h
+--- linux-4.4-orig/include/uapi/linux/netfilter_ipv4.h	2016-04-01 01:45:42.479884380 -0700
++++ linux-4.4/include/uapi/linux/netfilter_ipv4.h	2016-04-01 21:33:34.310150936 -0700
 @@ -67,7 +67,8 @@
  	NF_IP_PRI_NAT_SRC = 100,
  	NF_IP_PRI_SELINUX_LAST = 225,
@@ -22,9 +22,9 @@ diff -ruN linux-4.4.6.orig/include/uapi/linux/netfilter_ipv4.h linux-4.4.6-13/in
  	NF_IP_PRI_LAST = INT_MAX,
  };
  
-diff -ruN linux-4.4.6.orig/net/ipv4/netfilter/iptable_tune.c linux-4.4.6-13/net/ipv4/netfilter/iptable_tune.c
---- linux-4.4.6.orig/net/ipv4/netfilter/iptable_tune.c	1969-12-31 16:00:00.000000000 -0800
-+++ linux-4.4.6-13/net/ipv4/netfilter/iptable_tune.c	2016-03-27 23:11:51.391073320 -0700
+diff -ruN linux-4.4-orig/net/ipv4/netfilter/iptable_tune.c linux-4.4/net/ipv4/netfilter/iptable_tune.c
+--- linux-4.4-orig/net/ipv4/netfilter/iptable_tune.c	1969-12-31 16:00:00.000000000 -0800
++++ linux-4.4/net/ipv4/netfilter/iptable_tune.c	2016-04-01 21:33:34.310150936 -0700
 @@ -0,0 +1,94 @@
 +/* 
 + * 
@@ -120,10 +120,10 @@ diff -ruN linux-4.4.6.orig/net/ipv4/netfilter/iptable_tune.c linux-4.4.6-13/net/
 +module_exit(iptable_tune_exit);
 +
 +MODULE_LICENSE("GPL");
-diff -ruN linux-4.4.6.orig/net/ipv4/netfilter/Kconfig linux-4.4.6-13/net/ipv4/netfilter/Kconfig
---- linux-4.4.6.orig/net/ipv4/netfilter/Kconfig	2016-03-17 23:31:49.109617843 -0700
-+++ linux-4.4.6-13/net/ipv4/netfilter/Kconfig	2016-03-19 23:42:19.968430066 -0700
-@@ -419,3 +419,15 @@
+diff -ruN linux-4.4-orig/net/ipv4/netfilter/Kconfig linux-4.4/net/ipv4/netfilter/Kconfig
+--- linux-4.4-orig/net/ipv4/netfilter/Kconfig	2016-04-01 01:45:43.155889438 -0700
++++ linux-4.4/net/ipv4/netfilter/Kconfig	2016-04-01 21:33:34.310150936 -0700
+@@ -443,3 +443,15 @@
  
  endmenu
  
@@ -139,10 +139,10 @@ diff -ruN linux-4.4.6.orig/net/ipv4/netfilter/Kconfig linux-4.4.6-13/net/ipv4/ne
 +	  If you want to compile it as a module, say M here and read
 +	  <file:Documentation/modules.txt>.  If unsure, say `N'.
 +
-diff -ruN linux-4.4.6.orig/net/ipv4/netfilter/Makefile linux-4.4.6-13/net/ipv4/netfilter/Makefile
---- linux-4.4.6.orig/net/ipv4/netfilter/Makefile	2016-03-17 23:31:49.109617843 -0700
-+++ linux-4.4.6-13/net/ipv4/netfilter/Makefile	2016-03-19 23:42:19.968430066 -0700
-@@ -52,6 +52,7 @@
+diff -ruN linux-4.4-orig/net/ipv4/netfilter/Makefile linux-4.4/net/ipv4/netfilter/Makefile
+--- linux-4.4-orig/net/ipv4/netfilter/Makefile	2016-04-01 01:45:43.155889438 -0700
++++ linux-4.4/net/ipv4/netfilter/Makefile	2016-04-01 21:33:34.310150936 -0700
+@@ -54,6 +54,7 @@
  obj-$(CONFIG_IP_NF_MANGLE) += iptable_mangle.o
  obj-$(CONFIG_IP_NF_NAT) += iptable_nat.o
  obj-$(CONFIG_IP_NF_RAW) += iptable_raw.o
