@@ -1312,8 +1312,8 @@ CONFIG_ET_ALL_PASSIVE_RUNTIME=y
 # CONFIG_BCM_CTF is not set
 # CONFIG_WL_EMULATOR is not set
 # CONFIG_BCM57XX is not set
-CONFIG_DHDAP=m
-CONFIG_WL=m
+# CONFIG_DHDAP is not set
+# CONFIG_WL is not set
 # CONFIG_WAPI is not set
 # CONFIG_WL_USE_AP is not set
 # CONFIG_WL_USE_AP_SDSTD is not set
