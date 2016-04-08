@@ -4,7 +4,7 @@ TARBALL := dd-wrt-linux-4.4.tar.bz2
 KERNEL_DIR := linux-4.4
 KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
 MODULES_PATH=/tmp/mods-3.14.0
-MODULES_TARBALL := $(KERNEL_DIR)/modules.tar.bz2
+MODULES_TARBALL := modules.tar.bz2
 VIMAGE := $(KERNEL_DIR)/vimage
 CONFIG_ORIG := config_northstar_smp
 CONFIG_UNTANGLE_ORIG := untangle.config
@@ -53,5 +53,5 @@ $(MODULES_TARBALL): kernel
 	tar -C $(MODULES_PATH) -cjf $@ .
 
 clean:
-	rm -fr $(KERNEL_DIR)
+	rm -fr $(KERNEL_DIR) $(MODULES_TARBALL)
 	rm -f *-stamp *deb
