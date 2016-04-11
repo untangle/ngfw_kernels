@@ -62,7 +62,7 @@ diff -ruN linux-4.4-orig/net/ipv4/netfilter/iptable_tune.c linux-4.4/net/ipv4/ne
 +		/* root is playing with raw sockets. */
 +		return NF_ACCEPT;
 +
-+	return ipt_do_table(skb, state, state->net->ipv4.iptable_filter);
++	return ipt_do_table(skb, state, state->net->ipv4.iptable_tune);
 +}
 +
 +static struct nf_hook_ops *tune_ops __read_mostly;
