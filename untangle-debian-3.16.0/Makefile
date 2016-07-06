@@ -1,4 +1,4 @@
-BUILDDEPS=debhelper cpio module-init-tools python libelf-dev binutils-dev asciidoc xmlto quilt kernel-wedge kmod python python-six lzma patchutils bc gcc-4.8 xz-utils
+BUILDDEPS=debhelper cpio module-init-tools python xmlto quilt kernel-wedge kmod python python-six lzma patchutils bc gcc-4.8 xz-utils
 
 REPOSITORY=wheezy
 

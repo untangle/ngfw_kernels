@@ -209,7 +209,7 @@ diff -u -N -r ./debian/config/defines ./debian/config/defines
 diff -u -N -r ./debian/config/featureset-untangle/config ./debian/config/featureset-untangle/config
 --- ./debian/config/featureset-untangle/config	1969-12-31 16:00:00.000000000 -0800
 +++ ./debian/config/featureset-untangle/config	2014-12-11 05:33:37.000000000 -0800
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,28 @@
 +# CONFIG_HZ=100 is not set
 +CONFIG_HZ=1000
 +CONFIG_HZ_1000=y
@@ -237,6 +237,7 @@ diff -u -N -r ./debian/config/featureset-untangle/config ./debian/config/feature
 +CONFIG_NF_CONNTRACK=y
 +CONFIG_NF_NAT=y
 +CONFIG_NETFILTER_XTABLES=y
++CONFIG_IP_ROUTE_MULTIPATH=y
 diff -u -N -r ./debian/config/featureset-untangle/defines ./debian/config/featureset-untangle/defines
 --- ./debian/config/featureset-untangle/defines	1969-12-31 16:00:00.000000000 -0800
 +++ ./debian/config/featureset-untangle/defines	2014-12-11 05:33:37.000000000 -0800
