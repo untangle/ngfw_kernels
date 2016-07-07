@@ -144,8 +144,8 @@ diff -ruN linux-3.16.7.orig/net/ipv4/fib_semantics.c linux-3.16.7/net/ipv4/fib_s
 +#endif
 +		} else {
 +			w += nexthop_nh->nh_weight;
-+			upper_bound = DIV_ROUND_CLOSEST((u64)w << 31,
-+							total) - 1;
++			upper_bound = DIV_ROUND_CLOSEST_ULL((u64)w << 31,
++							    total) - 1;
 +		}
 +
 +		atomic_set(&nexthop_nh->nh_upper_bound, upper_bound);
