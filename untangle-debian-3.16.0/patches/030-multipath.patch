@@ -96,19 +96,14 @@ diff -ruN linux-3.16.7.orig/net/ipv4/fib_semantics.c linux-3.16.7/net/ipv4/fib_s
  			next = rcu_dereference_protected(fnhe->fnhe_next, 1);
  
  			rt_fibinfo_free(&fnhe->fnhe_rth_input);
-@@ -677,6 +679,82 @@
+@@ -677,6 +679,77 @@
  	return err;
  }
  
 +#ifdef CONFIG_IP_ROUTE_MULTIPATH
 +
-+#define DIV_ROUND_CLOSEST_ULL(x, divisor)(		\
-+{							\
-+	typeof(divisor) __d = divisor;			\
-+	unsigned long long _tmp = (x) + (__d) / 2;	\
-+	do_div(_tmp, __d);				\
-+	_tmp;						\
-+}	
++#define DIV_ROUND_CLOSEST_ULL(ll, d)	\
++	({ unsigned long long _tmp = (ll)+(d)/2; do_div(_tmp, d); _tmp; })
 +
 +static void fib_rebalance(struct fib_info *fi)
 +{
