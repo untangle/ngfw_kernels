@@ -1,7 +1,13 @@
 diff -u -N -r ./debian/changelog ./debian/changelog
 --- ./debian/changelog	2014-11-06 08:42:49.000000000 -0800
 +++ ./debian/changelog	2014-12-11 05:33:37.000000000 -0800
-@@ -1,3 +1,40 @@
+@@ -1,3 +1,46 @@
++linux (3.16.7-2untangle7) jessie; urgency=low
++
++  *  dmorris patch for multiwanphysdev (Comment: #13074)
++
++ -- Sebastien Delafond <seb@untangle.com>  Fri, 08 Jul 2016 04:08:54 -0400
++
 +linux (3.16.7-2untangle6) jessie; urgency=low
 +
 +  *  dmorris patch for multiwan, with correct macro for both amd64 and i386 (Comment: #12955)
