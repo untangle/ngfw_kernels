@@ -138,7 +138,7 @@ diff -ruN linux-3.16.7.orig/net/netfilter/xt_physdev.c linux-3.16.7.new/net/netf
  		return false;
  
  	if (!(info->bitmask & XT_PHYSDEV_OP_IN))
-@@ -74,12 +68,30 @@
+@@ -74,12 +68,31 @@
  		return false;
  
  match_outdev:
@@ -149,6 +149,7 @@ diff -ruN linux-3.16.7.orig/net/netfilter/xt_physdev.c linux-3.16.7.new/net/netf
 +	m_dev = dev_get_by_name(&init_net, info->physoutdev );
 +
 +	get_outdev(skb, par->out, m_dev);
++	dev_put(m_dev);
 +	if (!(nf_bridge = skb->nf_bridge)) {
 +		if ((info->bitmask & XT_PHYSDEV_OP_ISOUT) &&
 +		    !(info->invert & XT_PHYSDEV_OP_ISOUT))
