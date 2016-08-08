@@ -1,4 +1,4 @@
-BUILD_DEPS := gcc-5-arm-linux-gnueabihf device-tree-compiler u-boot-tools cgpt vboot-kernel-utils
+BUILD_DEPS := gcc-5-arm-linux-gnueabihf u-boot-tools cgpt
 
 TARBALL := dd-wrt-linux-4.4.tar.bz2
 KERNEL_DIR := linux-4.4
