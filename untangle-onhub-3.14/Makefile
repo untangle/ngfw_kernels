@@ -1,6 +1,7 @@
 BUILD_DEPS := gcc-5-arm-linux-gnueabihf device-tree-compiler u-boot-tools cgpt vboot-kernel-utils
 
 TARBALL := chromeos-3.14.tar.bz2
+TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
 KERNEL_DIR := chromeos-3.14
 KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
 ITF_IMAGE := $(KERNEL_DIR)/arch/arm/boot/vmlinux.itf
@@ -16,6 +17,9 @@ CONCURRENCY_LEVEL := $(shell grep -c '^processor\s:' /proc/cpuinfo)
 UNTANGLE_PATCH_SERIES := patches/untangle/series
 
 all: kernel vimage modules
+
+$(TARBALL):
+	curl -O $(TARBALL_URL)
 
 extract: extract-stamp
 extract-stamp: $(TARBALL)

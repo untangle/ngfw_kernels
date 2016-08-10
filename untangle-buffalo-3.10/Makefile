@@ -1,4 +1,5 @@
 TARBALL := linux-3.10.49+ddwrt24710.tar.bz2
+TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
 KERNEL_DIR := linux-3.10.49
 UIMAGE := $(KERNEL_DIR)/linux-3.10.49/arch/arm/boot/uImage
 CONFIG_ORIG := config_northstar_smp.config
@@ -9,6 +10,9 @@ UNTANGLE_PATCH_SERIES := patches/untangle/series
 DDWRT_PATCH_SERIES := patches/dd-wrt/series
 
 all: kernel
+
+$(TARBALL):
+	curl -O $(TARBALL_URL)
 
 extract: extract-stamp
 extract-stamp: $(TARBALL)
