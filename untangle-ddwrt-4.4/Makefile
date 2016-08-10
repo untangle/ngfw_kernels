@@ -1,6 +1,7 @@
 BUILD_DEPS := gcc-5-arm-linux-gnueabihf u-boot-tools cgpt
 
 TARBALL := dd-wrt-linux-4.4.tar.bz2
+TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
 KERNEL_DIR := linux-4.4
 KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
 MODULES_PATH=/tmp/mods-3.14.0
@@ -13,6 +14,9 @@ CONCURRENCY_LEVEL := $(shell grep -c '^processor\s:' /proc/cpuinfo)
 UNTANGLE_PATCH_SERIES := patches/untangle/series
 
 all: kernel modules
+
+$(TARBALL):
+	curl -O $(TARBALL_URL)
 
 extract: extract-stamp
 extract-stamp: $(TARBALL)
