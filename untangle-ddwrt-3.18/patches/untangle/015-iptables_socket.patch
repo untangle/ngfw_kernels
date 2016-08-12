@@ -1,0 +1,29 @@
+diff -ruN linux-4.4-orig/net/netfilter/xt_socket.c linux-4.4/net/netfilter/xt_socket.c
+--- linux-4.4-orig/net/netfilter/xt_socket.c	2016-04-01 01:45:43.147889377 -0700
++++ linux-4.4/net/netfilter/xt_socket.c	2016-04-06 09:30:50.206882674 -0700
+@@ -203,7 +203,7 @@
+ }
+ 
+ static bool
+-socket_match(const struct sk_buff *skb, struct xt_action_param *par,
++socket_match(struct sk_buff *skb, struct xt_action_param *par,
+ 	     const struct xt_socket_mtinfo1 *info)
+ {
+ 	struct sk_buff *pskb = (struct sk_buff *)skb;
+@@ -238,8 +238,14 @@
+ 		if (wildcard || !transparent)
+ 			sk = NULL;
+ 	}
+-
+-	return sk != NULL;
++    /* Untangle hack - or the socket mark to the packet if found
++         * We do this because there is no conntrack, and it is necessary
++         * to restore the QoS/bandwidth control mark on packets
++         * returning to nonlocally bound sockets */
++    if (sk != NULL) {
++        skb->mark |= sk->sk_mark;
++    }
++    return sk != NULL;
+ }
+ 
+ static bool
