@@ -7,6 +7,9 @@ TARBALL := dd-wrt-linux-$(MAJOR_VERSION).tar.bz2
 TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
 KERNEL_DIR := linux-$(MAJOR_VERSION)
 KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
+DTB_IMAGE := $(KERNEL_DIR)/arch/arm/boot/dts/armada-385-linksys-shelby.dtb
+TMP_ITF_IMAGE := /tmp/zImage-$(MAJOR_VERSION)
+ITF_IMAGE := $(KERNEL_DIR)/arch/arm/boot/vmlinux.itf
 MODULES_PATH=/tmp/mods-$(MAJOR_VERSION)
 MODULES_TARBALL := modules-$(MAJOR_VERSION).tar.bz2
 VIMAGE := $(KERNEL_DIR)/vimage
@@ -55,9 +58,17 @@ $(KERNEL_IMAGE): patch-stamp config
 	cd $(KERNEL_DIR) ; \
 	MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make -j $(CONCURRENCY_LEVEL) zImage
 
-kernel-package: patch-stamp config
+dtb: dtb-stamp
+dtb-stamp: kernel
 	cd $(KERNEL_DIR) ; \
-	MAKEFLAGS= MFLAGS= DEB_HOST_ARCH=armhf CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) fakeroot make-kpkg --arch arm --cross-compile arm-linux-gnueabihf- --revision=1+untangle1 kernel_image kernel_headers
+	MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make dtbs
+	touch $@
+
+itf: $(ITF_IMAGE)
+$(ITF_IMAGE): dtb
+#	mkimage -D '-I dts -O dtb -p 1024' -f onhub.its $(ITF_IMAGE)
+	cat $(KERNEL_IMAGE) $(DTB_IMAGE) > $(TMP_ITF_IMAGE)
+	mkimage -A arm -O linux -T kernel -a 0x00008000 -C none -e 0x00008000 -n 'Untangle' -d $(TMP_ITF_IMAGE) $(ITF_IMAGE)
 
 modules: $(MODULES_TARBALL)
 $(MODULES_TARBALL): kernel
@@ -68,5 +79,5 @@ $(MODULES_TARBALL): kernel
 	tar -C $(MODULES_PATH) -cjf $@ .
 
 clean:
-	rm -fr $(KERNEL_DIR) $(MODULES_TARBALL) $(MODULES_PATH)
+	rm -fr $(KERNEL_DIR) $(MODULES_TARBALL) $(MODULES_PATH) $(TMP_ITF_IMAGE)
 	rm -f *-stamp *deb
