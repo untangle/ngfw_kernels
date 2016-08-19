@@ -8,6 +8,11 @@ REPOSITORY=wheezy
 KVER=3.16.7
 KDEBVER=2
 
+ORIG_TARBALL := linux_$(KVER).orig.tar.xz
+ORIG_TARBALL_URL := http://download.untangle.com/kernels/$(ORIG_TARBALL)
+DEBIAN_TARBALL := linux_$(KVER)-$(KDEBVER).debian.tar.xz
+DEBIAN_TARBALL_URL := http://download.untangle.com/kernels/$(DEBIAN_TARBALL)
+
 KUPVER=${KDEBVER}
 PACKPFX=linux_${KVER}
 WORKDIR=linux-${KVER}
@@ -27,6 +32,11 @@ endif
 DOPTIONS = DEBIAN_KERNEL_JOBS=${NPROCEXP} DEB_BUILD_OPTIONS="parallel=${NPROCEXP}" CONCURRENCY_LEVEL=${NPROCEXP} AUTOBUILD=1
 
 all:	clean pkgs
+
+$(ORIG_TARBALL):
+	curl -O $(ORIG_TARBALL_URL)
+$(DEBIAN_TARBALL):
+	curl -O $(DEBIAN_TARBALL_URL)
 
 pkgs:	kpkg-arch kpkg-indep
 
@@ -61,7 +71,7 @@ ${KOURPATCH}: untangle-debian.basediff patches/*
 	gzip -c ${KOURDIFF} > ${KOURPATCH}
 
 patch: ${WORKDIR}
-${WORKDIR}:	${KDSC} ${KOURPATCH}
+${WORKDIR}: $(ORIG_TARBALL) $(DEBIAN_TARBALL) ${KDSC} ${KOURPATCH}
 	dpkg-source -x ${KDSC}
 	cd ${WORKDIR};gunzip -c ../${KOURPATCH} | patch -p1
 	perl -i -pe 's/fuzz=0/fuzz=3/' ${WORKDIR}/debian/rules*
