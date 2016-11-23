@@ -1,6 +1,6 @@
 BUILD_DEPS := gcc-5-arm-linux-gnueabihf u-boot-tools cgpt
 
-TARBALL := dd-wrt-linux-4.4.tar.bz2
+TARBALL := dd-wrt-linux-4.4.tar.xz
 TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
 KERNEL_DIR := linux-4.4
 KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
@@ -21,7 +21,7 @@ $(TARBALL):
 
 extract: extract-stamp
 extract-stamp: $(TARBALL)
-	tar xjf $<
+	tar xaf $<
 	touch $@
 
 patch: patch-stamp
