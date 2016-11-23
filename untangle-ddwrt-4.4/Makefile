@@ -49,7 +49,7 @@ $(CONFIG_DEST): patch-stamp $(CONFIG_UNTANGLE_ORIG)
 	cat $(KERNEL_DIR)/$(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $@
 
 kernel: $(KERNEL_IMAGE)
-$(KERNEL_IMAGE): patch-stamp config
+$(KERNEL_IMAGE): config
 	cd $(KERNEL_DIR) ; \
 	MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make -j $(CONCURRENCY_LEVEL) zImage
 
