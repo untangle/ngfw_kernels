@@ -28,3 +28,14 @@
  CONFIG_ET=m
  CONFIG_ET_47XX=y
  # CONFIG_ET_ALL_PASSIVE_ON is not set
+--- /home/seb/work/untangle/dd-wrt/dd-wrt-github/src/linux/universal/linux-4.4/.config_northstar_smp	2016-10-13 13:06:38.278963841 +0200
++++ linux-4.4/.config_northstar_smp	2016-11-23 15:28:40.650244792 +0100
+@@ -1630,7 +1630,7 @@
+ # CONFIG_TCG_TPM is not set
+ CONFIG_DEVPORT=y
+ # CONFIG_XILLYBUS is not set
+-CONFIG_RTL8365MB=m
++# CONFIG_RTL8365MB is not set
+ 
+ #
+ # I2C support
