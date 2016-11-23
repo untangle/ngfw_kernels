@@ -9,15 +9,6 @@
  # CONFIG_MODULE_COMPRESS is not set
  CONFIG_BLOCK=y
  CONFIG_LBDAF=y
-@@ -1307,7 +1307,7 @@
- #
- # Broadcom HND network devices
- #
--CONFIG_HND=y
-+CONFIG_HND=m
- CONFIG_ET=m
- CONFIG_ET_47XX=y
- # CONFIG_ET_ALL_PASSIVE_ON is not set
 @@ -1315,8 +1315,8 @@
  # CONFIG_BCM_CTF is not set
  # CONFIG_WL_EMULATOR is not set
