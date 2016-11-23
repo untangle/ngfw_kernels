@@ -386,9 +386,9 @@ diff -ruN linux-4.4-orig/net/ipv4/udp.c linux-4.4/net/ipv4/udp.c
 -		err = ip_cmsg_send(sock_net(sk), msg, &ipc,
 -				   sk->sk_family == AF_INET6);
 +        err = udp_cmsg_send(sock_net(sk), msg, &ipc);
- 		if (err)
- 			return err;
- 		if (ipc.opt)
+		if (unlikely(err)) {
+			kfree(ipc.opt);
+			return err;
 @@ -995,6 +1023,11 @@
  		rcu_read_unlock();
  	}
