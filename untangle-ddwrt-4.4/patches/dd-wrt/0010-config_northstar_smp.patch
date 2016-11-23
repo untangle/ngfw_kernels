@@ -1,5 +1,5 @@
 --- /home/seb/work/untangle/dd-wrt/dd-wrt-github/src/linux/universal/linux-4.4/.config_northstar_smp	2016-10-13 13:06:38.278963841 +0200
-+++ linux-4.4/.config_northstar_smp	2016-11-23 12:12:07.688206274 +0100
++++ linux-4.4/.config_northstar_smp	2016-11-23 12:17:38.122048396 +0100
 @@ -211,7 +211,7 @@
  # CONFIG_MODVERSIONS is not set
  # CONFIG_MODULE_SRCVERSION_ALL is not set
@@ -9,17 +9,6 @@
  # CONFIG_MODULE_COMPRESS is not set
  CONFIG_BLOCK=y
  CONFIG_LBDAF=y
-@@ -1315,8 +1315,8 @@
- # CONFIG_BCM_CTF is not set
- # CONFIG_WL_EMULATOR is not set
- # CONFIG_BCM57XX is not set
--CONFIG_DHDAP=m
--CONFIG_WL=m
-+# CONFIG_DHDAP is not set
-+# CONFIG_WL is not set
- # CONFIG_WAPI is not set
- # CONFIG_WL_USE_AP is not set
- # CONFIG_WL_USE_AP_SDSTD is not set
 @@ -2085,7 +2085,9 @@
  #
  CONFIG_DCACHE_WORD_ACCESS=y
