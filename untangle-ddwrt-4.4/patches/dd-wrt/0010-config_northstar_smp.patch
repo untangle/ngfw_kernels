@@ -9,6 +9,35 @@
  # CONFIG_MODULE_COMPRESS is not set
  CONFIG_BLOCK=y
  CONFIG_LBDAF=y
+@@ -1307,7 +1307,7 @@
+ #
+ # Broadcom HND network devices
+ #
+-CONFIG_HND=y
++CONFIG_HND=m
+ CONFIG_ET=m
+ CONFIG_ET_47XX=y
+ # CONFIG_ET_ALL_PASSIVE_ON is not set
+@@ -1315,8 +1315,8 @@
+ # CONFIG_BCM_CTF is not set
+ # CONFIG_WL_EMULATOR is not set
+ # CONFIG_BCM57XX is not set
+-CONFIG_DHDAP=m
+-CONFIG_WL=m
++# CONFIG_DHDAP is not set
++# CONFIG_WL is not set
+ # CONFIG_WAPI is not set
+ # CONFIG_WL_USE_AP is not set
+ # CONFIG_WL_USE_AP_SDSTD is not set
+@@ -1630,7 +1630,7 @@
+ # CONFIG_TCG_TPM is not set
+ CONFIG_DEVPORT=y
+ # CONFIG_XILLYBUS is not set
+-CONFIG_RTL8365MB=m
++# CONFIG_RTL8365MB is not set
+ 
+ #
+ # I2C support
 @@ -2085,7 +2085,9 @@
  #
  CONFIG_DCACHE_WORD_ACCESS=y
@@ -19,23 +48,3 @@
  CONFIG_EXT4_FS=m
  CONFIG_EXT4_USE_FOR_EXT2=y
  CONFIG_EXT4_FS_POSIX_ACL=y
-@@ -1307,7 +1307,7 @@
- #
- # Broadcom HND network devices
- #
--CONFIG_HND=y
-+CONFIG_HND=m
- CONFIG_ET=m
- CONFIG_ET_47XX=y
- # CONFIG_ET_ALL_PASSIVE_ON is not set
---- /home/seb/work/untangle/dd-wrt/dd-wrt-github/src/linux/universal/linux-4.4/.config_northstar_smp	2016-10-13 13:06:38.278963841 +0200
-+++ linux-4.4/.config_northstar_smp	2016-11-23 15:28:40.650244792 +0100
-@@ -1630,7 +1630,7 @@
- # CONFIG_TCG_TPM is not set
- CONFIG_DEVPORT=y
- # CONFIG_XILLYBUS is not set
--CONFIG_RTL8365MB=m
-+# CONFIG_RTL8365MB is not set
- 
- #
- # I2C support
