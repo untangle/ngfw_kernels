@@ -1,0 +1,22 @@
+--- linux-4.4/.config_northstar_smp	2016-03-03 11:36:43.000000000 +0100
++++ config_northstar_smp	2016-09-23 14:34:46.965950114 +0200
+@@ -210,7 +210,7 @@
+ # CONFIG_MODVERSIONS is not set
+ # CONFIG_MODULE_SRCVERSION_ALL is not set
+ # CONFIG_MODULE_SIG is not set
+-CONFIG_MODULE_STRIPPED=y
++# CONFIG_MODULE_STRIPPED is not set
+ # CONFIG_MODULE_COMPRESS is not set
+ CONFIG_BLOCK=y
+ CONFIG_LBDAF=y
+@@ -1312,8 +1312,8 @@
+ # CONFIG_BCM_CTF is not set
+ # CONFIG_WL_EMULATOR is not set
+ # CONFIG_BCM57XX is not set
+-CONFIG_DHDAP=m
+-CONFIG_WL=m
++# CONFIG_DHDAP is not set
++# CONFIG_WL is not set
+ # CONFIG_WAPI is not set
+ # CONFIG_WL_USE_AP is not set
+ # CONFIG_WL_USE_AP_SDSTD is not set

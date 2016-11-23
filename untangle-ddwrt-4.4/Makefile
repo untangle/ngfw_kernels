@@ -7,11 +7,12 @@ KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
 MODULES_PATH=/tmp/mods-3.14.0
 MODULES_TARBALL := modules.tar.bz2
 VIMAGE := $(KERNEL_DIR)/vimage
-CONFIG_ORIG := config_northstar_smp
+CONFIG_ORIG := .config_northstar_smp
 CONFIG_UNTANGLE_ORIG := untangle.config
 CONFIG_DEST := $(KERNEL_DIR)/.config
 CONCURRENCY_LEVEL := $(shell grep -c '^processor\s:' /proc/cpuinfo)
 UNTANGLE_PATCH_SERIES := patches/untangle/series
+DDWRT_PATCH_SERIES := patches/dd-wrt/series
 
 all: kernel modules
 
@@ -24,7 +25,7 @@ extract-stamp: $(TARBALL)
 	touch $@
 
 patch: patch-stamp
-patch-stamp: patch-untangle
+patch-stamp: patch-untangle patch-ddwrt
 	touch $@
 
 patch-untangle: patch-untangle-stamp
@@ -35,9 +36,17 @@ patch-untangle-stamp: extract-stamp patches/untangle/*
 	done < $(UNTANGLE_PATCH_SERIES)
 	touch $@
 
+patch-ddwrt: patch-ddwrt-stamp
+patch-ddwrt-stamp: extract-stamp patches/dd-wrt/*
+	while read patch ; do \
+	  echo "Applying $$patch" ; \
+	  patch -d $(KERNEL_DIR) -p1 < patches/dd-wrt/$$patch ; \
+	done < $(DDWRT_PATCH_SERIES)
+	touch $@
+
 config: $(CONFIG_DEST)
-$(CONFIG_DEST): extract-stamp $(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG)
-	cat $(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $@
+$(CONFIG_DEST): patch-stamp $(CONFIG_UNTANGLE_ORIG)
+	cat $(KERNEL_DIR)/$(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $@
 
 kernel: $(KERNEL_IMAGE)
 $(KERNEL_IMAGE): patch-stamp config
