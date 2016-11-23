@@ -19,3 +19,12 @@
  CONFIG_EXT4_FS=m
  CONFIG_EXT4_USE_FOR_EXT2=y
  CONFIG_EXT4_FS_POSIX_ACL=y
+@@ -1307,7 +1307,7 @@
+ #
+ # Broadcom HND network devices
+ #
+-CONFIG_HND=y
++CONFIG_HND=m
+ CONFIG_ET=m
+ CONFIG_ET_47XX=y
+ # CONFIG_ET_ALL_PASSIVE_ON is not set
