@@ -1,0 +1,11 @@
+--- linux-4.4/.config_northstar_smp	2016-10-13 13:06:38.278963841 +0200
++++ linux-4.4/.config_northstar_smp	2016-11-23 12:17:38.122048396 +0100
+@@ -211,7 +211,7 @@
+ # CONFIG_MODVERSIONS is not set
+ # CONFIG_MODULE_SRCVERSION_ALL is not set
+ # CONFIG_MODULE_SIG is not set
+-CONFIG_MODULE_STRIPPED=y
++# CONFIG_MODULE_STRIPPED is not set
+ # CONFIG_MODULE_COMPRESS is not set
+ CONFIG_BLOCK=y
+ CONFIG_LBDAF=y
