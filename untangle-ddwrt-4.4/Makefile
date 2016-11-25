@@ -2,19 +2,21 @@ BUILD_DEPS := gcc-5-arm-linux-gnueabihf u-boot-tools cgpt
 
 VERSION := 4.4.34
 KERNEL_DIR := linux-4.4
+CONFIG_ORIG := $(KERNEL_DIR)/.config_northstar_smp
+KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
 
 TARBALL := dd-wrt-linux-$(VERSION).tar.xz
 TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
-KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
 MODULES_PATH=/tmp/mods-$(VERSION)
 MODULES_TARBALL := modules-$(VERSION).tar.bz2
-VIMAGE := $(KERNEL_DIR)/vimage
-CONFIG_ORIG := .config_northstar_smp
 CONFIG_UNTANGLE_ORIG := untangle.config
 CONFIG_DEST := $(KERNEL_DIR)/.config
+CONFIG_DEST_KERNEL := $(KERNEL_DIR)/.config-kernel
+CONFIG_DEST_MODULES := $(KERNEL_DIR)/.config-modules
 CONCURRENCY_LEVEL := $(shell grep -c '^processor\s:' /proc/cpuinfo)
 UNTANGLE_PATCH_SERIES := patches/untangle/series
-DDWRT_PATCH_SERIES := patches/dd-wrt/series
+DDWRT_PATCH_SERIES := patches/dd-wrt/series-kernel
+DDWRT_PATCH_MODULES_SERIES := patches/dd-wrt/series-modules
 COMPILE_FLAGS := MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL)
 
 all: kernel modules
@@ -27,10 +29,6 @@ extract-stamp: $(TARBALL)
 	tar xaf $<
 	touch $@
 
-patch: patch-stamp
-patch-stamp: patch-untangle patch-ddwrt
-	touch $@
-
 patch-untangle: patch-untangle-stamp
 patch-untangle-stamp: extract-stamp patches/untangle/*
 	while read patch ; do \
@@ -39,29 +37,43 @@ patch-untangle-stamp: extract-stamp patches/untangle/*
 	done < $(UNTANGLE_PATCH_SERIES)
 	touch $@
 
-patch-ddwrt: patch-ddwrt-stamp
-patch-ddwrt-stamp: extract-stamp patches/dd-wrt/*
+patch-ddwrt-kernel: patch-ddwrt-kernel-stamp
+patch-ddwrt-kernel-stamp: extract-stamp patches/dd-wrt/*
+	cp $(CONFIG_ORIG) $(CONFIG_ORIG).bak
 	while read patch ; do \
 	  echo "Applying $$patch" ; \
 	  patch -d $(KERNEL_DIR) -p1 < patches/dd-wrt/$$patch ; \
 	done < $(DDWRT_PATCH_SERIES)
+	cp $(CONFIG_ORIG) $(CONFIG_DEST_KERNEL)
+	cp $(CONFIG_ORIG).bak $(CONFIG_ORIG)
 	touch $@
 
-config: $(CONFIG_DEST)
-$(CONFIG_DEST): patch-stamp $(CONFIG_UNTANGLE_ORIG)
-	cat $(KERNEL_DIR)/$(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $@
+patch-ddwrt-modules: patch-ddwrt-kernel patch-ddwrt-modules-stamp
+patch-ddwrt-modules-stamp: extract-stamp patches/dd-wrt/*
+	cp $(CONFIG_ORIG) $(CONFIG_ORIG).bak
+	while read patch ; do \
+	  echo "Applying $$patch" ; \
+	  patch -d $(KERNEL_DIR) -p1 < patches/dd-wrt/$$patch ; \
+	done < $(DDWRT_PATCH_MODULES_SERIES)
+	cp $(CONFIG_ORIG) $(CONFIG_DEST_MODULES)
+	cp $(CONFIG_ORIG).bak $(CONFIG_ORIG)
+	touch $@
+
+config-kernel: $(CONFIG_DEST_KERNEL)
+$(CONFIG_DEST_KERNEL): patch-untangle patch-ddwrt-kernel
+	cat $(CONFIG_DEST_KERNEL) $(CONFIG_UNTANGLE_ORIG) >| $(CONFIG_DEST)
+
+config-modules: $(CONFIG_DEST_MODULES)
+$(CONFIG_DEST_MODULES): patch-untangle patch-ddwrt-modules
+	cat $(CONFIG_DEST_MODULES) $(CONFIG_UNTANGLE_ORIG) >| $(CONFIG_DEST)
 
 kernel: $(KERNEL_IMAGE)
-$(KERNEL_IMAGE): config
-	cd $(KERNEL_DIR) ; \
-	$(COMPILE_FLAGS) make -j $(CONCURRENCY_LEVEL) zImage
-
-kernel-package: patch-stamp config
-	cd $(KERNEL_DIR) ; \
-	MAKEFLAGS= MFLAGS= DEB_HOST_ARCH=armhf CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) fakeroot make-kpkg --arch arm --cross-compile arm-linux-gnueabihf- --revision=1+untangle1 kernel_image kernel_headers
+$(KERNEL_IMAGE): config-kernel
+	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) make -j $(CONCURRENCY_LEVEL) zImage
+	cp $(KERNEL_IMAGE) .
 
 modules: $(MODULES_TARBALL)
-$(MODULES_TARBALL): kernel
+$(MODULES_TARBALL): config-modules
 	rm -fr $(MODULES_PATH)
 	mkdir -p $(MODULES_PATH)
 	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) INSTALL_MOD_PATH=$(MODULES_PATH) make -j $(CONCURRENCY_LEVEL) modules
@@ -69,5 +81,5 @@ $(MODULES_TARBALL): kernel
 	tar -C $(MODULES_PATH) -cjf $@ .
 
 clean:
-	rm -fr $(KERNEL_DIR) $(MODULES_TARBALL)
+	rm -fr $(KERNEL_DIR) $(MODULES_TARBALL) zImage
 	rm -f *-stamp *deb
