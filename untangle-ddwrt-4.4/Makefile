@@ -4,7 +4,9 @@ VERSION := 4.4.34
 KERNEL_DIR := linux-4.4
 CONFIG_ORIG := $(KERNEL_DIR)/.config_northstar_smp
 KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
+DTB_IMAGE :=
 
+ITF_IMAGE := $(KERNEL_DIR)/arch/arm/boot/vmlinux.itf
 TARBALL := dd-wrt-linux-$(VERSION).tar.xz
 TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
 MODULES_PATH=/tmp/mods-$(VERSION)
@@ -18,8 +20,9 @@ UNTANGLE_PATCH_SERIES := patches/untangle/series
 DDWRT_PATCH_SERIES := patches/dd-wrt/series-kernel
 DDWRT_PATCH_MODULES_SERIES := patches/dd-wrt/series-modules
 COMPILE_FLAGS := MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL)
+TMP_ITF_IMAGE := /tmp/zImage-$(VERSION)
 
-all: kernel modules
+all: itf modules
 
 $(TARBALL):
 	curl -O $(TARBALL_URL)
@@ -79,6 +82,19 @@ $(MODULES_TARBALL): config-modules
 	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) INSTALL_MOD_PATH=$(MODULES_PATH) make -j $(CONCURRENCY_LEVEL) modules
 	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) INSTALL_MOD_PATH=$(MODULES_PATH) make -j $(CONCURRENCY_LEVEL) modules_install
 	tar -C $(MODULES_PATH) -cjf $@ .
+
+dtb: dtb-stamp
+dtb-stamp: kernel
+	cd $(KERNEL_DIR) ; \
+	MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make dtbs
+	touch $@
+
+# no need here
+itf: kernel
+# $(ITF_IMAGE): dtb
+# #	mkimage -D '-I dts -O dtb -p 1024' -f onhub.its $(ITF_IMAGE)
+# 	cat $(KERNEL_IMAGE) $(DTB_IMAGE) > $(TMP_ITF_IMAGE)
+# 	mkimage -A arm -O linux -T kernel -a 0x00008000 -C none -e 0x00008000 -n 'Untangle' -d $(TMP_ITF_IMAGE) $(ITF_IMAGE)
 
 clean:
 	rm -fr $(KERNEL_DIR) $(MODULES_TARBALL) $(MODULES_PATH) zImage
