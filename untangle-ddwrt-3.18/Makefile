@@ -1,13 +1,13 @@
 BUILD_DEPS := gcc-5-arm-linux-gnueabihf u-boot-tools cgpt
 
-VERSION := 3.18.38
+VERSION := 3.18.42
 KERNEL_DIR := linux-3.18
 CONFIG_ORIG := $(KERNEL_DIR)/.config_mvebu
 KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
 DTB_IMAGE := $(KERNEL_DIR)/arch/arm/boot/dts/armada-385-linksys-shelby.dtb
 
 ITF_IMAGE := $(KERNEL_DIR)/arch/arm/boot/vmlinux.itf
-TARBALL := dd-wrt-linux-$(VERSION).tar.bz2
+TARBALL := dd-wrt-linux-$(VERSION).tar.xz
 TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
 MODULES_PATH=/tmp/mods-$(VERSION)
 MODULES_TARBALL := modules-$(VERSION).tar.bz2
@@ -29,7 +29,7 @@ $(TARBALL):
 
 extract: extract-stamp
 extract-stamp: $(TARBALL)
-	tar xjf $<
+	tar xaf $<
 	touch $@
 
 patch-untangle: patch-untangle-stamp
