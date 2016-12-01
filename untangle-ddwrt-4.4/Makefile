@@ -81,5 +81,5 @@ $(MODULES_TARBALL): config-modules
 	tar -C $(MODULES_PATH) -cjf $@ .
 
 clean:
-	rm -fr $(KERNEL_DIR) $(MODULES_TARBALL) zImage
+	rm -fr $(KERNEL_DIR) $(MODULES_TARBALL) $(MODULES_PATH) zImage
 	rm -f *-stamp *deb
