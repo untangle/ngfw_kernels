@@ -96,5 +96,5 @@ $(ITF_IMAGE): dtb
 	mkimage -A arm -O linux -T kernel -a 0x00008000 -C none -e 0x00008000 -n 'Untangle' -d $(TMP_ITF_IMAGE) $(ITF_IMAGE)
 	cp $(ITF_IMAGE) .
 clean:
-	rm -fr $(KERNEL_DIR) $(MODULES_TARBALL) $(MODULES_PATH) $(TMP_ITF_IMAGE)
+	rm -fr $(KERNEL_DIR) $(MODULES_TARBALL) $(MODULES_PATH) zImage $(TMP_ITF_IMAGE) vmlinux.itf
 	rm -f *-stamp *deb
