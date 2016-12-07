@@ -1,3 +1,4 @@
+0050-use_SLUB_instead_of_SLAB.patch
 0100_add_missing_config_defaults.patch
 0110_enable_orion_usb_drivers.patch
 0120_enable_usb_xhci_mvebu.patch
