@@ -3,3 +3,5 @@ linux-3.18
 *-stamp
 *bz2
 *xz
+zImage
+vmlinux.itf
