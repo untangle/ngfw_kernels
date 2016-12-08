@@ -1,0 +1,12 @@
+#! /bin/sh
+
+KERNEL_VERSION=$(echo $DPKG_MAINTSCRIPT_PACKAGE | perl -pe 's/.*(\d\.\d+(\.\d+).*/$1/')
+MODULES_DIR=/lib/modules/${KERNEL_VERSION}
+
+for mod in ${MODULES_DIR}/extra/*ko ; do 
+  find ${MODULES_DIR} -name $(basename $mod) -exec rm -f {} \;
+done
+
+depmod -a ${KERNEL_VERSION}
+
+# FIXME: flash TRX
