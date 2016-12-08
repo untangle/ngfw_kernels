@@ -6,6 +6,10 @@ CONFIG_ORIG := $(KERNEL_DIR)/.config_mvebu
 KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
 DTB_IMAGE := $(KERNEL_DIR)/arch/arm/boot/dts/armada-385-linksys-shelby.dtb
 
+# overridables
+DESTDIR ?= /tmp/test
+
+# constants
 ITF_IMAGE := $(KERNEL_DIR)/arch/arm/boot/vmlinux.itf
 TARBALL := dd-wrt-linux-$(VERSION).tar.xz
 TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
@@ -84,6 +88,20 @@ $(ITF_IMAGE): dtb
 	cat $(KERNEL_IMAGE) $(DTB_IMAGE) > $(TMP_ITF_IMAGE)
 	mkimage -A arm -O linux -T kernel -a 0x00008000 -C none -e 0x00008000 -n 'Untangle' -d $(TMP_ITF_IMAGE) $(ITF_IMAGE)
 	cp $(ITF_IMAGE) .
+
+install: itf modules
+	# wrapped zImage for this hardware
+	mkdir -p $(DESTDIR)/boot
+	cp $(ITF_IMAGE) $(DESTDIR)/boot/vmlinux-$(VERSION).trx
+	# firmware blobs for kernel modules
+	mkdir -p $(DESTDIR)/lib/firmware/
+	rsync -aHz binary/firmware/ $(DESTDIR)/lib/firmware/
+	# modules we built from source
+	rsync -aHz $(MODULES_PATH)/ $(DESTDIR)/
+	# binary modules from dd-wrt
+	mkdir -p $(DESTDIR)/lib/modules/$(VERSION)/extra
+	cp binary/modules/* $(DESTDIR)/lib/modules/$(VERSION)/extra
+
 clean:
 	rm -fr $(KERNEL_DIR) tmp
 	rm -f *-stamp *deb
