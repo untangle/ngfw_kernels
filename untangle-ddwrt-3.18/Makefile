@@ -95,12 +95,12 @@ install: itf modules
 	cp $(ITF_IMAGE) $(DESTDIR)/boot/vmlinux-$(VERSION).trx
 	# firmware blobs for kernel modules
 	mkdir -p $(DESTDIR)/lib/firmware/
-	rsync -aHz binary/firmware/ $(DESTDIR)/lib/firmware/
+	rsync -aHz binary-assets/firmware/ $(DESTDIR)/lib/firmware/
 	# modules we built from source
 	rsync -aHz $(MODULES_PATH)/ $(DESTDIR)/
 	# binary modules from dd-wrt
 	mkdir -p $(DESTDIR)/lib/modules/$(VERSION)/extra
-	cp binary/modules/* $(DESTDIR)/lib/modules/$(VERSION)/extra
+	cp binary-assets/modules/* $(DESTDIR)/lib/modules/$(VERSION)/extra
 
 clean:
 	rm -fr $(KERNEL_DIR) tmp
