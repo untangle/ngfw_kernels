@@ -71,10 +71,12 @@ kernel: $(KERNEL_IMAGE)
 $(KERNEL_IMAGE): patch
 	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) KCONFIG_CONFIG=$(shell basename $(CONFIG_DEST_KERNEL)) make -j $(CONCURRENCY_LEVEL) zImage
 
-modules: $(MODULES_PATH)
-$(MODULES_PATH): patch
+modules: modules-stamp
+modules-stamp: patch
 	mkdir -p $(MODULES_PATH)
-	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) INSTALL_MOD_PATH=../$(MODULES_PATH) KCONFIG_CONFIG=$(shell basename $(CONFIG_DEST_MODULES)) make -j $(CONCURRENCY_LEVEL) modules modules_install
+	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) INSTALL_MOD_PATH=../$(MODULES_PATH) KCONFIG_CONFIG=$(shell basename $(CONFIG_DEST_MODULES)) make -j $(CONCURRENCY_LEVEL) modules
+	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) INSTALL_MOD_PATH=../$(MODULES_PATH) KCONFIG_CONFIG=$(shell basename $(CONFIG_DEST_MODULES)) make -j $(CONCURRENCY_LEVEL) modules_install
+	touch modules-stamp
 
 dtb: dtb-stamp
 dtb-stamp: kernel
@@ -87,9 +89,9 @@ $(ITF_IMAGE): dtb
 	mkdir -p tmp
 	cat $(KERNEL_IMAGE) $(DTB_IMAGE) > $(TMP_ITF_IMAGE)
 	mkimage -A arm -O linux -T kernel -a 0x00008000 -C none -e 0x00008000 -n 'Untangle' -d $(TMP_ITF_IMAGE) $(ITF_IMAGE)
-	cp $(ITF_IMAGE) .
 
-install: itf modules
+install: install-stamp
+install-stamp: itf modules
 	# wrapped zImage for this hardware
 	mkdir -p $(DESTDIR)/boot
 	cp $(ITF_IMAGE) $(DESTDIR)/boot/vmlinux-$(VERSION).trx
@@ -101,6 +103,7 @@ install: itf modules
 	# binary modules from dd-wrt
 	mkdir -p $(DESTDIR)/lib/modules/$(VERSION)/extra
 	cp binary-assets/modules/* $(DESTDIR)/lib/modules/$(VERSION)/extra
+	touch install-stamp
 
 clean:
 	rm -fr $(KERNEL_DIR) tmp
