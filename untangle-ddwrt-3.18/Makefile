@@ -86,7 +86,7 @@ dtb-stamp: kernel
 trx: $(TRX_IMAGE)
 $(TRX_IMAGE): dtb
 	cat $(KERNEL_IMAGE) $(DTB_IMAGE) > $(TMP_TRX_IMAGE)
-	mkimage -A arm -O linux -T kernel -a 0x00008000 -C none -e 0x00008000 -n 'Untangle' -d $(TMP_TRX_IMAGE) $(TRX_IMAGE)
+	./trx.sh $(TMP_TRX_IMAGE) $(TRX_IMAGE)
 
 install: install-stamp
 install-stamp: trx modules
