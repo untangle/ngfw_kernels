@@ -1,4 +1,4 @@
-BUILD_DEPS := gcc-5-arm-linux-gnueabihf u-boot-tools cgpt
+BUILD_DEPS := gcc-5-arm-linux-gnueabihf u-boot-tools cgpt rsync
 
 VERSION := 3.18.42
 KERNEL_DIR := linux-3.18
@@ -10,7 +10,7 @@ DTB_IMAGE := $(KERNEL_DIR)/arch/arm/boot/dts/armada-385-linksys-shelby.dtb
 DESTDIR ?= /tmp/test
 
 # constants
-ITF_IMAGE := $(KERNEL_DIR)/arch/arm/boot/vmlinux.itf
+TRX_IMAGE := tmp/vmlinux-$(VERSION).trx
 TARBALL := dd-wrt-linux-$(VERSION).tar.xz
 TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
 MODULES_PATH := tmp/modules-$(VERSION)
@@ -23,9 +23,9 @@ UNTANGLE_PATCH_SERIES := patches/untangle/series
 DDWRT_PATCH_SERIES := patches/dd-wrt/series-kernel
 DDWRT_PATCH_MODULES_SERIES := patches/dd-wrt/series-modules
 COMPILE_FLAGS := MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL)
-TMP_ITF_IMAGE := tmp/zImage-$(VERSION)
+TMP_TRX_IMAGE := tmp/zImage-$(VERSION)
 
-all: itf modules
+all: trx modules
 
 $(TARBALL):
 	curl -O $(TARBALL_URL)
@@ -83,18 +83,16 @@ dtb-stamp: kernel
 	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) KCONFIG_CONFIG=$(shell basename $(CONFIG_DEST_KERNEL)) make dtbs
 	touch $@
 
-itf: $(ITF_IMAGE)
-$(ITF_IMAGE): dtb
-#	mkimage -D '-I dts -O dtb -p 1024' -f onhub.its $(ITF_IMAGE)
-	mkdir -p tmp
-	cat $(KERNEL_IMAGE) $(DTB_IMAGE) > $(TMP_ITF_IMAGE)
-	mkimage -A arm -O linux -T kernel -a 0x00008000 -C none -e 0x00008000 -n 'Untangle' -d $(TMP_ITF_IMAGE) $(ITF_IMAGE)
+trx: $(TRX_IMAGE)
+$(TRX_IMAGE): dtb
+	cat $(KERNEL_IMAGE) $(DTB_IMAGE) > $(TMP_TRX_IMAGE)
+	mkimage -A arm -O linux -T kernel -a 0x00008000 -C none -e 0x00008000 -n 'Untangle' -d $(TMP_TRX_IMAGE) $(TRX_IMAGE)
 
 install: install-stamp
-install-stamp: itf modules
+install-stamp: trx modules
 	# wrapped zImage for this hardware
 	mkdir -p $(DESTDIR)/boot
-	cp $(ITF_IMAGE) $(DESTDIR)/boot/vmlinux-$(VERSION).trx
+	cp $(TRX_IMAGE) $(DESTDIR)/boot/
 	# firmware blobs for kernel modules
 	mkdir -p $(DESTDIR)/lib/firmware/
 	rsync -aHz binary-assets/firmware/ $(DESTDIR)/lib/firmware/
