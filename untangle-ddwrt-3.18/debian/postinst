@@ -1,12 +1,15 @@
 #! /bin/sh
 
-KERNEL_VERSION=$(echo $DPKG_MAINTSCRIPT_PACKAGE | perl -pe 's/.*(\d\.\d+(\.\d+).*/$1/')
+set -e
+
+KERNEL_VERSION=$(echo $DPKG_MAINTSCRIPT_PACKAGE | perl -pe 's/.*-(\d\.\d+(?:\.\d+))-.*/$1/')
 MODULES_DIR=/lib/modules/${KERNEL_VERSION}
 
-for mod in ${MODULES_DIR}/extra/*ko ; do 
-  find ${MODULES_DIR} -name $(basename $mod) -exec rm -f {} \;
+for mod in $(ls ${MODULES_DIR}/extra/*ko 2> /dev/null) ; do 
+  find ${MODULES_DIR}/kernel -name $(basename $mod) -exec rm -f {} \;
 done
 
 depmod -a ${KERNEL_VERSION}
 
-# FIXME: flash TRX
+dd if=/boot/vmlinux-${KERNEL_VERSION}.trx of=/dev/mtdblock4 bs=1M 2> /dev/null
+dd if=/boot/vmlinux-${KERNEL_VERSION}.trx of=/dev/mtdblock6 bs=1M 2> /dev/null
