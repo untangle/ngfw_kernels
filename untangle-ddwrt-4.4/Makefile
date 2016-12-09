@@ -1,16 +1,19 @@
-BUILD_DEPS := gcc-5-arm-linux-gnueabihf u-boot-tools cgpt
+BUILD_DEPS := gcc-5-arm-linux-gnueabihf u-boot-tools cgpt rsync
 
 VERSION := 4.4.34
 KERNEL_DIR := linux-4.4
 CONFIG_ORIG := $(KERNEL_DIR)/.config_northstar_smp
 KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
-DTB_IMAGE :=
+DTB_IMAGE := /dev/null
 
-ITF_IMAGE := $(KERNEL_DIR)/arch/arm/boot/vmlinux.itf
+# overridables
+DESTDIR ?= /tmp/test
+
+# constants
+TRX_IMAGE := tmp/vmlinux-$(VERSION).trx
 TARBALL := dd-wrt-linux-$(VERSION).tar.xz
 TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
-MODULES_PATH=/tmp/mods-$(VERSION)
-MODULES_TARBALL := modules-$(VERSION).tar.bz2
+MODULES_PATH := tmp/modules-$(VERSION)
 CONFIG_UNTANGLE_ORIG := untangle.config
 CONFIG_DEST := $(KERNEL_DIR)/.config
 CONFIG_DEST_KERNEL := $(KERNEL_DIR)/.config-kernel
@@ -20,9 +23,9 @@ UNTANGLE_PATCH_SERIES := patches/untangle/series
 DDWRT_PATCH_SERIES := patches/dd-wrt/series-kernel
 DDWRT_PATCH_MODULES_SERIES := patches/dd-wrt/series-modules
 COMPILE_FLAGS := MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL)
-TMP_ITF_IMAGE := /tmp/zImage-$(VERSION)
+TMP_TRX_IMAGE := tmp/zImage-$(VERSION)
 
-all: itf modules
+all: trx modules
 
 $(TARBALL):
 	curl -O $(TARBALL_URL)
@@ -47,7 +50,7 @@ patch-ddwrt-kernel-stamp: extract-stamp patches/dd-wrt/*
 	  echo "Applying $$patch" ; \
 	  patch -d $(KERNEL_DIR) -p1 < patches/dd-wrt/$$patch ; \
 	done < $(DDWRT_PATCH_SERIES)
-	cp $(CONFIG_ORIG) $(CONFIG_DEST_KERNEL)
+	cat $(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $(CONFIG_DEST_KERNEL)
 	cp $(CONFIG_ORIG).bak $(CONFIG_ORIG)
 	touch $@
 
@@ -58,44 +61,48 @@ patch-ddwrt-modules-stamp: extract-stamp patches/dd-wrt/*
 	  echo "Applying $$patch" ; \
 	  patch -d $(KERNEL_DIR) -p1 < patches/dd-wrt/$$patch ; \
 	done < $(DDWRT_PATCH_MODULES_SERIES)
-	cp $(CONFIG_ORIG) $(CONFIG_DEST_MODULES)
+	cat $(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $(CONFIG_DEST_MODULES)
 	cp $(CONFIG_ORIG).bak $(CONFIG_ORIG)
 	touch $@
 
-config-kernel: $(CONFIG_DEST_KERNEL)
-$(CONFIG_DEST_KERNEL): patch-untangle patch-ddwrt-kernel
-	cat $(CONFIG_DEST_KERNEL) $(CONFIG_UNTANGLE_ORIG) >| $(CONFIG_DEST)
-
-config-modules: $(CONFIG_DEST_MODULES)
-$(CONFIG_DEST_MODULES): patch-untangle patch-ddwrt-modules
-	cat $(CONFIG_DEST_MODULES) $(CONFIG_UNTANGLE_ORIG) >| $(CONFIG_DEST)
+patch: patch-untangle patch-ddwrt-kernel patch-ddwrt-modules
 
 kernel: $(KERNEL_IMAGE)
-$(KERNEL_IMAGE): config-kernel
-	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) make -j $(CONCURRENCY_LEVEL) zImage
-	cp $(KERNEL_IMAGE) .
+$(KERNEL_IMAGE): patch
+	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) KCONFIG_CONFIG=$(shell basename $(CONFIG_DEST_KERNEL)) make -j $(CONCURRENCY_LEVEL) zImage
 
-modules: $(MODULES_TARBALL)
-$(MODULES_TARBALL): config-modules
-	rm -fr $(MODULES_PATH)
+modules: modules-stamp
+modules-stamp: patch
 	mkdir -p $(MODULES_PATH)
-	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) INSTALL_MOD_PATH=$(MODULES_PATH) make -j $(CONCURRENCY_LEVEL) modules
-	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) INSTALL_MOD_PATH=$(MODULES_PATH) make -j $(CONCURRENCY_LEVEL) modules_install
-	tar -C $(MODULES_PATH) -cjf $@ .
+	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) INSTALL_MOD_PATH=../$(MODULES_PATH) KCONFIG_CONFIG=$(shell basename $(CONFIG_DEST_MODULES)) make -j $(CONCURRENCY_LEVEL) modules
+	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) INSTALL_MOD_PATH=../$(MODULES_PATH) KCONFIG_CONFIG=$(shell basename $(CONFIG_DEST_MODULES)) make -j $(CONCURRENCY_LEVEL) modules_install
+	touch modules-stamp
 
 dtb: dtb-stamp
 dtb-stamp: kernel
-	cd $(KERNEL_DIR) ; \
-	MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) make dtbs
+	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) KCONFIG_CONFIG=$(shell basename $(CONFIG_DEST_KERNEL)) make dtbs
 	touch $@
 
-# no need here
-itf: kernel
-# $(ITF_IMAGE): dtb
-# #	mkimage -D '-I dts -O dtb -p 1024' -f onhub.its $(ITF_IMAGE)
-# 	cat $(KERNEL_IMAGE) $(DTB_IMAGE) > $(TMP_ITF_IMAGE)
-# 	mkimage -A arm -O linux -T kernel -a 0x00008000 -C none -e 0x00008000 -n 'Untangle' -d $(TMP_ITF_IMAGE) $(ITF_IMAGE)
+trx: $(TRX_IMAGE)
+$(TRX_IMAGE): dtb
+	cat $(KERNEL_IMAGE) $(DTB_IMAGE) > $(TMP_TRX_IMAGE)
+	./trx.sh $(TMP_TRX_IMAGE) $(TRX_IMAGE)
+
+install: install-stamp
+install-stamp: trx modules
+	# wrapped zImage for this hardware
+	mkdir -p $(DESTDIR)/boot
+	cp $(TRX_IMAGE) $(DESTDIR)/boot/
+	# firmware blobs for kernel modules
+	mkdir -p $(DESTDIR)/lib/firmware/
+	rsync -aHz binary-assets/firmware/ $(DESTDIR)/lib/firmware/
+	# modules we built from source
+	rsync -aHz $(MODULES_PATH)/ $(DESTDIR)/
+	# binary modules from dd-wrt
+	mkdir -p $(DESTDIR)/lib/modules/$(VERSION)/extra
+	cp binary-assets/modules/* $(DESTDIR)/lib/modules/$(VERSION)/extra
+	touch install-stamp
 
 clean:
-	rm -fr $(KERNEL_DIR) $(MODULES_TARBALL) $(MODULES_PATH) zImage $(TMP_ITF_IMAGE) vmlinux.itf
+	rm -fr $(KERNEL_DIR) tmp
 	rm -f *-stamp *deb
