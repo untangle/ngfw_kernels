@@ -1,13 +1,14 @@
-BUILD_DEPS := gcc-5-arm-linux-gnueabihf u-boot-tools cgpt rsync
+BUILD_DEPS := gcc-5-arm-linux-gnueabihf u-boot-tools cgpt rsync dpkg-dev build-essential
 
 VERSION := 4.4.34
 KERNEL_DIR := linux-4.4
+DEB_BUILD_ARCH := armel
 CONFIG_ORIG := $(KERNEL_DIR)/.config_northstar_smp
 KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
 DTB_IMAGE := /dev/null
 
 # overridables
-DESTDIR ?= /tmp/test
+DESTDIR ?= tmp/install
 
 # constants
 TRX_IMAGE := tmp/vmlinux-$(VERSION).trx
@@ -25,7 +26,7 @@ DDWRT_PATCH_MODULES_SERIES := patches/dd-wrt/series-modules
 COMPILE_FLAGS := MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL)
 TMP_TRX_IMAGE := tmp/zImage-$(VERSION)
 
-all: trx modules
+all:
 
 $(TARBALL):
 	curl -O $(TARBALL_URL)
@@ -103,6 +104,9 @@ install-stamp: trx modules
 	mkdir -p $(DESTDIR)/lib/modules/$(VERSION)/extra
 	cp binary-assets/modules/* $(DESTDIR)/lib/modules/$(VERSION)/extra
 	touch install-stamp
+
+debian: trx modules
+	dpkg-buildpackage -us -uc -b --host-arch $(DEB_BUILD_ARCH)
 
 clean:
 	rm -fr $(KERNEL_DIR) tmp
