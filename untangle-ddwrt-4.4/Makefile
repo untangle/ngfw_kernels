@@ -85,6 +85,7 @@ dtb-stamp: kernel
 
 trx: $(TRX_IMAGE)
 $(TRX_IMAGE): dtb
+	mkdir -p tmp
 	cat $(KERNEL_IMAGE) $(DTB_IMAGE) > $(TMP_TRX_IMAGE)
 	./trx.sh $(TMP_TRX_IMAGE) $(TRX_IMAGE)
 
@@ -106,3 +107,5 @@ install-stamp: trx modules
 clean:
 	rm -fr $(KERNEL_DIR) tmp
 	rm -f *-stamp *deb
+
+.SUFFIXES:
