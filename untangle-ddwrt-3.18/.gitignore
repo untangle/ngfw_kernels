@@ -1,8 +1,8 @@
-*-stamp
-linux-3.18
+linux-3.*
+linux-4.*
 *-stamp
 *bz2
 *xz
-zImage
-vmlinux.itf
 tmp
+debian/untangle-linux-image-*
+debian/files

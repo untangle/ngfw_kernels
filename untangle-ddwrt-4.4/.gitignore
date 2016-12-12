@@ -1,6 +1,8 @@
-*-stamp
-linux-4.4
+linux-3.*
+linux-4.*
 *-stamp
 *bz2
 *xz
 tmp
+debian/untangle-linux-image-*
+debian/files
