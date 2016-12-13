@@ -11,4 +11,6 @@ done
 
 depmod -a ${KERNEL_VERSION}
 
-dd if=/boot/vmlinux-${KERNEL_VERSION}.trx of=/dev/mtdblock2 bs=1M 2> /dev/null
+if [ -e /dev/mtdblock2 ] ; then
+  dd if=/boot/vmlinux-${KERNEL_VERSION}.trx of=/dev/mtdblock2 bs=1M 2> /dev/null
+fi
