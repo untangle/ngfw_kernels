@@ -1,5 +1,6 @@
 #! /bin/sh
 
+set -x
 set -e
 
 KERNEL_VERSION=$(echo $DPKG_MAINTSCRIPT_PACKAGE | perl -pe 's/.*-(\d\.\d+(?:\.\d+))-.*/$1/')
