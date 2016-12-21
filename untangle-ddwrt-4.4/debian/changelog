@@ -1,4 +1,10 @@
-untangle-linux-image-4.4.34-asus-ac88u (4.4.34+untangle1) unstable; urgency=medium
+untangle-linux-image-4.4-asus-ac88u (4.4.39-rc1+untangle1) unstable; urgency=medium
+
+  * Rebase on recent 2016-12-15 r30949 build of dd-wrt
+
+ -- Sebastien Delafond <seb@debian.org>  Wed, 21 Dec 2016 11:00:50 +0100
+
+untangle-linux-image-4.4-asus-ac88u (4.4.34+untangle1) unstable; urgency=medium
 
   * First version
 
