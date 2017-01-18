@@ -1,0 +1,17 @@
+#! /bin/sh
+
+set -x
+set -e
+
+KERNEL_VERSION=$(dpkg -l $DPKG_MAINTSCRIPT_PACKAGE | tail -1 | perl -pe 's/.*\s(\d\.\d+(?:\..*))\+untangle.*/$1/')
+MODULES_DIR=/lib/modules/${KERNEL_VERSION}
+
+for mod in $(ls ${MODULES_DIR}/extra/*ko 2> /dev/null) ; do 
+  find ${MODULES_DIR}/kernel -name $(basename $mod) -exec rm -f {} \;
+done
+
+depmod -a ${KERNEL_VERSION}
+
+if [ -e /dev/mtdblock2 ] ; then
+  dd if=/boot/vmlinux-${KERNEL_VERSION}.trx of=/dev/mtdblock2 bs=1M 2> /dev/null
+fi

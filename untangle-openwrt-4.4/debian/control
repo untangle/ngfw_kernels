@@ -1,0 +1,13 @@
+Source: untangle-linux-image-4.4-turris-omnia
+Section: admin
+Priority: optional
+Maintainer: Sebastien Delafond <sdelafond@gmail.com>
+Uploaders: Untangle Buildbot <buildbot@untangle.com>
+Build-Depends: debhelper (>> 3.0.0)
+Standards-Version: 3.8.0
+
+Package: untangle-linux-image-4.4-turris-omnia
+Conflicts: untangle-linux-image-4.4.43-turris-omnia
+Architecture: armel
+Description: The Untangle linux image 4.4 for Asus A88U
+ Provides the 4.4 trx, modules, and firmware for Asus A88U
