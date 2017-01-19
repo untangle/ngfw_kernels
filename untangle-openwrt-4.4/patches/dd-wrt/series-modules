@@ -1,3 +1,4 @@
 0010_default-unneeded_options.patch
 0020_enable-usb.patch
 0030_enable-atheros.patch
+0040_disable_useless_wifi_options.patch
