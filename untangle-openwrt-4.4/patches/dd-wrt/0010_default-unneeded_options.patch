@@ -1,0 +1,24 @@
+--- linux-4.4/.config_turris_omnia.bak	2017-01-19 16:40:33.565233330 +0100
++++ linux-4.4/.config_turris_omnia	2017-01-19 16:40:45.009025915 +0100
+@@ -3345,2 +3345,21 @@
+ CONFIG_ARCH_HAS_SG_CHAIN=y
+ # CONFIG_VIRTUALIZATION is not set
++# CONFIG_XFRM_SUB_POLICY is not set
++# CONFIG_XFRM_MIGRATE is not set
++# CONFIG_XFRM_STATISTICS is not set
++# CONFIG_IPV6_VTI is not set
++# CONFIG_IP_SET_HASH_IPMARK is not set
++# CONFIG_IP_SET_HASH_MAC is not set
++# CONFIG_DNS_RESOLVER moduis not set
++# CONFIG_BLK_DEV_SR_VENDOR is not set
++# CONFIG_GENEVE is not set
++# CONFIG_USB_EHCI_ROOT_HUB_TT is not set
++# CONFIG_USB_CHIPIDEA is not set
++# CONFIG_USB_SISUSBVGA is not set
++# CONFIG_ECRYPT_FS is not set
++# CONFIG_PERSISTENT_KEYRINGS is not set
++# CONFIG_BIG_KEYS is not set
++# CONFIG_ENCRYPTED_KEYS is not set
++# CONFIG_CRYPTO_MANAGER_DISABLE_TESTS is not set
++# CONFIG_ASYMMETRIC_KEY_TYPE is not set
++# CONFIG_SYSTEM_TRUSTED_KEYRING is not set
