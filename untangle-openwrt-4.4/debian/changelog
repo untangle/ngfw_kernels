@@ -1,11 +1,5 @@
-untangle-linux-image-4.4-turris-omnia (4.4.39-rc1+untangle1) unstable; urgency=medium
-
-  * Rebase on recent 2016-12-15 r30949 build of dd-wrt
-
- -- Sebastien Delafond <seb@debian.org>  Wed, 21 Dec 2016 11:00:50 +0100
-
 untangle-linux-image-4.4-turris-omnia (4.4.43+untangle1) unstable; urgency=medium
 
   * First version
 
- -- Sebastien Delafond <seb@untangle.com>  Fri, 09 Dec 2016 11:04:37 +0100
+ -- Sebastien Delafond <seb@untangle.com>  Thu, 19 Jan 2017 16:35:51 +0100
