@@ -6,13 +6,14 @@ DEB_BUILD_ARCH := armhf
 CONFIG_ORIG := $(KERNEL_DIR)/.config_turris_omnia
 KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
 DTB_IMAGE := $(KERNEL_DIR)/arch/arm/boot/dts/armada-385-turris-omnia.dtb
+UPSTREAM := openwrt
 
 # overridables
 DESTDIR ?= tmp/install
 
 # constants
 TRX_IMAGE := tmp/vmlinux-$(VERSION).trx
-TARBALL := dd-wrt-linux-$(VERSION).tar.xz
+TARBALL := $(UPSTREAM)-linux-$(VERSION).tar.xz
 TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
 MODULES_PATH := tmp/modules-$(VERSION)
 CONFIG_UNTANGLE_ORIG := untangle.config
