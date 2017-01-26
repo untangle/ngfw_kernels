@@ -12,6 +12,9 @@ done
 
 depmod -a ${KERNEL_VERSION}
 
-if [ -e /dev/mtdblock2 ] ; then
-  dd if=/boot/vmlinux-${KERNEL_VERSION}.trx of=/dev/mtdblock2 bs=1M 2> /dev/null
-fi
+cd /boot
+
+ln -sf zImage-${KERNEL_VERSION} zImage
+ln -sf *.dtb dtb # FIXME: careful if several DTBs
+
+exit 0

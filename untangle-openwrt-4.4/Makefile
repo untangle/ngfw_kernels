@@ -93,9 +93,11 @@ $(TRX_IMAGE): dtb
 
 install: install-stamp
 install-stamp: trx modules
-	# wrapped zImage for this hardware
+	# zImage, DTB and uImage for this hardware
 	mkdir -p $(DESTDIR)/boot
 	cp $(TRX_IMAGE) $(DESTDIR)/boot/
+	cp $(DTB_IMAGE) $(DESTDIR)/boot/
+	cp $(KERNEL_IMAGE) $(DESTDIR)/boot/zImage-$(VERSION)
 	# firmware blobs for kernel modules
 	mkdir -p $(DESTDIR)/lib/firmware/
 	rsync -aHz binary-assets/firmware/ $(DESTDIR)/lib/firmware/
@@ -106,11 +108,13 @@ install-stamp: trx modules
 	cp binary-assets/modules/* $(DESTDIR)/lib/modules/$(VERSION)/extra || true
 	touch install-stamp
 
-debian: trx modules
+debian:
 	dpkg-buildpackage -us -uc -b --host-arch $(DEB_BUILD_ARCH)
 
 clean:
 	rm -fr $(KERNEL_DIR) tmp
 	rm -f *-stamp *deb
+
+.PHONY: debian
 
 .SUFFIXES:
