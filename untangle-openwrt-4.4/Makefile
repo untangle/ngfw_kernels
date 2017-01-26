@@ -50,7 +50,7 @@ patch-ddwrt-kernel-stamp: extract-stamp patches/dd-wrt/*
 	cp $(CONFIG_ORIG) $(CONFIG_ORIG).bak
 	while read patch ; do \
 	  echo "Applying $$patch" ; \
-	  patch -d $(KERNEL_DIR) -p1 < patches/dd-wrt/$$patch ; \
+	  patch -d $(KERNEL_DIR) -p1 < patches/dd-wrt/$$patch || exit 1 ; \
 	done < $(DDWRT_PATCH_SERIES)
 	cat $(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $(CONFIG_DEST_KERNEL)
 	cp $(CONFIG_ORIG).bak $(CONFIG_ORIG)
@@ -61,7 +61,7 @@ patch-ddwrt-modules-stamp: extract-stamp patches/dd-wrt/*
 	cp $(CONFIG_ORIG) $(CONFIG_ORIG).bak
 	while read patch ; do \
 	  echo "Applying $$patch" ; \
-	  patch -d $(KERNEL_DIR) -p1 < patches/dd-wrt/$$patch ; \
+	  patch -d $(KERNEL_DIR) -p1 < patches/dd-wrt/$$patch || exit 1 ; \
 	done < $(DDWRT_PATCH_MODULES_SERIES)
 	cat $(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $(CONFIG_DEST_MODULES)
 	cp $(CONFIG_ORIG).bak $(CONFIG_ORIG)
