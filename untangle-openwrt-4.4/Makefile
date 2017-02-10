@@ -1,5 +1,3 @@
-BUILD_DEPS := gcc-6-arm-linux-gnueabihf u-boot-tools rsync dpkg-dev build-essential
-
 include kernel.conf
 
 # overridables
