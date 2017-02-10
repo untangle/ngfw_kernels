@@ -106,8 +106,13 @@ install-stamp: trx modules
 	cp binary-assets/modules/* $(DESTDIR)/lib/modules/$(VERSION)/extra || true
 	touch install-stamp
 
-debian:
+debian: debian-stamp
+debian-stamp:
 	dpkg-buildpackage -us -uc -b --host-arch $(DEB_BUILD_ARCH)
+	touch $@
+
+kpkg-arch: debian
+kpkg-indep: debian
 
 clean:
 	rm -fr $(KERNEL_DIR) tmp
