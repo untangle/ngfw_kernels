@@ -4,6 +4,7 @@ include kernel.conf
 DESTDIR ?= tmp/install
 
 # constants
+UNTANGLE_VERSION := $(patsubst $(VERSION)%,%,$(shell dpkg-parsechangelog -S version))
 TRX_IMAGE := tmp/vmlinux-$(VERSION).trx
 TARBALL := $(UPSTREAM)-linux-$(VERSION).tar.xz
 TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
@@ -61,12 +62,17 @@ patch-ddwrt-modules-stamp: extract-stamp patches/dd-wrt/*
 
 patch: patch-untangle patch-ddwrt-kernel patch-ddwrt-modules
 
+set-local-revision: patch set-local-revision-stamp
+set-local-revision-stamp:
+	perl -i -pe 's/(?<=^CONFIG_LOCALVERSION=")/'$(UNTANGLE_VERSION)/ $(CONFIG_DEST_KERNEL) $(CONFIG_DEST_MODULES)
+	touch $@
+
 kernel: $(KERNEL_IMAGE)
-$(KERNEL_IMAGE): patch
+$(KERNEL_IMAGE): set-local-revision
 	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) KCONFIG_CONFIG=$(shell basename $(CONFIG_DEST_KERNEL)) make -j $(CONCURRENCY_LEVEL) zImage
 
 modules: modules-stamp
-modules-stamp: patch
+modules-stamp: set-local-revision
 	mkdir -p $(MODULES_PATH)
 	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) INSTALL_MOD_PATH=../$(MODULES_PATH) KCONFIG_CONFIG=$(shell basename $(CONFIG_DEST_MODULES)) make -j $(CONCURRENCY_LEVEL) modules
 	cd $(KERNEL_DIR) && $(COMPILE_FLAGS) INSTALL_MOD_PATH=../$(MODULES_PATH) KCONFIG_CONFIG=$(shell basename $(CONFIG_DEST_MODULES)) make -j $(CONCURRENCY_LEVEL) modules_install
