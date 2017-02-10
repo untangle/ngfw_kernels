@@ -95,7 +95,7 @@ install-stamp: trx modules
 	# zImage, DTB and uImage for this hardware
 	mkdir -p $(DESTDIR)/boot
 	cp $(TRX_IMAGE) $(DESTDIR)/boot/
-	cp $(DTB_IMAGE) $(DESTDIR)/boot/
+	[ $(DTB_IMAGE) = /dev/null ] || cp $(DTB_IMAGE) $(DESTDIR)/boot/
 	cp $(KERNEL_IMAGE) $(DESTDIR)/boot/zImage-$(DEBIAN_VERSION)
 	# firmware blobs for kernel modules
 	mkdir -p $(DESTDIR)/lib/firmware/
