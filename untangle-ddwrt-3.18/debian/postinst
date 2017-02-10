@@ -1,7 +1,5 @@
 #! /bin/sh
 
-set -e
-
 KERNEL_VERSION=$(dpkg -l $DPKG_MAINTSCRIPT_PACKAGE | tail -1 | perl -pe 's/.*\s(\d\.\d+(?:\..*))\+untangle.*/$1/')
 MODULES_DIR=/lib/modules/${KERNEL_VERSION}
 
