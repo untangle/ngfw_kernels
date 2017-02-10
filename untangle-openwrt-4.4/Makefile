@@ -1,12 +1,6 @@
 BUILD_DEPS := gcc-6-arm-linux-gnueabihf u-boot-tools rsync dpkg-dev build-essential
 
-VERSION := 4.4.43
-KERNEL_DIR := linux-4.4
-DEB_BUILD_ARCH := armhf
-CONFIG_ORIG := $(KERNEL_DIR)/.config_turris_omnia
-KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
-DTB_IMAGE := $(KERNEL_DIR)/arch/arm/boot/dts/armada-385-turris-omnia.dtb
-UPSTREAM := openwrt
+include kernel.conf
 
 # overridables
 DESTDIR ?= tmp/install

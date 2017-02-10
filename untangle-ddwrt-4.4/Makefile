@@ -1,11 +1,6 @@
 BUILD_DEPS := gcc-5-arm-linux-gnueabihf u-boot-tools cgpt rsync dpkg-dev build-essential
 
-VERSION := 4.4.39-rc1
-KERNEL_DIR := linux-4.4
-DEB_BUILD_ARCH := armel
-CONFIG_ORIG := $(KERNEL_DIR)/.config_northstar_smp
-KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
-DTB_IMAGE := /dev/null
+include kernel.conf
 
 # overridables
 DESTDIR ?= tmp/install
