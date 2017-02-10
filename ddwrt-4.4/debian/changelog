@@ -1,4 +1,4 @@
-untangle-linux-image-4.4-asus-ac88u (4.4.39-rc2+untangle2) unstable; urgency=medium
+untangle-linux-image-4.4-asus-ac88u (4.4.39-rc1+untangle2) unstable; urgency=medium
 
   * Add CONFIG_SWAP=y so we can build kernels on the armel Asus slave
 
