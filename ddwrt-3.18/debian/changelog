@@ -1,3 +1,9 @@
+untangle-linux-image-3.18-linksys-wrt1900acs (3.18.42+untangle4) unstable; urgency=medium
+
+  * Add CONFIG_SWAP=y so we can build kernel on the hardware armel slave
+
+ -- Sebastien Delafond <seb@debian.org>  Fri, 10 Feb 2017 14:41:56 +0100
+
 untangle-linux-image-3.18-linksys-wrt1900acs (3.18.42+untangle3) unstable; urgency=medium
 
   * Do not run the postinst with set -e, as sometimes dd doesn't return 0
