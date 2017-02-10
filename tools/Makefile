@@ -4,11 +4,12 @@ include kernel.conf
 DESTDIR ?= tmp/install
 
 # constants
-UNTANGLE_VERSION := $(patsubst $(VERSION)%,%,$(shell dpkg-parsechangelog -S version))
-TRX_IMAGE := tmp/vmlinux-$(VERSION).trx
+DEBIAN_VERSION := $(shell dpkg-parsechangelog -S version)
+UNTANGLE_VERSION := $(patsubst $(VERSION)%,%,$(DEBIAN_VERSION))
+TRX_IMAGE := tmp/vmlinux-$(DEBIAN_VERSION).trx
 TARBALL := $(UPSTREAM)-linux-$(VERSION).tar.xz
 TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
-MODULES_PATH := tmp/modules-$(VERSION)
+MODULES_PATH := tmp/modules-$(DEBIAN_VERSION)
 CONFIG_UNTANGLE_ORIG := untangle.config
 CONFIG_DEST := $(KERNEL_DIR)/.config
 CONFIG_DEST_KERNEL := $(KERNEL_DIR)/.config-kernel
@@ -18,7 +19,7 @@ UNTANGLE_PATCH_SERIES := patches/untangle/series
 DDWRT_PATCH_SERIES := patches/dd-wrt/series-kernel
 DDWRT_PATCH_MODULES_SERIES := patches/dd-wrt/series-modules
 COMPILE_FLAGS := MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL)
-TMP_TRX_IMAGE := tmp/zImage-$(VERSION)
+TMP_TRX_IMAGE := tmp/zImage-$(DEBIAN_VERSION)
 
 all:
 
@@ -95,15 +96,15 @@ install-stamp: trx modules
 	mkdir -p $(DESTDIR)/boot
 	cp $(TRX_IMAGE) $(DESTDIR)/boot/
 	cp $(DTB_IMAGE) $(DESTDIR)/boot/
-	cp $(KERNEL_IMAGE) $(DESTDIR)/boot/zImage-$(VERSION)
+	cp $(KERNEL_IMAGE) $(DESTDIR)/boot/zImage-$(DEBIAN_VERSION)
 	# firmware blobs for kernel modules
 	mkdir -p $(DESTDIR)/lib/firmware/
 	rsync -aHz binary-assets/firmware/ $(DESTDIR)/lib/firmware/
 	# modules we built from source
 	rsync -aHz $(MODULES_PATH)/ $(DESTDIR)/
 	# binary modules from dd-wrt
-	mkdir -p $(DESTDIR)/lib/modules/$(VERSION)/extra
-	cp binary-assets/modules/* $(DESTDIR)/lib/modules/$(VERSION)/extra || true
+	mkdir -p $(DESTDIR)/lib/modules/$(DEBIAN_VERSION)/extra
+	cp binary-assets/modules/* $(DESTDIR)/lib/modules/$(DEBIAN_VERSION)/extra || true
 	touch install-stamp
 
 debian: debian-stamp

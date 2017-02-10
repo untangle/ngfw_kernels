@@ -1,6 +1,6 @@
 #! /bin/sh
 
-KERNEL_VERSION=$(dpkg -l $DPKG_MAINTSCRIPT_PACKAGE | tail -1 | perl -pe 's/.*\s(\d\.\d+(?:\..*))\+untangle.*/$1/')
+KERNEL_VERSION=$(dpkg -l $DPKG_MAINTSCRIPT_PACKAGE | tail -1 | perl -pe 's/.*\s(\d\.\d+(?:\..*)\+untangle\d+).*/$1/')
 MODULES_DIR=/lib/modules/${KERNEL_VERSION}
 
 for mod in $(ls ${MODULES_DIR}/extra/*ko 2> /dev/null) ; do 
