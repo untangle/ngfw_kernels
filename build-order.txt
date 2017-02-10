@@ -1,3 +1,4 @@
 untangle-debian-3.16.0          jessie          i386,amd64,armel,armhf
-untangle-ddwrt-4.4		jessie		armel
-untangle-ddwrt-3.18		jessie		armhf
+untangle-ddwrt-4.4		jessie		amd64
+untangle-ddwrt-3.18		jessie		amd64
+untangle-openwrt-4.4		jessie		amd64
