@@ -1,0 +1,11 @@
+--- linux-4.4/.config_turris_omnia	2017-02-15 19:58:07.926427272 +0100
++++ linux-4.4/.config_turris_omnia	2017-02-15 19:58:23.890139616 +0100
+@@ -2321,7 +2321,7 @@
+ # CONFIG_XILINX_WATCHDOG is not set
+ # CONFIG_CADENCE_WATCHDOG is not set
+ # CONFIG_DW_WATCHDOG is not set
+-# CONFIG_ORION_WATCHDOG is not set
++CONFIG_ORION_WATCHDOG=y
+ # CONFIG_MAX63XX_WATCHDOG is not set
+ # CONFIG_ALIM7101_WDT is not set
+ # CONFIG_I6300ESB_WDT is not set
