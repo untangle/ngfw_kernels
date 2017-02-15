@@ -1,3 +1,9 @@
+untangle-linux-image-4.4-turris-omnia (4.4.43+untangle2) unstable; urgency=medium
+
+  * Change default kernel parameters to boot from internal flash drive
+
+ -- Sebastien Delafond <seb@debian.org>  Wed, 15 Feb 2017 18:43:24 +0100
+
 untangle-linux-image-4.4-turris-omnia (4.4.43+untangle1) unstable; urgency=medium
 
   * First version
