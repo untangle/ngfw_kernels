@@ -122,7 +122,8 @@ kpkg-indep: debian
 
 clean:
 	rm -fr $(KERNEL_DIR) tmp
-	rm -f *-stamp *deb
+	rm -f *-stamp 
+	rm -f../*.deb ../*.manifest
 	find debian -maxdepth 1 -name untangle-linux-image* -type d -exec rm -fr {} \;
 
 .PHONY: debian
