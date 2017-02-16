@@ -1,3 +1,9 @@
+untangle-linux-image-4.4-turris-omnia (4.4.43+untangle4) unstable; urgency=medium
+
+  * Let the bootloader pass its arguments to the kernel
+
+ -- Sebastien Delafond <seb@debian.org>  Thu, 16 Feb 2017 08:16:41 +0100
+
 untangle-linux-image-4.4-turris-omnia (4.4.43+untangle3) unstable; urgency=medium
 
   * Enable Orion watchdog
