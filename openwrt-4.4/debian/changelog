@@ -1,3 +1,10 @@
+untangle-linux-image-4.4-turris-omnia (4.4.43+untangle5) unstable; urgency=medium
+
+  * Bring back CONFIG_CMDLINE, as we cannot guarantee that u-boot config
+    is the same on all Turris Omnia devices
+
+ -- Sebastien Delafond <seb@debian.org>  Thu, 16 Feb 2017 12:27:45 +0100
+
 untangle-linux-image-4.4-turris-omnia (4.4.43+untangle4) unstable; urgency=medium
 
   * Let the bootloader pass its arguments to the kernel
