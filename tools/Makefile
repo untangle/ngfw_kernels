@@ -3,7 +3,7 @@ include kernel.conf
 # overridables
 DESTDIR ?= tmp/install
 
-# constants
+# variables
 DEBIAN_VERSION := $(shell dpkg-parsechangelog -S version)
 UNTANGLE_VERSION := $(patsubst $(VERSION)%,%,$(DEBIAN_VERSION))
 TRX_IMAGE := tmp/vmlinux-$(DEBIAN_VERSION).trx
@@ -11,6 +11,10 @@ TARBALL := $(UPSTREAM)-linux-$(VERSION).tar.xz
 TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
 MODULES_PATH := tmp/modules-$(DEBIAN_VERSION)
 CONFIG_UNTANGLE_ORIG := untangle.config
+KERNEL_BOOT_DIR := $(KERNEL_DIR)/arch/$(KERNEL_ARCH)/boot
+DTB_IMAGE := $(KERNEL_BOOT_DIR)/dts/$(DTB_NAME)
+KERNEL_IMAGE := $(KERNEL_BOOT_DIR)/$(KERNEL_IMAGE)
+CONFIG_ORIG := $(KERNEL_DIR)/$(CONFIG_NAME)
 CONFIG_DEST := $(KERNEL_DIR)/.config
 CONFIG_DEST_KERNEL := $(KERNEL_DIR)/.config-kernel
 CONFIG_DEST_MODULES := $(KERNEL_DIR)/.config-modules
@@ -85,7 +89,7 @@ dtb-stamp: kernel
 	touch $@
 
 trx: $(TRX_IMAGE)
-$(TRX_IMAGE): dtb
+$(TRX_IMAGE): dtb $(DTB_IMAGE)
 	mkdir -p tmp
 	cat $(KERNEL_IMAGE) $(DTB_IMAGE) > $(TMP_TRX_IMAGE)
 	./trx.sh $(TMP_TRX_IMAGE) $(TRX_IMAGE)
