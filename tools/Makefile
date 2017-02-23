@@ -25,7 +25,7 @@ DDWRT_PATCH_MODULES_SERIES := patches/dd-wrt/series-modules
 COMPILE_FLAGS := MAKEFLAGS= MFLAGS= ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- CONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL)
 TMP_TRX_IMAGE := tmp/zImage-$(DEBIAN_VERSION)
 
-all:
+all: kernel modules
 
 $(TARBALL):
 	curl -O $(TARBALL_URL)
