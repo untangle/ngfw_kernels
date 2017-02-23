@@ -1,4 +1,4 @@
-Source: untangle-linux-image-3.18-linksys-wrt1900acs
+Source: untangle-linux-image-3.18-ddwrt
 Section: admin
 Priority: optional
 Maintainer: Sebastien Delafond <sdelafond@gmail.com>
@@ -12,3 +12,9 @@ Conflicts: untangle-linux-image-3.18.42-linksys-wrt1900acs
 Description: The Untangle linux image 3.18 for Linksys WRT1900ACS
  Provides the 3.18 trx, modules, and firmware for Linksys
  WRT1900ACS
+
+Package: untangle-linux-image-3.18-linksys-wrt3200acm
+Architecture: armhf
+Description: The Untangle linux image 3.18 for Linksys WRT3200ACM
+ Provides the 3.18 trx, modules, and firmware for Linksys
+ WRT3200ACM
