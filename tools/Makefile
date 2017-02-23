@@ -94,8 +94,8 @@ $(TRX_IMAGE): dtb $(DTB_IMAGE)
 	cat $(KERNEL_IMAGE) $(DTB_IMAGE) > $(TMP_TRX_IMAGE)
 	./trx.sh $(TMP_TRX_IMAGE) $(TRX_IMAGE)
 
-install: install-stamp
-install-stamp: trx modules
+install: trx modules
+	rm -fr $(DESTDIR)
 	# zImage, DTB and uImage for this hardware
 	mkdir -p $(DESTDIR)/boot
 	# TRX and symlink
@@ -114,7 +114,6 @@ install-stamp: trx modules
 	# binary modules from dd-wrt
 	mkdir -p $(DESTDIR)/lib/modules/$(DEBIAN_VERSION)/extra
 	cp binary-assets/modules/* $(DESTDIR)/lib/modules/$(DEBIAN_VERSION)/extra || true
-	touch install-stamp
 
 debian: debian-stamp
 debian-stamp:
