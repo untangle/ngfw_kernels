@@ -21,8 +21,6 @@ include /usr/share/dpkg/default.mk
 %:
 	dh $@
 
-override_dh_install:
+override_dh_auto_install:
 	DTB_NAME=armada-385-linksys-shelby.dtb DESTDIR=debian/untangle-linux-image-3.18-linksys-wrt1900acs make install
-	dh_install -p untangle-linux-image-3.18-linksys-wrt1900acs
 	DTB_NAME=armada-385-linksys-rango.dtb make DESTDIR=debian/untangle-linux-image-3.18-linksys-wrt3200acm install
-	dh_install -p untangle-linux-image-3.18-linksys-wrt3200acm

@@ -1,3 +1,9 @@
+untangle-linux-image-3.18-ddwrt (3.18.42+untangle6) unstable; urgency=medium
+
+  * Use same postinst for both binary packages
+
+ -- Sebastien Delafond <seb@debian.org>  Thu, 23 Feb 2017 17:09:47 +0100
+
 untangle-linux-image-3.18-ddwrt (3.18.42+untangle5) unstable; urgency=medium
 
   * Several binary packages from one given source tree
