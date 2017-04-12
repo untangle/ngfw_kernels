@@ -1,3 +1,10 @@
+untangle-linux-image-3.18-ddwrt (3.18.42+untangle7) unstable; urgency=medium
+
+  * Make sure we use our custom postinsts (including flashing steps) in
+    both binary packages (NGFW-10510)
+
+ -- Sebastien Delafond <seb@debian.org>  Wed, 12 Apr 2017 08:03:37 +0200
+
 untangle-linux-image-3.18-ddwrt (3.18.42+untangle6) unstable; urgency=medium
 
   * Use same postinst for both binary packages
