@@ -3,38 +3,38 @@ untangle-linux-image-3.18-ddwrt (3.18.42+untangle7) unstable; urgency=medium
   * Make sure we use our custom postinsts (including flashing steps) in
     both binary packages (NGFW-10510)
 
- -- Sebastien Delafond <seb@debian.org>  Wed, 12 Apr 2017 08:03:37 +0200
+ -- Sebastien Delafond <sdelafond@gmail.com>  Wed, 12 Apr 2017 08:03:37 +0200
 
 untangle-linux-image-3.18-ddwrt (3.18.42+untangle6) unstable; urgency=medium
 
   * Use same postinst for both binary packages
 
- -- Sebastien Delafond <seb@debian.org>  Thu, 23 Feb 2017 17:09:47 +0100
+ -- Sebastien Delafond <sdelafond@gmail.com>  Thu, 23 Feb 2017 17:09:47 +0100
 
 untangle-linux-image-3.18-ddwrt (3.18.42+untangle5) unstable; urgency=medium
 
   * Several binary packages from one given source tree
 
- -- Sebastien Delafond <seb@debian.org>  Thu, 23 Feb 2017 15:20:35 +0100
+ -- Sebastien Delafond <sdelafond@gmail.com>  Thu, 23 Feb 2017 15:20:35 +0100
 
 untangle-linux-image-3.18-ddwrt (3.18.42+untangle4) unstable; urgency=medium
 
   * Add CONFIG_SWAP=y so we can build kernel on the hardware armel slave
 
- -- Sebastien Delafond <seb@debian.org>  Fri, 10 Feb 2017 14:41:56 +0100
+ -- Sebastien Delafond <sdelafond@gmail.com>  Fri, 10 Feb 2017 14:41:56 +0100
 
 untangle-linux-image-3.18-ddwrt (3.18.42+untangle3) unstable; urgency=medium
 
   * Do not run the postinst with set -e, as sometimes dd doesn't return 0
     when writing to an MTD device (NGFW-10326)
 
- -- Sebastien Delafond <seb@debian.org>  Fri, 10 Feb 2017 09:05:38 +0100
+ -- Sebastien Delafond <sdelafond@gmail.com>  Fri, 10 Feb 2017 09:05:38 +0100
 
 untangle-linux-image-3.18-ddwrt (3.18.42+untangle2) unstable; urgency=medium
 
   * Disable CONFIG_NF_CONNTRACK_RTCACHE (NGFW-10311)
 
- -- Sebastien Delafond <seb@debian.org>  Wed, 08 Feb 2017 09:26:12 +0100
+ -- Sebastien Delafond <sdelafond@gmail.com>  Wed, 08 Feb 2017 09:26:12 +0100
 
 untangle-linux-image-3.18-ddwrt (3.18.42+untangle1) unstable; urgency=medium
 

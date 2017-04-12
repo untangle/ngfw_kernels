@@ -2,19 +2,19 @@ untangle-linux-image-4.4-asus-ac88u (4.4.39-rc1+untangle3) unstable; urgency=med
 
   * Add 3 missing options 
 
- -- Sebastien Delafond <seb@debian.org>  Fri, 17 Feb 2017 12:41:11 +0100
+ -- Sebastien Delafond <sdelafond@gmail.com>  Fri, 17 Feb 2017 12:41:11 +0100
 
 untangle-linux-image-4.4-asus-ac88u (4.4.39-rc1+untangle2) unstable; urgency=medium
 
   * Add CONFIG_SWAP=y so we can build kernels on the armel Asus slave
 
- -- Sebastien Delafond <seb@debian.org>  Fri, 10 Feb 2017 14:57:56 +0100
+ -- Sebastien Delafond <sdelafond@gmail.com>  Fri, 10 Feb 2017 14:57:56 +0100
 
 untangle-linux-image-4.4-asus-ac88u (4.4.39-rc1+untangle1) unstable; urgency=medium
 
   * Rebase on recent 2016-12-15 r30949 build of dd-wrt
 
- -- Sebastien Delafond <seb@debian.org>  Wed, 21 Dec 2016 11:00:50 +0100
+ -- Sebastien Delafond <sdelafond@gmail.com>  Wed, 21 Dec 2016 11:00:50 +0100
 
 untangle-linux-image-4.4-asus-ac88u (4.4.34+untangle1) unstable; urgency=medium
 

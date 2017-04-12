@@ -3,25 +3,25 @@ untangle-linux-image-4.4-turris-omnia (4.4.43+untangle5) unstable; urgency=mediu
   * Bring back CONFIG_CMDLINE, as we cannot guarantee that u-boot config
     is the same on all Turris Omnia devices
 
- -- Sebastien Delafond <seb@debian.org>  Thu, 16 Feb 2017 12:27:45 +0100
+ -- Sebastien Delafond <sdelafond@gmail.com>  Thu, 16 Feb 2017 12:27:45 +0100
 
 untangle-linux-image-4.4-turris-omnia (4.4.43+untangle4) unstable; urgency=medium
 
   * Let the bootloader pass its arguments to the kernel
 
- -- Sebastien Delafond <seb@debian.org>  Thu, 16 Feb 2017 08:16:41 +0100
+ -- Sebastien Delafond <sdelafond@gmail.com>  Thu, 16 Feb 2017 08:16:41 +0100
 
 untangle-linux-image-4.4-turris-omnia (4.4.43+untangle3) unstable; urgency=medium
 
   * Enable Orion watchdog
 
- -- Sebastien Delafond <seb@debian.org>  Wed, 15 Feb 2017 20:00:14 +0100
+ -- Sebastien Delafond <sdelafond@gmail.com>  Wed, 15 Feb 2017 20:00:14 +0100
 
 untangle-linux-image-4.4-turris-omnia (4.4.43+untangle2) unstable; urgency=medium
 
   * Change default kernel parameters to boot from internal flash drive
 
- -- Sebastien Delafond <seb@debian.org>  Wed, 15 Feb 2017 18:43:24 +0100
+ -- Sebastien Delafond <sdelafond@gmail.com>  Wed, 15 Feb 2017 18:43:24 +0100
 
 untangle-linux-image-4.4-turris-omnia (4.4.43+untangle1) unstable; urgency=medium
 
