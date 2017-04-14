@@ -1,3 +1,11 @@
+untangle-linux-image-4.4-turris-omnia (4.4.43+untangle6) unstable; urgency=medium
+
+  * Make sure we're OK even before rebooting to the new kernel, by
+    ensuring /lib/modules/$(uname -r) symlinks to
+    /lib/modules/$package_version
+
+ -- Sebastien Delafond <seb@debian.org>  Fri, 14 Apr 2017 12:16:22 +0200
+
 untangle-linux-image-4.4-turris-omnia (4.4.43+untangle5) unstable; urgency=medium
 
   * Bring back CONFIG_CMDLINE, as we cannot guarantee that u-boot config

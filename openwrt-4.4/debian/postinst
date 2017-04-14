@@ -9,8 +9,10 @@ done
 
 depmod -a ${KERNEL_VERSION}
 
-cd /boot
+# make sure we're OK even before rebooting to the new kernel
+ln -sf $MODULES_DIR /lib/modules/$(uname -r)
 
+cd /boot
 ln -sf zImage-${KERNEL_VERSION} zImage
 ln -sf *.dtb dtb # FIXME: careful if several DTBs
 

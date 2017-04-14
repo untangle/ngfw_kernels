@@ -9,6 +9,9 @@ done
 
 depmod -a ${KERNEL_VERSION}
 
+# make sure we're OK even before rebooting to the new kernel
+ln -sf $MODULES_DIR /lib/modules/$(uname -r)
+
 if [ -e /dev/mtdblock2 ] ; then
   dd if=/boot/vmlinux-${KERNEL_VERSION}.trx of=/dev/mtdblock2 bs=1M 2> /dev/null
 fi

@@ -1,3 +1,11 @@
+untangle-linux-image-3.18-ddwrt (3.18.42+untangle8) unstable; urgency=medium
+
+  * Make sure we're OK even before rebooting to the new kernel, by
+    ensuring /lib/modules/$(uname -r) symlinks to
+    /lib/modules/$package_version
+
+ -- Sebastien Delafond <seb@debian.org>  Fri, 14 Apr 2017 12:12:54 +0200
+
 untangle-linux-image-3.18-ddwrt (3.18.42+untangle7) unstable; urgency=medium
 
   * Make sure we use our custom postinsts (including flashing steps) in
