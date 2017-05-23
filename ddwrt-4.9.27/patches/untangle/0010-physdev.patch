@@ -1,6 +1,17 @@
-diff -ruN linux-4.4.6.orig/net/bridge/br_nf_core.c linux-4.4.6/net/bridge/br_nf_core.c
---- linux-4.4.6.orig/net/bridge/br_nf_core.c	2016-03-17 23:31:50.337629464 -0700
-+++ linux-4.4.6/net/bridge/br_nf_core.c	2016-03-27 21:12:21.115268911 -0700
+From 15f0eb48e6c66275904c64e3a9de80f859ca5b6f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
+Date: Thu, 18 May 2017 11:28:37 +0200
+Subject: [PATCH 10/12] physdev
+
+---
+ net/bridge/br_nf_core.c    | 90 ++++++++++++++++++++++++++++++++++++++++++++++
+ net/netfilter/xt_physdev.c | 47 ++++++++++++------------
+ 2 files changed, 115 insertions(+), 22 deletions(-)
+
+diff --git a/net/bridge/br_nf_core.c b/net/bridge/br_nf_core.c
+index 20cbb72..a7a0da8 100644
+--- a/net/bridge/br_nf_core.c
++++ b/net/bridge/br_nf_core.c
 @@ -19,12 +19,24 @@
  #include <linux/in_route.h>
  #include <linux/inetdevice.h>
@@ -26,7 +37,7 @@ diff -ruN linux-4.4.6.orig/net/bridge/br_nf_core.c linux-4.4.6/net/bridge/br_nf_
  static void fake_update_pmtu(struct dst_entry *dst, struct sock *sk,
  			     struct sk_buff *skb, u32 mtu)
  {
-@@ -93,3 +105,81 @@
+@@ -93,3 +105,81 @@ void br_nf_core_fini(void)
  {
  	dst_entries_destroy(&fake_dst_ops);
  }
@@ -108,9 +119,10 @@ diff -ruN linux-4.4.6.orig/net/bridge/br_nf_core.c linux-4.4.6/net/bridge/br_nf_
 +}
 +
 +EXPORT_SYMBOL(get_outdev);
-diff -ruN linux-4.4.6.orig/net/netfilter/xt_physdev.c linux-4.4.6/net/netfilter/xt_physdev.c
---- linux-4.4.6.orig/net/netfilter/xt_physdev.c	2016-03-17 23:31:51.113636812 -0700
-+++ linux-4.4.6/net/netfilter/xt_physdev.c	2016-03-27 21:13:33.067841475 -0700
+diff --git a/net/netfilter/xt_physdev.c b/net/netfilter/xt_physdev.c
+index bb33598..752e17d 100644
+--- a/net/netfilter/xt_physdev.c
++++ b/net/netfilter/xt_physdev.c
 @@ -15,6 +15,8 @@
  #include <linux/netfilter/x_tables.h>
  #include <net/netfilter/br_netfilter.h>
@@ -120,7 +132,7 @@ diff -ruN linux-4.4.6.orig/net/netfilter/xt_physdev.c linux-4.4.6/net/netfilter/
  MODULE_LICENSE("GPL");
  MODULE_AUTHOR("Bart De Schuymer <bdschuym@pandora.be>");
  MODULE_DESCRIPTION("Xtables: Bridge physical device match");
-@@ -29,6 +31,8 @@
+@@ -29,6 +31,8 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
  	const struct net_device *physdev;
  	unsigned long ret;
  	const char *indev, *outdev;
@@ -129,7 +141,7 @@ diff -ruN linux-4.4.6.orig/net/netfilter/xt_physdev.c linux-4.4.6/net/netfilter/
  
  	/* Not a bridged IP packet or no info available yet:
  	 * LOCAL_OUT/mangle and LOCAL_OUT/nat don't know if
-@@ -41,16 +45,10 @@
+@@ -41,16 +45,10 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
  		if ((info->bitmask & XT_PHYSDEV_OP_ISIN) &&
  		    !(info->invert & XT_PHYSDEV_OP_ISIN))
  			return false;
@@ -147,7 +159,7 @@ diff -ruN linux-4.4.6.orig/net/netfilter/xt_physdev.c linux-4.4.6/net/netfilter/
  	}
  
  	physdev = nf_bridge_get_physoutdev(skb);
-@@ -65,9 +63,7 @@
+@@ -65,9 +63,7 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
  	indev = physdev ? physdev->name : NULL;
  
  	if ((info->bitmask & XT_PHYSDEV_OP_ISIN &&
@@ -158,14 +170,14 @@ diff -ruN linux-4.4.6.orig/net/netfilter/xt_physdev.c linux-4.4.6/net/netfilter/
  		return false;
  
  	if (!(info->bitmask & XT_PHYSDEV_OP_IN))
-@@ -82,8 +78,26 @@
+@@ -82,9 +78,27 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
  	}
  
  match_outdev:
 -	if (!(info->bitmask & XT_PHYSDEV_OP_OUT))
 +    if (!(info->bitmask & (XT_PHYSDEV_OP_ISOUT | XT_PHYSDEV_OP_OUT)))
-+		return true;
-+
+ 		return true;
+ 
 +	m_dev = dev_get_by_name(&init_net, info->physoutdev );
 +
 +	get_outdev(skb, par->out, m_dev);
@@ -177,31 +189,34 @@ diff -ruN linux-4.4.6.orig/net/netfilter/xt_physdev.c linux-4.4.6/net/netfilter/
 +		if ((info->bitmask & XT_PHYSDEV_OP_OUT) &&
 +		    !(info->invert & XT_PHYSDEV_OP_OUT))
 +			return false;
- 		return true;
++		return true;
 +	}
 +
 +	if (info->bitmask & XT_PHYSDEV_OP_ISOUT &&
 +	    (!nf_bridge->physoutdev ^ !!(info->invert & XT_PHYSDEV_OP_ISOUT)))
 +		return false;
- 
++
  	if (!outdev)
  		return false;
-@@ -102,17 +115,7 @@
+ 
+@@ -102,17 +116,6 @@ static int physdev_mt_check(const struct xt_mtchk_param *par)
  	if (!(info->bitmask & XT_PHYSDEV_OP_MASK) ||
  	    info->bitmask & ~XT_PHYSDEV_OP_MASK)
  		return -EINVAL;
--	if (info->bitmask & XT_PHYSDEV_OP_OUT &&
+-	if (info->bitmask & (XT_PHYSDEV_OP_OUT | XT_PHYSDEV_OP_ISOUT) &&
 -	    (!(info->bitmask & XT_PHYSDEV_OP_BRIDGED) ||
 -	     info->invert & XT_PHYSDEV_OP_BRIDGED) &&
 -	    par->hook_mask & ((1 << NF_INET_LOCAL_OUT) |
 -	    (1 << NF_INET_FORWARD) | (1 << NF_INET_POST_ROUTING))) {
--		pr_info("using --physdev-out in the OUTPUT, FORWARD and "
--			"POSTROUTING chains for non-bridged traffic is not "
--			"supported anymore.\n");
+-		pr_info("using --physdev-out and --physdev-is-out are only "
+-			"supported in the FORWARD and POSTROUTING chains with "
+-			"bridged traffic.\n");
 -		if (par->hook_mask & (1 << NF_INET_LOCAL_OUT))
 -			return -EINVAL;
 -	}
-+
  	return 0;
  }
  
+-- 
+2.8.1
+

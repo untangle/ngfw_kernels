@@ -1,0 +1,44 @@
+From f0474005fbbd9be1d3e3f7989fe9852d163f6824 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
+Date: Thu, 18 May 2017 13:12:59 +0200
+Subject: [PATCH 04/12] extensions (non-straightforward porting fix #2):
+ ip_cmsg_send() new signature
+
+---
+ net/ipv4/udp.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/net/ipv4/udp.c b/net/ipv4/udp.c
+index 6c7908a..d26287b 100644
+--- a/net/ipv4/udp.c
++++ b/net/ipv4/udp.c
+@@ -490,7 +490,7 @@ static struct sock *udp4_lib_lookup2(struct net *net,
+ 	return result;
+ }
+ 
+-static int udp_cmsg_send(struct net *net, struct msghdr *msg, struct ipcm_cookie *ipc)
++static int udp_cmsg_send(struct sock *sk, struct msghdr *msg, struct ipcm_cookie *ipc)
+ {
+     struct cmsghdr *cmsg;
+ 
+@@ -513,7 +513,7 @@ static int udp_cmsg_send(struct net *net, struct msghdr *msg, struct ipcm_cookie
+         }
+     }
+ 
+-    return ip_cmsg_send(net,msg,ipc, false);
++    return ip_cmsg_send(sk,msg,ipc, false);
+ }
+ 
+ 
+@@ -996,7 +996,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
+ 	ipc.oif = sk->sk_bound_dev_if;
+ 
+ 	if (msg->msg_controllen) {
+-               err = udp_cmsg_send(sock_net(sk), msg, &ipc);
++               err = udp_cmsg_send(sk, msg, &ipc);
+ 		if (unlikely(err)) {
+ 			kfree(ipc.opt);
+ 			return err;
+-- 
+2.8.1
+

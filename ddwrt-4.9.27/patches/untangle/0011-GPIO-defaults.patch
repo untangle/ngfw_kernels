@@ -1,5 +1,16 @@
---- linux-4.4/arch/arm/mach-brcm-hnd/gpio.c	2016-03-03 11:35:46.000000000 +0100
-+++ gpio.c	2016-05-12 19:18:49.110896890 +0200
+From 10be44a8ab6959230cf5bc455113cb39fab5aaf8 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
+Date: Thu, 18 May 2017 11:29:49 +0200
+Subject: [PATCH 11/12] GPIO defaults
+
+---
+ arch/arm/mach-brcm-hnd/gpio.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-brcm-hnd/gpio.c b/arch/arm/mach-brcm-hnd/gpio.c
+index 48ad476..3742112 100644
+--- a/arch/arm/mach-brcm-hnd/gpio.c
++++ b/arch/arm/mach-brcm-hnd/gpio.c
 @@ -26,6 +26,18 @@
  #include "ext_io.h"
  
@@ -19,7 +30,7 @@
  static int gpio_major;
  static struct {
  	char *name;
-@@ -197,9 +209,10 @@
+@@ -190,9 +202,10 @@ static int __init gpio_init(void)
  	    && nvram_match("melco_id", "RD_BB13049")) {
  		printk(KERN_EMERG "Buffalo WXR-1900DHP\n");
  		isbuffalowxr = 1;
@@ -31,3 +42,6 @@
  	}
  
  	if ((!strncmp(nvram_safe_get("boardnum"),"2013",4) || !strncmp(nvram_safe_get("boardnum"),"2014",4)) && nvram_match("boardtype", "0x0646")
+-- 
+2.8.1
+

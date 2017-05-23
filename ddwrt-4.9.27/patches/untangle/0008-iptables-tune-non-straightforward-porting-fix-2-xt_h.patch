@@ -1,0 +1,50 @@
+From 5801fb36ffb5326046b473ab809d3ff52e2a9585 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
+Date: Thu, 18 May 2017 14:05:56 +0200
+Subject: [PATCH 08/12] iptables tune (non-straightforward porting fix #2):
+ xt_hook_link and xt_hook_unlink are gone (inspired from diff
+ linux-4.[49]/net/ipv4/netfilter/iptable_filter.c)
+
+---
+ net/ipv4/netfilter/iptable_tune.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
+
+diff --git a/net/ipv4/netfilter/iptable_tune.c b/net/ipv4/netfilter/iptable_tune.c
+index b815939..749e956 100644
+--- a/net/ipv4/netfilter/iptable_tune.c
++++ b/net/ipv4/netfilter/iptable_tune.c
+@@ -70,24 +70,22 @@ static int __init iptable_tune_init(void)
+ {
+ 	int ret;
+ 
+-	ret = register_pernet_subsys(&iptable_tune_net_ops);
+-	if (ret < 0)
+-		return ret;
+-
+-	/* Register hooks */
+-	tune_ops = xt_hook_link(&packet_tuner, iptable_tune_hook);
++	tune_ops = xt_hook_ops_alloc(&packet_tuner, iptable_tune_hook);
+ 	if (IS_ERR(tune_ops)) {
+-		ret = PTR_ERR(tune_ops);
+-		unregister_pernet_subsys(&iptable_tune_net_ops);
++		return PTR_ERR(tune_ops);
+ 	}
+ 
++	ret = register_pernet_subsys(&iptable_tune_net_ops);
++	if (ret < 0)
++		kfree(tune_ops);
++
+ 	return ret;
+ }
+ 
+ static void __exit iptable_tune_exit(void)
+ {
+-	xt_hook_unlink(&packet_tuner, tune_ops);
+ 	unregister_pernet_subsys(&iptable_tune_net_ops);
++	kfree(tune_ops);
+ }
+ 
+ module_init(iptable_tune_init);
+-- 
+2.8.1
+
