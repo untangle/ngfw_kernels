@@ -1,0 +1,4 @@
+0010-config_disable_module_stripped.patch
+0020-config_disable_dhd_and_wl.patch
+0030-config_disable_rtl8365.patch
+0040-config_add_missing_ext_fs_configs.patch
