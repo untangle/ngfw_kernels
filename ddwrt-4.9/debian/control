@@ -7,6 +7,6 @@ Build-Depends: debhelper (>> 3.0.0)
 Standards-Version: 3.8.0
 
 Package: untangle-linux-image-4.9-linksys-wrt3200acm
-Architecture: armel
-Description: The Untangle linux image 4.4 for Linksys WRT3200ACM
- Provides the 4.4 trx, modules, and firmware for Linksys WRT3200ACM
+Architecture: armhf
+Description: The Untangle linux image 4.9 for Linksys WRT3200ACM
+ Provides the 4.9 trx, modules, and firmware for Linksys WRT3200ACM
