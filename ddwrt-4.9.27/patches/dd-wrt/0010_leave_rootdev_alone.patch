@@ -1,0 +1,14 @@
+--- linux-3.18/init/do_mounts.c.bak	2016-08-25 19:24:54.415035454 +0200
++++ linux-3.18/init/do_mounts.c	2016-08-25 19:25:06.190837831 +0200
+@@ -299,11 +299,7 @@
+ 
+ int __init root_dev_setup(char *line)
+ {
+-#ifdef CONFIG_ARCH_MVEBU
+-	strcpy(saved_root_name, "/dev/ubiblock0_0");
+-#else
+ 	strlcpy(saved_root_name, line, sizeof(saved_root_name));
+-#endif
+ 	return 1;
+ }
+ 

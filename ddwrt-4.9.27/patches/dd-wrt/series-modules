@@ -1,4 +1,6 @@
 0010-config_disable_module_stripped.patch
-0020-config_disable_dhd_and_wl.patch
-0030-config_disable_rtl8365.patch
-0040-config_add_missing_ext_fs_configs.patch
+0050-use_SLUB_instead_of_SLAB.patch
+0100_add_missing_config_defaults.patch
+0110_enable_orion_usb_drivers.patch
+0120_enable_usb_xhci_mvebu.patch
+0200_NGFW-10311_disable_conntrack_rtcache.patch
