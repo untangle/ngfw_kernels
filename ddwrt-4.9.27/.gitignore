@@ -4,7 +4,7 @@ linux-4.*
 *bz2
 *xz
 tmp
-debian/*log
+debian/*.log
 debian/*debhelper
 debian/*substvars
 debian/untangle-linux-image-3.18-linksys-wrt1900acs
