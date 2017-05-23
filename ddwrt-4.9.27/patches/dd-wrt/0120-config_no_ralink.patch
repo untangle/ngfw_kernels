@@ -1,9 +1,9 @@
---- linux-4.4/drivers/net/wireless/Kconfig	2016-03-03 19:36:44.000000000 +0100
-+++ linux-4.4/drivers/net/wireless/Kconfig.bak	2016-11-23 12:03:37.413682908 +0100
-@@ -284,16 +284,16 @@
- source "drivers/net/wireless/zd1211rw/Kconfig"
- source "drivers/net/wireless/mwifiex/Kconfig"
- source "drivers/net/wireless/cw1200/Kconfig"
+--- linux-4.9/drivers/net/wireless/Kconfig.bak	2017-05-17 15:16:11.898959535 +0200
++++ linux-4.9/drivers/net/wireless/Kconfig	2017-05-17 15:17:10.057983107 +0200
+@@ -28,16 +28,16 @@
+ source "drivers/net/wireless/mediatek/Kconfig"
+ source "drivers/net/wireless/ralink/Kconfig"
+ source "drivers/net/wireless/realtek/Kconfig"
 -if RALINK_DEVICE
 -source "drivers/net/wireless/rt3352/rt2860v2_ap/Kconfig"
 -source "drivers/net/wireless/rt3352/rt2860v2_sta/Kconfig"
@@ -25,5 +25,5 @@
 +# source "drivers/net/wireless/rt7612/rlt_wifi/Kconfig"
 +# endif
  source "drivers/net/wireless/rsi/Kconfig"
- 
- endif # WLAN
+ source "drivers/net/wireless/st/Kconfig"
+ source "drivers/net/wireless/ti/Kconfig"
