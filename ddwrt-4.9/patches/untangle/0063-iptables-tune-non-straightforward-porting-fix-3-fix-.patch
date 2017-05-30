@@ -1,0 +1,75 @@
+From 1ef14e24ed10fa24743d08d30d9b60e50a23d09d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
+Date: Thu, 18 May 2017 17:02:04 +0200
+Subject: [PATCH]  iptables tune (non-straightforward porting fix #3): fix
+ kernel panic (more inspiration from
+ linux-4.9/net/ipv4/netfilter/iptable_filter.c)
+
+---
+ net/ipv4/netfilter/iptable_tune.c | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
+
+diff --git a/net/ipv4/netfilter/iptable_tune.c b/net/ipv4/netfilter/iptable_tune.c
+index 749e956..ce86ab1 100644
+--- a/net/ipv4/netfilter/iptable_tune.c
++++ b/net/ipv4/netfilter/iptable_tune.c
+@@ -12,9 +12,11 @@
+ #include <linux/ip.h>
+ #include <net/ip.h>
+ 
+-#define TUNE_VALID_HOOKS ((1 << NF_INET_POST_ROUTING) | (1 << NF_INET_LOCAL_OUT))
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Untangle Inc. www.untangle.com");
++MODULE_DESCRIPTION("iptables tune table");
+ 
+-static struct nf_hook_ops *tune_ops __read_mostly;
++#define TUNE_VALID_HOOKS ((1 << NF_INET_POST_ROUTING) | (1 << NF_INET_LOCAL_OUT))
+ 
+ static const struct xt_table packet_tuner = {
+ 	.name		= "tune",
+@@ -37,27 +39,29 @@ iptable_tune_hook(void *priv, struct sk_buff *skb,
+ 	return ipt_do_table(skb, state, state->net->ipv4.iptable_tune);
+ }
+ 
+-
++static struct nf_hook_ops *tune_ops __read_mostly;
+ 
+ static int __net_init iptable_tune_net_init(struct net *net)
+ {
+ 	struct ipt_replace *repl;
++	int err;
+ 
+ 	repl = ipt_alloc_initial_table(&packet_tuner);
+ 	if (repl == NULL)
+ 		return -ENOMEM;
+ 
+-	net->ipv4.iptable_tune = ipt_register_table(net, &packet_tuner, repl,
+-						    tune_ops,
+-						    &net->ipv4.iptable_filter);
++	err = ipt_register_table(net, &packet_tuner, repl,
++				 tune_ops,
++				 &net->ipv4.iptable_tune);
+ 	kfree(repl);
+-	return PTR_ERR_OR_ZERO(net->ipv4.iptable_tune);
++	return err;
+ }
+ 
+-
+-
+ static void __net_exit iptable_tune_net_exit(struct net *net)
+ {
++	if (!net->ipv4.iptable_tune)
++		return;
++	net->ipv4.iptable_tune = NULL;
+ 	ipt_unregister_table(net, net->ipv4.iptable_tune, tune_ops);
+ }
+ 
+@@ -90,5 +94,3 @@ static void __exit iptable_tune_exit(void)
+ 
+ module_init(iptable_tune_init);
+ module_exit(iptable_tune_exit);
+-
+-MODULE_LICENSE("GPL");
+-- 
+2.8.1
+
