@@ -13,8 +13,8 @@ depmod -a ${KERNEL_VERSION}
 ln -sf $MODULES_DIR /lib/modules/$(uname -r)
 
 if [ -e /dev/mtdblock4 ] ; then
-  dd if=/boot/vmlinux-${KERNEL_VERSION}.trx of=/dev/mtdblock4 bs=1M 2> /dev/null
+  dd if=/boot/vmlinux-${KERNEL_VERSION}.trx of=/dev/mtdblock5 bs=1M 2> /dev/null
 fi
 if [ -e /dev/mtdblock6 ] ; then
-  dd if=/boot/vmlinux-${KERNEL_VERSION}.trx of=/dev/mtdblock6 bs=1M 2> /dev/null
+  dd if=/boot/vmlinux-${KERNEL_VERSION}.trx of=/dev/mtdblock7 bs=1M 2> /dev/null
 fi
