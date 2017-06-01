@@ -1,3 +1,9 @@
+untangle-linux-image-4.9-linksys-wrt3200acm (4.9.28+untangle4) unstable; urgency=medium
+
+  * wrt3200acm uses mtdblock[57] for kernels
+
+ -- Sebastien Delafond <seb@untangle.com>  Thu, 01 Jun 2017 17:36:42 +0200
+
 untangle-linux-image-4.9-linksys-wrt3200acm (4.9.28+untangle3) unstable; urgency=medium
 
   * Add missing iptables tune patch
