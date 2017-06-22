@@ -25,14 +25,14 @@ diff -u -N -r ./debian/config/amd64/untangle/defines ./debian/config/amd64/untan
 +install-stem: vmlinuz
 +
 +[relations]
-+headers%gcc-4.8: linux-compiler-gcc-4.8-x86
++headers%gcc-6.0: linux-compiler-gcc-6.0-x86
 +
 +[amd64_description]
 +hardware: 64-bit PCs
 +hardware-long: PCs with AMD64, Intel 64 or VIA Nano processors
 +
 +[amd64_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle, linux-image-3.2-untangle-amd64
++provides: untangle-linux-image, linux-untangle, linux-image-4.9-untangle, linux-image-4.9-untangle-amd64
 +configs:
 + kernelarch-x86/config-arch-64
 diff -u -N -r ./debian/config/armel/defines ./debian/config/armel/defines
@@ -68,14 +68,14 @@ diff -u -N -r ./debian/config/armel/untangle/defines ./debian/config/armel/untan
 +install-stem: vmlinuz
 +
 +[relations]
-+headers%gcc-4.8: linux-compiler-gcc-4.8-arm
++headers%gcc-6.0: linux-compiler-gcc-6.0-arm
 +
 +[ixp4xx_description]
 +hardware: IXP4xx
 +hardware-long: IXP4xx based systems (Linksys NSLU2, etc)
 +
 +[ixp4xx_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle
++provides: untangle-linux-image, linux-untangle, linux-image-4.9-untangle
 +# Linksys NSLU2: 1441792 - 16 - 16 = 1441760
 +check-size: 1441760
 +configs:
@@ -87,7 +87,7 @@ diff -u -N -r ./debian/config/armel/untangle/defines ./debian/config/armel/untan
 +hardware-long: Marvell Kirkwood based systems (SheevaPlug, QNAP TS-119/TS-219, etc)
 +
 +[kirkwood_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle
++provides: untangle-linux-image, linux-untangle, linux-image-4.9-untangle
 +recommends: uboot-mkimage
 +# SheevaPlug: 4194304 - 8 - 64 = 4194232
 +# QNAP TS-119/TS-219: 2097152 - 8 - 64 = 2097080
@@ -98,7 +98,7 @@ diff -u -N -r ./debian/config/armel/untangle/defines ./debian/config/armel/untan
 +hardware-long: Marvell Orion 5181, 5182 and 5281 based systems (QNAP TS-109/TS-209, etc)
 +
 +[orion5x_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle
++provides: untangle-linux-image, linux-untangle, linux-image-4.9-untangle
 +# D-Link DNS-323: 1572864 - 8 - 64 = 1572792
 +# HP Media Vault mv2120: ca 2 MB
 +# QNAP TS-109/TS-209 & TS-409: 2097152 - 8 - 64 = 2097080
@@ -112,7 +112,7 @@ diff -u -N -r ./debian/config/armel/untangle/defines ./debian/config/armel/untan
 +hardware-long: Versatile systems (PB, AB, Qemu)
 +
 +[versatile_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle
++provides: untangle-linux-image, linux-untangle, linux-image-4.9-untangle
 diff -u -N -r ./debian/config/armhf/defines ./debian/config/armhf/defines
 --- ./debian/config/armhf/defines	2014-09-07 21:58:05.000000000 -0700
 +++ ./debian/config/armhf/defines	2014-12-11 05:33:37.000000000 -0800
@@ -142,7 +142,7 @@ diff -u -N -r ./debian/config/armhf/untangle/defines ./debian/config/armhf/untan
 +install-stem: vmlinuz
 +
 +[relations]
-+headers%gcc-4.8: linux-compiler-gcc-4.8-arm
++headers%gcc-6.0: linux-compiler-gcc-6.0-arm
 +
 +[armmp_description]
 +hardware: ARMv7 multiplatform compatible SoCs
@@ -246,7 +246,7 @@ diff -u -N -r ./debian/config/i386/untangle/defines ./debian/config/i386/untangl
 +install-stem: vmlinuz
 +
 +[relations]
-+headers%gcc-4.8: linux-compiler-gcc-4.8-x86
++headers%gcc-6.0: linux-compiler-gcc-6.0-x86
 +
 +[586_description]
 +hardware: older PCs
@@ -267,7 +267,7 @@ diff -u -N -r ./debian/config/i386/untangle/defines ./debian/config/i386/untangl
 +parts: pae
 +
 +[686-pae_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-3.2-untangle, linux-image-3.2-untangle-686-pae
++provides: untangle-linux-image, linux-untangle, linux-image-4.9-untangle, linux-image-4.9-untangle-686-pae
 +configs:
 + kernelarch-x86/config-arch-32
 + i386/config.686-pae
