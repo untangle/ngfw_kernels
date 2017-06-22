@@ -1,0 +1,28 @@
+From 94f60afa8a49c4f4cd745f891d669f8b95459d74 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
+Date: Thu, 18 May 2017 12:18:56 +0200
+Subject: [PATCH 03/12] extensions (non-straightforward porting fix #1):
+ comment out BUILD_BUG_ON() compile-time check
+
+---
+ net/ipv4/tcp.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/ipv4/tcp.c b/net/ipv4/tcp.c
+index eb142ca..474e737 100644
+--- a/net/ipv4/tcp.c
++++ b/net/ipv4/tcp.c
+@@ -3286,8 +3286,8 @@ void __init tcp_init(void)
+ 	unsigned long limit;
+ 	unsigned int i;
+ 
+-	BUILD_BUG_ON(sizeof(struct tcp_skb_cb) >
+-		     FIELD_SIZEOF(struct sk_buff, cb));
++	/* BUILD_BUG_ON(sizeof(struct tcp_skb_cb) > */
++	/* 	     FIELD_SIZEOF(struct sk_buff, cb)); */
+ 
+ 	percpu_counter_init(&tcp_sockets_allocated, 0, GFP_KERNEL);
+ 	percpu_counter_init(&tcp_orphan_count, 0, GFP_KERNEL);
+-- 
+2.8.1
+

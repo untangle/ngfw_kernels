@@ -1,0 +1,55 @@
+From 99a2182481d5be262280a9b3a710427523de5f95 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
+Date: Thu, 18 May 2017 11:30:13 +0200
+Subject: [PATCH 12/12] ifconfig
+
+---
+ drivers/net/bonding/bond_sysfs.c | 7 +------
+ include/uapi/linux/if.h          | 6 ------
+ 2 files changed, 1 insertion(+), 12 deletions(-)
+
+diff --git a/drivers/net/bonding/bond_sysfs.c b/drivers/net/bonding/bond_sysfs.c
+index 4dfb1e0..e23c3ed 100644
+--- a/drivers/net/bonding/bond_sysfs.c
++++ b/drivers/net/bonding/bond_sysfs.c
+@@ -192,12 +192,7 @@ static ssize_t bonding_show_slaves(struct device *d,
+ 			res += sprintf(buf + res, "++more++ ");
+ 			break;
+ 		}
+-		if (bond->params.mode == BOND_MODE_WEIGHTED_RR) {
+-			res += sprintf(buf + res, "%s %d ", slave->dev->name,
+-					slave->weight);
+-		} else {
+-			res += sprintf(buf + res, "%s ", slave->dev->name);
+-		}
++		res += sprintf(buf + res, "%s ", slave->dev->name);
+ 	}
+ 
+ 	rtnl_unlock();
+diff --git a/include/uapi/linux/if.h b/include/uapi/linux/if.h
+index c24578a..a90d6b9 100644
+--- a/include/uapi/linux/if.h
++++ b/include/uapi/linux/if.h
+@@ -245,10 +245,6 @@ struct ifreq {
+ 		char	ifru_newname[IFNAMSIZ];
+ 		void __user *	ifru_data;
+ 		struct	if_settings ifru_settings;
+-		struct {
+-			__u16 weight;
+-			char slave[IFNAMSIZ];	
+-		} ifru_weight;
+ 	} ifr_ifru;
+ };
+ #endif /* __UAPI_DEF_IF_IFREQ */
+@@ -258,8 +254,6 @@ struct ifreq {
+ #define	ifr_addr	ifr_ifru.ifru_addr	/* address		*/
+ #define	ifr_dstaddr	ifr_ifru.ifru_dstaddr	/* other end of p-p lnk	*/
+ #define	ifr_broadaddr	ifr_ifru.ifru_broadaddr	/* broadcast address	*/
+-#define	ifr_weight_weight ifr_ifru.ifru_weight.weight /* bonding weight*/
+-#define	ifr_weight_slave  ifr_ifru.ifru_weight.slave  /* bonding weight slave */
+ #define	ifr_netmask	ifr_ifru.ifru_netmask	/* interface net mask	*/
+ #define	ifr_flags	ifr_ifru.ifru_flags	/* flags		*/
+ #define	ifr_metric	ifr_ifru.ifru_ivalue	/* metric		*/
+-- 
+2.8.1
+

@@ -1,0 +1,175 @@
+From 13b260c2ecab1b3d61fcf43d26bd0f9ca0df35e4 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
+Date: Thu, 18 May 2017 11:26:11 +0200
+Subject: [PATCH 06/12] iptables tune
+
+---
+ include/net/netns/ipv4.h            |  1 +
+ include/uapi/linux/netfilter_ipv4.h |  3 +-
+ net/ipv4/netfilter/Kconfig          | 12 +++++
+ net/ipv4/netfilter/Makefile         |  1 +
+ net/ipv4/netfilter/iptable_tune.c   | 94 +++++++++++++++++++++++++++++++++++++
+ 5 files changed, 110 insertions(+), 1 deletion(-)
+ create mode 100644 net/ipv4/netfilter/iptable_tune.c
+
+diff --git a/include/net/netns/ipv4.h b/include/net/netns/ipv4.h
+index 7adf438..0b07a2d 100644
+--- a/include/net/netns/ipv4.h
++++ b/include/net/netns/ipv4.h
+@@ -60,6 +60,7 @@ struct netns_ipv4 {
+ 	struct xt_table		*iptable_filter;
+ 	struct xt_table		*iptable_mangle;
+ 	struct xt_table		*iptable_raw;
++	struct xt_table		*iptable_tune;
+ 	struct xt_table		*arptable_filter;
+ #ifdef CONFIG_SECURITY
+ 	struct xt_table		*iptable_security;
+diff --git a/include/uapi/linux/netfilter_ipv4.h b/include/uapi/linux/netfilter_ipv4.h
+index 91ddd1f..0249c7d 100644
+--- a/include/uapi/linux/netfilter_ipv4.h
++++ b/include/uapi/linux/netfilter_ipv4.h
+@@ -67,7 +67,8 @@ enum nf_ip_hook_priorities {
+ 	NF_IP_PRI_NAT_SRC = 100,
+ 	NF_IP_PRI_SELINUX_LAST = 225,
+ 	NF_IP_PRI_CONNTRACK_HELPER = 300,
+-	NF_IP_PRI_CONNTRACK_CONFIRM = INT_MAX,
++	NF_IP_PRI_CONNTRACK_CONFIRM = INT_MAX - 10,
++	NF_IP_PRI_TUNE = INT_MAX - 5,
+ 	NF_IP_PRI_LAST = INT_MAX,
+ };
+ 
+diff --git a/net/ipv4/netfilter/Kconfig b/net/ipv4/netfilter/Kconfig
+index be823ac..2b04200 100644
+--- a/net/ipv4/netfilter/Kconfig
++++ b/net/ipv4/netfilter/Kconfig
+@@ -432,3 +432,15 @@ endif # IP_NF_ARPTABLES
+ 
+ endmenu
+ 
++# tune + specific targets
++config IP_NF_TUNE
++	tristate  'tune table support (adds a chain after POSTROUTING nat)'
++	depends on IP_NF_IPTABLES
++	help
++	  This option adds a `tune' table to iptables. This table is the very
++	  last in the netfilter framework and hooks in at the POSTROUTING
++	  chain.
++	
++	  If you want to compile it as a module, say M here and read
++	  <file:Documentation/modules.txt>.  If unsure, say `N'.
++
+diff --git a/net/ipv4/netfilter/Makefile b/net/ipv4/netfilter/Makefile
+index 7923134..18cfad7 100644
+--- a/net/ipv4/netfilter/Makefile
++++ b/net/ipv4/netfilter/Makefile
+@@ -49,6 +49,7 @@ obj-$(CONFIG_IP_NF_FILTER) += iptable_filter.o
+ obj-$(CONFIG_IP_NF_MANGLE) += iptable_mangle.o
+ obj-$(CONFIG_IP_NF_NAT) += iptable_nat.o
+ obj-$(CONFIG_IP_NF_RAW) += iptable_raw.o
++obj-$(CONFIG_IP_NF_TUNE) += iptable_tune.o
+ obj-$(CONFIG_IP_NF_SECURITY) += iptable_security.o
+ 
+ # matches
+diff --git a/net/ipv4/netfilter/iptable_tune.c b/net/ipv4/netfilter/iptable_tune.c
+new file mode 100644
+index 0000000..934cce2
+--- /dev/null
++++ b/net/ipv4/netfilter/iptable_tune.c
+@@ -0,0 +1,94 @@
++/* 
++ * 
++ * (C) 2015 David Han <dhan@untangle.com>
++ *
++ * Port old version tune table to kernel 3.16 version
++ */
++
++#include <linux/module.h>
++#include <linux/netfilter.h>
++#include <linux/netfilter_ipv4.h>
++#include <linux/netfilter_ipv4/ip_tables.h>
++#include <linux/ip.h>
++#include <net/ip.h>
++
++#define TUNE_VALID_HOOKS ((1 << NF_INET_POST_ROUTING) | (1 << NF_INET_LOCAL_OUT))
++
++static struct nf_hook_ops *tune_ops __read_mostly;
++
++static const struct xt_table packet_tuner = {
++	.name		= "tune",
++	.valid_hooks	= TUNE_VALID_HOOKS,
++	.me		= THIS_MODULE,
++	.af		= NFPROTO_IPV4,
++	.priority = NF_IP_PRI_TUNE,
++};
++
++static unsigned int
++iptable_tune_hook(void *priv, struct sk_buff *skb,
++		    const struct nf_hook_state *state)
++{
++	if (state->hook == NF_INET_LOCAL_OUT &&
++	    (skb->len < sizeof(struct iphdr) ||
++	     ip_hdrlen(skb) < sizeof(struct iphdr)))
++		/* root is playing with raw sockets. */
++		return NF_ACCEPT;
++
++	return ipt_do_table(skb, state, state->net->ipv4.iptable_tune);
++}
++
++
++
++static int __net_init iptable_tune_net_init(struct net *net)
++{
++	struct ipt_replace *repl;
++
++	repl = ipt_alloc_initial_table(&packet_tuner);
++	if (repl == NULL)
++		return -ENOMEM;
++
++	net->ipv4.iptable_tune = ipt_register_table(net, &packet_tuner, repl);
++	kfree(repl);
++	return PTR_ERR_OR_ZERO(net->ipv4.iptable_tune);
++}
++
++
++
++static void __net_exit iptable_tune_net_exit(struct net *net)
++{
++	ipt_unregister_table(net, net->ipv4.iptable_tune);
++}
++
++static struct pernet_operations iptable_tune_net_ops = {
++	.init	= iptable_tune_net_init,
++	.exit	= iptable_tune_net_exit,
++};
++
++static int __init iptable_tune_init(void)
++{
++	int ret;
++
++	ret = register_pernet_subsys(&iptable_tune_net_ops);
++	if (ret < 0)
++		return ret;
++
++	/* Register hooks */
++	tune_ops = xt_hook_link(&packet_tuner, iptable_tune_hook);
++	if (IS_ERR(tune_ops)) {
++		ret = PTR_ERR(tune_ops);
++		unregister_pernet_subsys(&iptable_tune_net_ops);
++	}
++
++	return ret;
++}
++
++static void __exit iptable_tune_exit(void)
++{
++	xt_hook_unlink(&packet_tuner, tune_ops);
++	unregister_pernet_subsys(&iptable_tune_net_ops);
++}
++
++module_init(iptable_tune_init);
++module_exit(iptable_tune_exit);
++
++MODULE_LICENSE("GPL");
+-- 
+2.8.1
+
