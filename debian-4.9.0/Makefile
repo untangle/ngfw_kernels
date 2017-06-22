@@ -1,4 +1,4 @@
-BUILDDEPS=debhelper cpio module-init-tools python xmlto quilt kernel-wedge kmod python python-six lzma patchutils bc gcc-4.8 xz-utils
+BUILDDEPS=debhelper cpio module-init-tools python xmlto quilt kernel-wedge kmod python python-six lzma patchutils bc gcc-6.0 xz-utils
 
 REPOSITORY=stretch
 
@@ -13,20 +13,15 @@ ORIG_TARBALL_URL := http://download.untangle.com/kernels/$(ORIG_TARBALL)
 DEBIAN_TARBALL := linux_$(KVER)-$(KDEBVER).debian.tar.xz
 DEBIAN_TARBALL_URL := http://download.untangle.com/kernels/$(DEBIAN_TARBALL)
 
-KUPVER=${KDEBVER}
 PACKPFX=linux_${KVER}
 KERNEL_DIR=linux-${KVER}
-KDSC=${PACKPFX}-${KUPVER}.dsc
-KOURDIFF=untangle-debian.diff
-KOURPATCH=${KOURDIFF}.gz
+KDSC=${PACKPFX}-${DEBVER}.dsc
 
 UNTANGLE_PATCH_SERIES := patches/untangle/series
 DEBIAN_PATCH_SERIES := patches/debian/series
 
 MACHINE:=$(shell dpkg-architecture -qDEB_BUILD_ARCH)
 NPROCEXP:=$(shell echo "$$((1+`grep -c processor /proc/cpuinfo`))")
-TEMPDIR:=$(shell mktemp)
-TEMPDIR2:=$(shell mktemp)
 
 ifeq ($(MACHINE),armhf)
   NPROCEXP := 1
@@ -52,8 +47,6 @@ patch-debian-stamp: extract-stamp patches/debian/*
 	  echo "Applying $$patch" ; \
 	  patch -d $(KERNEL_DIR) -p1 < patches/debian/$$patch || exit 1 ; \
 	done < $(DEBIAN_PATCH_SERIES)
-	# # FIXME: prolly already in basediff patch ?
-	# cat $(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $(CONFIG_DEST_KERNEL)
 	touch $@
 
 patch-untangle: patch-untangle-stamp
@@ -65,9 +58,8 @@ patch-untangle-stamp: extract-stamp patches/untangle/*
 	touch $@
 
 patch: patch-debian patch-untangle
-	touch $(KERNEL_DIR}/debian/patches/series-untangle
 	# FIXME: make this a debian patch
-	perl -i -pe 's/fuzz=0/fuzz=3/' ${KERNEL_DIR}/debian/rules.{defs,gen,real}*
+	perl -i -pe 's/fuzz=0/fuzz=3 || true/' ${KERNEL_DIR}/debian/rules.{defs,gen,real}*
 
 pkgs:	kpkg-arch kpkg-indep
 
@@ -89,7 +81,6 @@ ${KERNEL_DIR}/debian/control-real: force patch
 	cd ${KERNEL_DIR};make -f debian/rules debian/control-real || true
 
 clean::
-	rm -f ${KOURPATCH} ${KOURDIFF}
 	rm -rf ${KERNEL_DIR}
 	rm -f *.deb modules/*.deb
 	rm -f *.udeb modules/*.udeb
