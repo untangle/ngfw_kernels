@@ -1,1 +1,2 @@
-untangle-debian.basediff
+0100-additional-defines.patch
+0200-additional-kernel-config.patch
