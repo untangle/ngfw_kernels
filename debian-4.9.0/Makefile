@@ -65,6 +65,7 @@ patch-untangle-stamp: extract-stamp patches/untangle/*
 	touch $@
 
 patch: patch-debian patch-untangle
+	touch $(KERNEL_DIR}/debian/patches/series-untangle
 	# FIXME: make this a debian patch
 	perl -i -pe 's/fuzz=0/fuzz=3/' ${KERNEL_DIR}/debian/rules.{defs,gen,real}*
 
