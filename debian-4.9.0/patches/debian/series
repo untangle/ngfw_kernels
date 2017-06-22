@@ -1,2 +1,5 @@
-0100-additional-defines.patch
-0200-additional-kernel-config.patch
+0100-arch-indep-defines.patch
+0110-armhf-defines.patch
+0120-i386-defines.patch
+0130-amd64-defines.patch
+0200-kernel-config.patch

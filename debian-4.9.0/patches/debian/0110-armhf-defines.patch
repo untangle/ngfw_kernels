@@ -1,0 +1,42 @@
+diff -u -N -r ./debian/config/armhf/defines ./debian/config/armhf/defines
+--- ./debian/config/armhf/defines	2014-09-07 21:58:05.000000000 -0700
++++ ./debian/config/armhf/defines	2014-12-11 05:33:37.000000000 -0800
+@@ -1,4 +1,6 @@
+ [base]
++featuresets:
++ untangle
+ flavours:
+  armmp
+  armmp-lpae
+diff -u -N -r ./debian/config/armhf/untangle/defines ./debian/config/armhf/untangle/defines
+--- ./debian/config/armhf/untangle/defines	1969-12-31 16:00:00.000000000 -0800
++++ ./debian/config/armhf/untangle/defines	2014-12-11 05:33:37.000000000 -0800
+@@ -0,0 +1,28 @@
++[base]
++flavours:
++kernel-arch: arm
++
++[build]
++image-file: arch/arm/boot/zImage
++
++[image]
++suggests: fdutils
++configs:
++ kernelarch-arm/config
++ armhf/config
++install-stem: vmlinuz
++
++[relations]
++headers%gcc-6.0: linux-compiler-gcc-6.0-arm
++
++[armmp_description]
++hardware: ARMv7 multiplatform compatible SoCs
++hardware-long: ARMv7 multiplatform kernel. See
++  https://wiki.debian.org/DebianKernel/ARMMP for details of supported
++  platforms
++
++[armmp-lpae_description]
++hardware: ARMv7 multiplatform compatible SoCs supporting LPAE
++hardware-long: ARMv7 multiplatform kernel supporting LPAE. See
++  https://wiki.debian.org/DebianKernel/ARMMP for details of supported
++  platforms.
