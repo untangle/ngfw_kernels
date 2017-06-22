@@ -52,8 +52,8 @@ patch-debian-stamp: extract-stamp patches/debian/*
 	  echo "Applying $$patch" ; \
 	  patch -d $(KERNEL_DIR) -p1 < patches/debian/$$patch || exit 1 ; \
 	done < $(DEBIAN_PATCH_SERIES)
-	# FIXME: prolly already in basediff patch ?
-	cat $(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $(CONFIG_DEST_KERNEL)
+	# # FIXME: prolly already in basediff patch ?
+	# cat $(CONFIG_ORIG) $(CONFIG_UNTANGLE_ORIG) >| $(CONFIG_DEST_KERNEL)
 	touch $@
 
 patch-untangle: patch-untangle-stamp
@@ -66,7 +66,7 @@ patch-untangle-stamp: extract-stamp patches/untangle/*
 
 patch: patch-debian patch-untangle
 	# FIXME: make this a debian patch
-	perl -i -pe 's/fuzz=0/fuzz=3/' ${KERNEL_DIR}/debian/rules*
+	perl -i -pe 's/fuzz=0/fuzz=3/' ${KERNEL_DIR}/debian/rules.{defs,gen,real}*
 
 pkgs:	kpkg-arch kpkg-indep
 
