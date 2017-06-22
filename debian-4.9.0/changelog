@@ -1,0 +1,5 @@
+linux (4.9.30-2+untangle1) unstable; urgency=medium
+
+  * First Untangle version of Stretch's 4.9.30
+
+ -- Sebastien Delafond <seb@debian.org>  Wed, 21 Jun 2017 10:11:05 +0200
