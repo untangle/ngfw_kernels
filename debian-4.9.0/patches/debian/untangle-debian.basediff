@@ -158,22 +158,18 @@ diff -u -N -r ./debian/config/armhf/untangle/defines ./debian/config/armhf/untan
 diff -u -N -r ./debian/config/defines ./debian/config/defines
 --- ./debian/config/defines	2014-10-30 17:30:43.000000000 -0700
 +++ ./debian/config/defines	2014-12-11 05:33:37.000000000 -0800
-@@ -30,11 +30,15 @@
- compiler: gcc-4.8
+@@ -88,7 +88,11 @@
+ compiler: gcc-6
  featuresets:
   none
 + untangle
   rt
  
- [featureset-rt_base]
- enabled: false
- 
 +[featureset-untangle_base]
 +enabled: true
 +
- [description]
- part-long-up: This kernel is not suitable for SMP (multi-processor,
-  multi-core or hyper-threaded) systems.
+ [build]
+ debug-info: true
 diff -u -N -r ./debian/config/featureset-untangle/config ./debian/config/featureset-untangle/config
 --- ./debian/config/featureset-untangle/config	1969-12-31 16:00:00.000000000 -0800
 +++ ./debian/config/featureset-untangle/config	2014-12-11 05:33:37.000000000 -0800
