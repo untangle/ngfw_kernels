@@ -3,3 +3,4 @@
 0120-i386-defines.patch
 0130-amd64-defines.patch
 0200-kernel-config.patch
+0300-relax-gencontrol-version-check.patch

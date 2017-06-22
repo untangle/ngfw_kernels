@@ -15,7 +15,7 @@ DEBIAN_TARBALL_URL := http://download.untangle.com/kernels/$(DEBIAN_TARBALL)
 
 PACKPFX=linux_${KVER}
 KERNEL_DIR=linux-${KVER}
-KDSC=${PACKPFX}-${DEBVER}.dsc
+KDSC=${PACKPFX}-${KDEBVER}.dsc
 
 UNTANGLE_PATCH_SERIES := patches/untangle/series
 DEBIAN_PATCH_SERIES := patches/debian/series
@@ -57,10 +57,15 @@ patch-untangle-stamp: extract-stamp patches/untangle/*
 	done < $(UNTANGLE_PATCH_SERIES)
 	touch $@
 
-patch: patch-debian patch-untangle
+version: version-stamp
+version-stamp: changelog
+	cat  changelog $(KERNEL_DIR)/debian/changelog > /tmp/changelog
+	mv /tmp/changelog $(KERNEL_DIR)/debian/changelog
+	touch $@
+
+patch: patch-debian patch-untangle version
 	# FIXME: make this a debian patch ?
 	perl -i -pe 's/fuzz=0/fuzz=3 || true/' ${KERNEL_DIR}/debian/rules.{defs,gen,real}*
-	cp changelog $(KERNEL_DIR)/debian/changelog
 
 pkgs:	kpkg-arch kpkg-indep
 
@@ -82,7 +87,7 @@ ${KERNEL_DIR}/debian/control-real: force patch
 	cd ${KERNEL_DIR};make -f debian/rules debian/control-real || true
 
 clean::
-	rm -rf ${KERNEL_DIR}
+	rm -rf ${KERNEL_DIR} *stamp
 	rm -f *.deb modules/*.deb
 	rm -f *.udeb modules/*.udeb
 
