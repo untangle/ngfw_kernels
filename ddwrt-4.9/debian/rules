@@ -20,3 +20,7 @@ include /usr/share/dpkg/default.mk
 # main packaging script based on dh7 syntax
 %:
 	dh $@
+
+override_dh_auto_install:
+	DTB_NAME=armada-385-linksys-shelby.dtb DESTDIR=debian/untangle-linux-image-4.9-linksys-wrt1900acs make install
+	DTB_NAME=armada-385-linksys-rango.dtb DESTDIR=debian/untangle-linux-image-4.9-linksys-wrt3200acm make install

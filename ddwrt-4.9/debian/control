@@ -1,4 +1,4 @@
-Source: untangle-linux-image-4.9-linksys-wrt3200acm
+Source: untangle-linux-image-4.9-ddwrt
 Section: admin
 Priority: optional
 Maintainer: Sebastien Delafond <sdelafond@gmail.com>
@@ -10,3 +10,8 @@ Package: untangle-linux-image-4.9-linksys-wrt3200acm
 Architecture: armhf
 Description: The Untangle linux image 4.9 for Linksys WRT3200ACM
  Provides the 4.9 trx, modules, and firmware for Linksys WRT3200ACM
+
+Package: untangle-linux-image-4.9-linksys-wrt1900acs
+Architecture: armhf
+Description: The Untangle linux image 4.9 for Linksys WRT1900ACS
+ Provides the 4.9 trx, modules, and firmware for Linksys WRT1900ACS

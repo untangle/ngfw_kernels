@@ -1,4 +1,4 @@
-untangle-linux-image-4.9-linksys-wrt3200acm (4.9.30+untangle1) unstable; urgency=medium
+untangle-linux-image-4.9-ddwrt (4.9.30+untangle1) unstable; urgency=medium
 
   * Rebase on dd-wrt's 4.9.30 r32170 (beta from 2017-06-01)
 
