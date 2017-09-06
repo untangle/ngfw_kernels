@@ -43,7 +43,7 @@ The tree then lives in:
 
   linux-4.9.30/debian/build/build_amd64_untangle_amd64
 
-The beast approach is to transplant this somewhere else, and then set
+The bast approach is to transplant this somewhere else, and then set
 that up as a git tree so you can track and later export the changes:
 
   cp -R linux-4.9.30/debian/build/build_amd64_untangle_amd64 /tmp/debian-4.9.30
