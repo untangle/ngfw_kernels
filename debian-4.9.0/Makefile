@@ -51,8 +51,9 @@ patch-debian-stamp: extract-stamp patches/debian/*
 
 patch-untangle: patch-untangle-stamp
 patch-untangle-stamp: extract-stamp patches/untangle/*
-	mkdir -p $(KERNEL_DIR)/debian/patches/series-untangle
-	cp patches/untangle/* $(KERNEL_DIR)/debian/patches/series-untangle
+	mkdir -p $(KERNEL_DIR)/debian/patches/features/all/untangle
+	cp patches/untangle/*.patch $(KERNEL_DIR)/debian/patches/features/all/untangle
+	perl -pe 's|^|features/all/untangle/|' patches/untangle/series > $(KERNEL_DIR)/debian/patches/series-untangle
 	touch $@
 
 version: version-stamp
