@@ -51,10 +51,8 @@ patch-debian-stamp: extract-stamp patches/debian/*
 
 patch-untangle: patch-untangle-stamp
 patch-untangle-stamp: extract-stamp patches/untangle/*
-	while read patch ; do \
-	  echo "Applying $$patch" ; \
-	  patch -d $(KERNEL_DIR) -p1 < patches/untangle/$$patch ; \
-	done < $(UNTANGLE_PATCH_SERIES)
+	mkdir -p $(KERNEL_DIR)/debian/patches/series-untangle
+	cp patches/untangle/* $(KERNEL_DIR)/debian/patches/series-untangle
 	touch $@
 
 version: version-stamp
