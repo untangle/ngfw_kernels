@@ -1,4 +1,4 @@
-BUILDDEPS=debhelper dh-exec lzma gcc-6.0 kernel-wedge kmod python3 quilt xmlto xz-utils
+BUILDDEPS=asciidoc-base debhelper dh-exec lzma gcc-6.0 kernel-wedge kmod python3 python3-sphinx quilt xmlto xz-utils
 
 REPOSITORY=stretch
 
