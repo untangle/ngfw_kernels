@@ -1,4 +1,4 @@
-BUILDDEPS=debhelper cpio module-init-tools python xmlto quilt kernel-wedge kmod python python-six lzma patchutils bc gcc-6.0 xz-utils
+BUILDDEPS=debhelper dh-exec lzma gcc-6.0 kernel-wedge kmod python3 quilt xmlto xz-utils
 
 REPOSITORY=stretch
 
