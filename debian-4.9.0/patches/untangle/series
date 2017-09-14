@@ -1,11 +1,1 @@
-# 0010-bridge-mac-ageing-fix.patch
-# 0020-extensions.patch
-# 0021-extensions-non-straightforward-porting-fix-1-comment.patch
-# 0022-extensions-non-straightforward-porting-fix-2-ip_cmsg.patch
-# 0050-IPSEC-policy-bypass.patch
-# 0060-iptables-tune.patch
-# 0061-iptables-tune-non-straightforward-porting-fix-1-new-.patch
-# 0062-iptables-tune-non-straightforward-porting-fix-2-xt_h.patch
-# 0063-iptables-tune-non-straightforward-porting-fix-3-fix-.patch
-# 0090-iptables-socket.patch
 0100-physdev.patch
