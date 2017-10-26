@@ -27,9 +27,4 @@ physdev.patch
     https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/patch/net/netfilter/xt_physdev.c?id=10ea6ac895418bd0d23900e3330daa6ba0836d26
     https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/patch/net/netfilter/xt_physdev.c?id=2bf540b73ed5b304e84bb4d4c390d49d1cfa0ef8
 
-ifconfig.patch
-    This remove dd-wrt specific patch (http://svn.dd-wrt.com/changeset/10887) on bonding interface. 
-    With this patch included in kernel source, in if.h file ifreq structure size will be 4 bytes bigger than use space same structure as we use standard Linux package on ifconfig.  
-    And the running system will pop up kernel warning "Loading kernel module for a network device with CAP_SYS_MODULE (deprecated). Use CAP_NET_ADMIN and alias netdev- instead." when type ifconfig command     
-
 
