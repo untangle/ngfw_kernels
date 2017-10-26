@@ -36,16 +36,6 @@ diff --git a/include/net/ip.h b/include/net/ip.h
 index d3a1078..6da31b8 100644
 --- a/include/net/ip.h
 +++ b/include/net/ip.h
-@@ -39,6 +39,9 @@ struct inet_skb_parm {
- 	int			iif;
- 	struct ip_options	opt;		/* Compiled IP options		*/
- 	u16			flags;
-+       /* Extensions */
-+       unsigned char    pkt_ip_ttl;
-+       unsigned char    pkt_ip_tos;
- 
- #define IPSKB_FORWARDED		BIT(0)
- #define IPSKB_XFRM_TUNNEL_SIZE	BIT(1)
 @@ -67,6 +70,11 @@ struct ipcm_cookie {
  	__be32			addr;
  	int			oif;
@@ -112,30 +102,6 @@ diff --git a/net/ipv4/ip_output.c b/net/ipv4/ip_output.c
 index e5c1dbe..fe091bc 100644
 --- a/net/ipv4/ip_output.c
 +++ b/net/ipv4/ip_output.c
-@@ -154,8 +154,14 @@ int ip_build_and_send_pkt(struct sk_buff *skb, const struct sock *sk,
- 	iph->version  = 4;
- 	iph->ihl      = 5;
- 	iph->tos      = inet->tos;
-+    if (IPCB(skb)->pkt_ip_tos)
-+        iph->tos = IPCB(skb)->pkt_ip_tos;
-+
- 	iph->ttl      = ip_select_ttl(inet, &rt->dst);
- 	iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
-+    if (IPCB(skb)->pkt_ip_ttl)
-+        iph->ttl = IPCB(skb)->pkt_ip_ttl;
-+
- 	iph->saddr    = saddr;
- 	iph->protocol = sk->sk_protocol;
- 	if (ip_dont_fragment(sk, &rt->dst)) {
-@@ -172,7 +178,7 @@ int ip_build_and_send_pkt(struct sk_buff *skb, const struct sock *sk,
- 	}
- 
- 	skb->priority = sk->sk_priority;
--	skb->mark = sk->sk_mark;
-+	skb->mark |= sk->sk_mark;
- 
- 	/* Send it out. */
- 	return ip_local_out(net, skb->sk, skb);
 @@ -473,7 +479,7 @@ int ip_queue_xmit(struct sock *sk, struct sk_buff *skb, struct flowi *fl)
  
  	/* TODO : should we use skb->sk here instead of sk ? */
@@ -154,20 +120,10 @@ index e5c1dbe..fe091bc 100644
  			    unsigned int flags)
  {
  	struct inet_sock *inet = inet_sk(sk);
-@@ -1041,6 +1047,18 @@ static int __ip_append_data(struct sock *sk,
+@@ -1041,6 +1047,8 @@ static int __ip_append_data(struct sock *sk,
  						 fragheaderlen);
  			data += fragheaderlen + exthdrlen;
  
-+			if (ipc->ttl)
-+				IPCB(skb)->pkt_ip_ttl = ipc->ttl;
-+			else
-+				IPCB(skb)->pkt_ip_ttl = 0;
-+
-+			if (ipc->tos)
-+				IPCB(skb)->pkt_ip_ttl = ipc->tos;
-+			else
-+				IPCB(skb)->pkt_ip_ttl = 0;
-+
 +			skb->mark = ipc->nfmark;
 +
  			if (fraggap) {

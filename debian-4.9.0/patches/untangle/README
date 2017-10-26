@@ -5,7 +5,7 @@ bridge-mac-ageing-fix.patch
     Pinging the host will instantly resolve that state as the FIB would be updated. This patch updates the FIB when a packet is received on a bridge port.
 
 extensions.patch
-    This provides extensions to cmsg so that special fields like TTL, TOS, NFMARK, and SADDR can be specified in cmsg ancilarry data options in recvfrom and sendmsg.
+    This provides extensions to cmsg so that special fields like NFMARK, and SADDR can be specified in cmsg ancilarry data options in recvfrom and sendmsg.
     This is used in libnetcap to send and receive UDP packets.
 
 ipsec-policy-bypass.patch
