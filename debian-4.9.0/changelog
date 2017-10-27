@@ -1,11 +1,17 @@
+linux (4.9.30-2+untangle3) unstable; urgency=medium
+
+  * Correct several 4.9 patches: extensions, ipsec & iptables
+
+ -- Sebastien Delafond <sdelafond@gmail.com>  Fri, 27 Oct 2017 08:38:52 +0200
+
 linux (4.9.30-2+untangle2) unstable; urgency=medium
 
   * Add Untangle-specific "Provides:"
 
- -- Sebastien Delafond <sdelafond@untangle.com>  Tue, 19 Sep 2017 16:47:58 +0200
+ -- Sebastien Delafond <sdelafond@gmail.com>  Tue, 19 Sep 2017 16:47:58 +0200
 
 linux (4.9.30-2+untangle1) unstable; urgency=medium
 
   * First Untangle version of Stretch's 4.9.30
 
- -- Sebastien Delafond <sdelafond@untangle.com>  Wed, 21 Jun 2017 10:11:05 +0200
+ -- Sebastien Delafond <sdelafond@gmail.com>  Wed, 21 Jun 2017 10:11:05 +0200
