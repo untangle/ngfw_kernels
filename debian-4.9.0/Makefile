@@ -1,4 +1,4 @@
-BUILDDEPS=asciidoc-base bc build-essential cpio debhelper dh-exec dracut lzma gcc-6 kernel-wedge kmod patchutils python3 python3-sphinx quilt xmlto xz-utils
+BUILDDEPS=asciidoc-base bc build-essential cpio curl debhelper dh-exec dracut lzma gcc-6 kernel-wedge kmod patchutils python3 python3-sphinx quilt xmlto xz-utils
 
 REPOSITORY=stretch
 
