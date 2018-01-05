@@ -5,8 +5,8 @@ REPOSITORY=wheezy
 # EXTRADCHARGS:= --distributor Untangle
 
 # Upstream version numbers
-KVER=3.16.7
-KDEBVER=2
+KVER=3.16.43
+KDEBVER=2+deb8u6
 
 ORIG_TARBALL := linux_$(KVER).orig.tar.xz
 ORIG_TARBALL_URL := http://download.untangle.com/kernels/$(ORIG_TARBALL)
