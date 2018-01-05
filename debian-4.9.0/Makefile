@@ -5,8 +5,8 @@ REPOSITORY=stretch
 # EXTRADCHARGS:= --distributor Untangle
 
 # Upstream version numbers
-KVER=4.9.30
-KDEBVER=2
+KVER=4.9.65
+KDEBVER=3+deb9u2
 
 ORIG_TARBALL := linux_$(KVER).orig.tar.xz
 ORIG_TARBALL_URL := http://download.untangle.com/kernels/$(ORIG_TARBALL)

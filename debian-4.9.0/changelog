@@ -1,3 +1,10 @@
+linux (4.9.65-3+deb9u2+untangle1) unstable; urgency=medium
+
+  * Latest official stretch kernel from security.d., including KPTI among
+    other things
+
+ -- Sebastien Delafond <sdelafond@gmail.com>  Fri, 05 Jan 2018 15:29:06 +0100
+
 linux (4.9.30-2+untangle3) unstable; urgency=medium
 
   * Correct several 4.9 patches: extensions, ipsec & iptables
