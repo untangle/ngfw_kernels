@@ -1,17 +1,29 @@
-to make sure you have everything necessary
+# Note: this is the old, "shove all our modifications into a single
+# nasty unified diff file named untangle-debian.basediff", way of
+# doing things.
+#
+# Please do not base any further work on this model, but instead refer
+# to debian-4.9, which implements a clean and well-separated patchset
+# to be laid out on top of a vanilla Debian kernel.
+#
+# Seb, Fri, 05 Jan 2018 15:49:03 +0100
+
+
+
+
+# to make sure you have everything necessary
 make deps
 
-to build packages:
+# to build packages:
 make src pkgs
 
-to develop:
+# to develop:
 'make src' to expand the src
 edit the source in untangle-debian-3.2.0/linux-3.2.51/debian/build/source_untangle/ (on amd64 anyway)
 'make kern' to build kernel package
 dpkg -i kernel package and reboot
 
-
-to port patches: 
+# to port patches: 
 generally I'll do a 'make src'
 the go into linux-2.6-2.6.32/debian/build/
 cp -r source_amd64_untangle source_amd64_untangle.modified
@@ -19,7 +31,7 @@ then patch in source_amd64_untangle.modified and get everything cleaned up
 create a new diff -urN based on those two directories and drop the new patch in patches/
 repeat.
 
-to get building working:
+# to get building working:
 sometimes the 'make kern' fails and often it hides the error message
 go into linux-2.6-2.6.32/debian/build/build_amd64_untangle_amd64/
 and run 'make' and it will display the error messages that caused the fail if it failed during the kernel build
