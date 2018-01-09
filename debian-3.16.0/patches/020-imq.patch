@@ -1404,9 +1404,9 @@ diff -ruN source_untangle.1/net/core/skbuff.c source_untangle/net/core/skbuff.c
 +	spin_unlock(&skb_cb_store_lock);
 +}
 +#endif
+ int sysctl_max_skb_frags __read_mostly = MAX_SKB_FRAGS;
+ EXPORT_SYMBOL(sysctl_max_skb_frags);
  
- /**
-  *	skb_panic - private function for out-of-line support
 @@ -563,6 +641,28 @@
  		WARN_ON(in_irq());
  		skb->destructor(skb);
@@ -1541,12 +1541,13 @@ diff -ruN source_untangle.1/net/netfilter/Makefile source_untangle/net/netfilter
 diff -ruN source_untangle.1/net/netfilter/nf_internals.h source_untangle/net/netfilter/nf_internals.h
 --- source_untangle.1/net/netfilter/nf_internals.h	2015-05-12 09:25:38.759179909 -0600
 +++ source_untangle/net/netfilter/nf_internals.h	2015-05-12 09:26:17.507179122 -0600
-@@ -23,7 +23,7 @@
+@@ -23,8 +23,8 @@
  int nf_queue(struct sk_buff *skb, struct nf_hook_ops *elem, u_int8_t pf,
  	     unsigned int hook, struct net_device *indev,
  	     struct net_device *outdev, int (*okfn)(struct sk_buff *),
 -	     unsigned int queuenum);
 +	     unsigned int queuenum, unsigned int queuetype);
+ void nf_queue_nf_hook_drop(struct nf_hook_ops *ops);
  int __init netfilter_queue_init(void);
  
  /* nf_log.c */
