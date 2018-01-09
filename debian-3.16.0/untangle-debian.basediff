@@ -52,9 +52,9 @@ diff -u -N -r ./debian/changelog ./debian/changelog
 +
 + -- Sebastien Delafond <seb@untangle.com>  Thu, 11 Dec 2014 05:23:34 -0800
 +
- linux (3.16.7-2) unstable; urgency=medium
+ linux (3.16.51-3+deb8u1) jessie-security; urgency=high
  
-   [ Ian Campbell ]
+   * dccp: CVE-2017-8824: use-after-free in DCCP code
 diff -u -N -r ./debian/config/amd64/defines ./debian/config/amd64/defines
 --- ./debian/config/amd64/defines	2014-11-03 15:37:27.000000000 -0800
 +++ ./debian/config/amd64/defines	2014-12-11 05:33:37.000000000 -0800
