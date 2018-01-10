@@ -7,7 +7,7 @@ diff -u -N -r ./debian/changelog ./debian/changelog
 +  *  Latest officiel jessie kernel from security.d.o, including KPTI among
 +     other things
 +
-+ -- Sebastien Delafond <sdelafond@gmail.com>  Fri, 08 Jul 2016 04:08:54 -0400
++ -- Sebastien Delafond <sdelafond@gmail.com>  Wed, 10 Jan 2018 08:08:44 +0100
 +
 +linux (3.16.7-2untangle7) jessie; urgency=low
 +
