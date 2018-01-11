@@ -1,7 +1,13 @@
 diff -u -N -r ./debian/changelog ./debian/changelog
 --- ./debian/changelog	2014-11-06 08:42:49.000000000 -0800
 +++ ./debian/changelog	2014-12-11 05:33:37.000000000 -0800
-@@ -1,3 +1,53 @@
+@@ -1,3 +1,59 @@
++linux (3.16.51-3+deb8u1+untangle2) jessie; urgency=low
++
++  *  Adjust Untangle 009-extensions patch
++
++ -- Sebastien Delafond <sdelafond@gmail.com>  Thu, 11 Jan 2018 10:53:55 +0100
++
 +linux (3.16.51-3+deb8u1+untangle1) jessie; urgency=low
 +
 +  *  Latest officiel jessie kernel from security.d.o, including KPTI among

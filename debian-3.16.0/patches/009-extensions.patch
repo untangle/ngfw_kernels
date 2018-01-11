@@ -106,13 +106,13 @@ diff -ruN linux-3.16.7.orig/net/ipv4/ip_output.c linux-3.16.7.new/net/ipv4/ip_ou
  	iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
  	iph->saddr    = saddr;
  	iph->protocol = sk->sk_protocol;
-@@ -156,8 +160,8 @@
+@@ -156,8 +160,7 @@
  	}
  
  	skb->priority = sk->sk_priority;
- 	if (!skb->mark)
+- 	if (!skb->mark)
 -		skb->mark = sk->sk_mark;
-+		skb->mark |= sk->sk_mark;
++	skb->mark |= sk->sk_mark;
  
  	/* Send it out. */
  	return ip_local_out(skb);
