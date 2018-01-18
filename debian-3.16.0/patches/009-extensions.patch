@@ -25,9 +25,9 @@ diff -ruN linux-3.16.7.orig/include/net/ip.h linux-3.16.7.new/include/net/ip.h
 +	unsigned char    pkt_ip_ttl;
 +	unsigned char    pkt_ip_tos;
 +
- #define IPSKB_FORWARDED		BIT(0)
- #define IPSKB_XFRM_TUNNEL_SIZE	BIT(1)
- #define IPSKB_XFRM_TRANSFORMED	BIT(2)
+ #define IPSKB_FORWARDED		1
+ #define IPSKB_XFRM_TUNNEL_SIZE	2
+ #define IPSKB_XFRM_TRANSFORMED	4
 @@ -56,6 +60,11 @@
  	__be32			addr;
  	int			oif;
@@ -106,12 +106,11 @@ diff -ruN linux-3.16.7.orig/net/ipv4/ip_output.c linux-3.16.7.new/net/ipv4/ip_ou
  	iph->daddr    = (opt && opt->opt.srr ? opt->opt.faddr : daddr);
  	iph->saddr    = saddr;
  	iph->protocol = sk->sk_protocol;
-@@ -162,8 +162,7 @@
+@@ -156,7 +160,7 @@
  	}
  
  	skb->priority = sk->sk_priority;
--	if (!skb->mark)
--		skb->mark = sk->sk_mark;
+-	skb->mark = sk->sk_mark;
 +	skb->mark |= sk->sk_mark;
  
  	/* Send it out. */
@@ -123,7 +122,7 @@ diff -ruN linux-3.16.7.orig/net/ipv4/ip_output.c linux-3.16.7.new/net/ipv4/ip_ou
 -	skb->mark = sk->sk_mark;
 +	skb->mark |= sk->sk_mark;
  
- 	res = ip_local_out(sk, skb);
+ 	res = ip_local_out(skb);
  	rcu_read_unlock();
 @@ -839,7 +843,7 @@
  			    struct page_frag *pfrag,
@@ -348,9 +347,9 @@ diff -ruN linux-3.16.7.orig/net/ipv4/udp.c linux-3.16.7.new/net/ipv4/udp.c
 -		err = ip_cmsg_send(sock_net(sk), msg, &ipc,
 -				   sk->sk_family == AF_INET6);
 +		err = udp_cmsg_send(sock_net(sk), msg, &ipc);
- 		if (unlikely(err)) {
- 			kfree(ipc.opt);
+ 		if (err)
  			return err;
+ 		if (ipc.opt)
 @@ -990,6 +1018,11 @@
  		rcu_read_unlock();
  	}
