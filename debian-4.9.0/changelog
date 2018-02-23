@@ -1,3 +1,9 @@
+linux (4.9.65-3+deb9u2+untangle2) unstable; urgency=medium
+
+  * Fix tune patch issue
+
+ -- Dirk Morris  <dmorris@untangle.com>  Fri Feb 23 13:03:49 PST 2018
+
 linux (4.9.65-3+deb9u2+untangle1) unstable; urgency=medium
 
   * Latest official stretch kernel from security.d., including KPTI among
