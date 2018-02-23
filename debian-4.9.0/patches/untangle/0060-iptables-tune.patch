@@ -89,8 +89,8 @@ diff -urN linux-4.9.30.orig/net/ipv4/netfilter/iptable_tune.c linux-4.9.30/net/i
 +{
 +	if (!net->ipv4.iptable_tune)
 +		return;
-+	net->ipv4.iptable_tune = NULL;
 +	ipt_unregister_table(net, net->ipv4.iptable_tune, tune_ops);
++	net->ipv4.iptable_tune = NULL;
 +}
 +
 +static struct pernet_operations iptable_tune_net_ops = {
