@@ -307,10 +307,10 @@ diff -urN linux-4.9.30.orig/net/ipv4/udp.c linux-4.9.30/net/ipv4/udp.c
  		rcu_read_unlock();
  	}
  
-+    sport = inet->inet_sport;
++	sport = inet->inet_sport;
 +
-+    if (ipc.pkt_udp_sport)
-+        sport = ipc.pkt_udp_sport;
++	if (ipc.pkt_udp_sport)
++		sport = ipc.pkt_udp_sport;
 +
  	saddr = ipc.addr;
  	ipc.addr = faddr = daddr;

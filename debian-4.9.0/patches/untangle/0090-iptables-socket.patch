@@ -11,32 +11,21 @@ diff --git a/net/netfilter/xt_socket.c b/net/netfilter/xt_socket.c
 index b10ade2..d844787 100644
 --- a/net/netfilter/xt_socket.c
 +++ b/net/netfilter/xt_socket.c
-@@ -210,7 +210,7 @@ static struct sock *xt_socket_lookup_slow_v4(struct net *net,
- }
- 
- static bool
--socket_match(const struct sk_buff *skb, struct xt_action_param *par,
-+socket_match(struct sk_buff *skb, struct xt_action_param *par,
- 	     const struct xt_socket_mtinfo1 *info)
- {
- 	struct sk_buff *pskb = (struct sk_buff *)skb;
-@@ -245,8 +245,14 @@ socket_match(const struct sk_buff *skb, struct xt_action_param *par,
- 		if (wildcard || !transparent)
+@@ -246,6 +246,14 @@ socket_match(const struct sk_buff *skb, struct xt_action_param *par,
  			sk = NULL;
  	}
--
--	return sk != NULL;
-+    /* Untangle hack - or the socket mark to the packet if found
-+         * We do this because there is no conntrack, and it is necessary
-+         * to restore the QoS/bandwidth control mark on packets
-+         * returning to nonlocally bound sockets */
-+    if (sk != NULL) {
-+        skb->mark |= sk->sk_mark;
-+    }
-+    return sk != NULL;
+
++	/* Untangle hack - or the socket mark to the packet if found
++	 * We do this because there is no conntrack, and it is necessary
++	 * to restore the QoS/bandwidth control mark on packets
++	 * returning to nonlocally bound sockets */
++	if (sk != NULL) {
++		pskb->mark |= sk->sk_mark;
++	}
++
+	return sk != NULL;
  }
  
- static bool
 -- 
 2.8.1
 

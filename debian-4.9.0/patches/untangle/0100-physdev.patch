@@ -132,10 +132,12 @@ index bb33598..752e17d 100644
  MODULE_LICENSE("GPL");
  MODULE_AUTHOR("Bart De Schuymer <bdschuym@pandora.be>");
  MODULE_DESCRIPTION("Xtables: Bridge physical device match");
-@@ -29,6 +31,8 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
+@@ -28,7 +30,9 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
+ 	const struct xt_physdev_info *info = par->matchinfo;
  	const struct net_device *physdev;
  	unsigned long ret;
- 	const char *indev, *outdev;
+-	const char *indev, *outdev;
++	const char *indev, *outdev = NULL;
 +    struct nf_bridge_info *nf_bridge;
 +    struct net_device  *m_dev;
  
