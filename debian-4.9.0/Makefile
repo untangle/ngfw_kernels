@@ -17,10 +17,10 @@ KDSC := linux_$(UPSTREAM_VERSION)-$(DEBIAN_VERSION).dsc
 UNTANGLE_PATCH_SERIES := patches/untangle/series
 DEBIAN_PATCH_SERIES := patches/debian/series
 
-MACHINE:=$(shell dpkg-architecture -qDEB_BUILD_ARCH)
-NPROCEXP:=$(shell echo "$$((1+`grep -c processor /proc/cpuinfo`))")
+ARCH ?= $(shell dpkg-architecture -qDEB_BUILD_ARCH)
+NPROCEXP := $(shell echo "$$((1+`grep -c processor /proc/cpuinfo`))")
 
-ifeq ($(MACHINE),armhf)
+ifeq ($(ARCH),armhf)
   NPROCEXP := 1
 endif
 
@@ -69,14 +69,14 @@ deps:	force
 	sudo apt-get install ${BUILDDEPS} || echo "unable to run sudo"
 
 kpkg-arch: control-real force
-	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -j ${NPROCEXP} -f debian/rules.gen binary-arch_${MACHINE}_untangle
+	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -j ${NPROCEXP} -f debian/rules.gen binary-arch_${ARCH}_untangle
 kpkg-indep: control-real force
 	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -j ${NPROCEXP} -f debian/rules binary-indep
 
 kern:   ${KERNEL_DIR} kpkg-arch
 
 src: 	${KERNEL_DIR} control-real force
-	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_untangle setup_${MACHINE}_untangle
+	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_untangle setup_${ARCH}_untangle
 
 control-real: ${KERNEL_DIR}/debian/control-real
 ${KERNEL_DIR}/debian/control-real: force patch
