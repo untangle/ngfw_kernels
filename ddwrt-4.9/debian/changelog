@@ -1,3 +1,9 @@
+untangle-linux-image-4.9-ddwrt (4.9.30+untangle4) unstable; urgency=medium
+
+  * Add "rw" to kernel boot parameters
+
+ -- Brett Mastbergen <bmastbergen@untangle.com>  Mon, 09 Apr 2018 09:21:52 -0400
+
 untangle-linux-image-4.9-ddwrt (4.9.30+untangle3) unstable; urgency=medium
 
   * Add kernel config options required by systemd
