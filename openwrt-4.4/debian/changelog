@@ -1,3 +1,9 @@
+untangle-linux-image-4.4-turris-omnia (4.4.43+untangle8) unstable; urgency=medium
+
+  * Update 022-physdev.patch to fix a porting issue
+
+ -- Brett Mastbergen <bmastbergen@untangle.com>  Tue, 01 May 2018 16:14:55 -0400
+
 untangle-linux-image-4.4-turris-omnia (4.4.43+untangle7) unstable; urgency=medium
 
   * Add kernel config options required by systemd
