@@ -5,8 +5,8 @@ Subject: [PATCH 10/12] physdev
 
 ---
  net/bridge/br_nf_core.c    | 90 ++++++++++++++++++++++++++++++++++++++++++++++
- net/netfilter/xt_physdev.c | 47 ++++++++++++------------
- 2 files changed, 115 insertions(+), 22 deletions(-)
+ net/netfilter/xt_physdev.c | 52 +++++++++++++++------------
+ 2 files changed, 119 insertions(+), 23 deletions(-)
 
 diff --git a/net/bridge/br_nf_core.c b/net/bridge/br_nf_core.c
 index 20cbb72..a7a0da8 100644
@@ -132,10 +132,12 @@ index bb33598..752e17d 100644
  MODULE_LICENSE("GPL");
  MODULE_AUTHOR("Bart De Schuymer <bdschuym@pandora.be>");
  MODULE_DESCRIPTION("Xtables: Bridge physical device match");
-@@ -29,6 +31,8 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
+@@ -28,7 +30,9 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
+ 	const struct xt_physdev_info *info = par->matchinfo;
  	const struct net_device *physdev;
  	unsigned long ret;
- 	const char *indev, *outdev;
+-	const char *indev, *outdev;
++	const char *indev, *outdev = NULL;
 +    struct nf_bridge_info *nf_bridge;
 +    struct net_device  *m_dev;
  
@@ -170,7 +172,7 @@ index bb33598..752e17d 100644
  		return false;
  
  	if (!(info->bitmask & XT_PHYSDEV_OP_IN))
-@@ -82,9 +78,27 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
+@@ -82,8 +78,29 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
  	}
  
  match_outdev:
@@ -196,10 +198,12 @@ index bb33598..752e17d 100644
 +	    (!nf_bridge->physoutdev ^ !!(info->invert & XT_PHYSDEV_OP_ISOUT)))
 +		return false;
 +
++	physdev = nf_bridge_get_physoutdev(skb);
++	outdev = physdev ? physdev->name : NULL;
++
  	if (!outdev)
  		return false;
- 
-@@ -102,17 +116,6 @@ static int physdev_mt_check(const struct xt_mtchk_param *par)
+@@ -102,17 +119,6 @@ static int physdev_mt_check(const struct xt_mtchk_param *par)
  	if (!(info->bitmask & XT_PHYSDEV_OP_MASK) ||
  	    info->bitmask & ~XT_PHYSDEV_OP_MASK)
  		return -EINVAL;

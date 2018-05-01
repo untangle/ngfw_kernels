@@ -1,3 +1,10 @@
+untangle-linux-image-4.9-ddwrt (4.9.30+untangle5) unstable; urgency=medium
+
+  * Sync 0100-physdev.patch with the debian-4.9.0 version.  This fixes a
+    porting issue and removes a compiler warning
+
+ -- Brett Mastbergen <bmastbergen@untangle.com>  Tue, 01 May 2018 16:13:24 -0400
+
 untangle-linux-image-4.9-ddwrt (4.9.30+untangle4) unstable; urgency=medium
 
   * Add "rw" to kernel boot parameters
