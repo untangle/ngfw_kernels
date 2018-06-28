@@ -1,0 +1,51 @@
+From f9a905bb9c99b5eb6071f1f9ae9a327042e59aeb Mon Sep 17 00:00:00 2001
+From: Brett Mastbergen <bmastbergen@untangle.com>
+Date: Fri, 22 Jun 2018 14:52:40 -0400
+Subject: [PATCH 1/2] 4.14 ct id
+
+---
+ include/uapi/linux/netfilter/nf_tables.h | 1 +
+ net/netfilter/nft_ct.c                   | 8 ++++++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/include/uapi/linux/netfilter/nf_tables.h b/include/uapi/linux/netfilter/nf_tables.h
+index c6c4477c136b..d0d758b803c3 100644
+--- a/include/uapi/linux/netfilter/nf_tables.h
++++ b/include/uapi/linux/netfilter/nf_tables.h
+@@ -830,6 +830,7 @@ enum nft_ct_keys {
+ 	NFT_CT_LABELS,
+ 	NFT_CT_PKTS,
+ 	NFT_CT_BYTES,
++	NFT_CT_ID,
+ };
+ 
+ /**
+diff --git a/net/netfilter/nft_ct.c b/net/netfilter/nft_ct.c
+index 6837348c8993..06707e96b75d 100644
+--- a/net/netfilter/nft_ct.c
++++ b/net/netfilter/nft_ct.c
+@@ -135,6 +135,11 @@ static void nft_ct_get_eval(const struct nft_expr *expr,
+ 	case NFT_CT_PROTOCOL:
+ 		*dest = nf_ct_protonum(ct);
+ 		return;
++	case NFT_CT_ID: {
++		unsigned int ct_id = (unsigned long)ct;
++		*dest = ct_id;
++		return;
++	}
+ 	default:
+ 		break;
+ 	}
+@@ -321,6 +326,9 @@ static int nft_ct_get_init(const struct nft_ctx *ctx,
+ 			priv->dir = IP_CT_DIR_MAX;
+ 		len = sizeof(u64);
+ 		break;
++	case NFT_CT_ID:
++		len = sizeof(u64);
++		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+-- 
+2.11.0
+

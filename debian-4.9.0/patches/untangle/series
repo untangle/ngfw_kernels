@@ -5,4 +5,5 @@
 0090-iptables-socket.patch
 0100-physdev.patch
 0110-imq-Apply-4.9-patch.patch
-0001-netfilter-Add-conndict.patch
+0001-4.14-ct-id.patch
+0002-4.14-dict.patch

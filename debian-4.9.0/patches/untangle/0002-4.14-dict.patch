@@ -1,0 +1,1469 @@
+From f22d31808e8d58fd90204899c79e5d47dea4dd78 Mon Sep 17 00:00:00 2001
+From: Brett Mastbergen <bmastbergen@untangle.com>
+Date: Tue, 26 Jun 2018 13:22:09 -0400
+Subject: [PATCH 2/2] 4.14 dict
+
+---
+ include/net/netfilter/nf_conntrack_dict.h |   37 +
+ include/uapi/linux/netfilter/nf_tables.h  |   15 +
+ net/netfilter/Kconfig                     |   18 +
+ net/netfilter/Makefile                    |    3 +
+ net/netfilter/nf_conntrack_dict.c         | 1120 +++++++++++++++++++++++++++++
+ net/netfilter/nft_dict.c                  |  192 +++++
+ 6 files changed, 1385 insertions(+)
+ create mode 100644 include/net/netfilter/nf_conntrack_dict.h
+ create mode 100644 net/netfilter/nf_conntrack_dict.c
+ create mode 100644 net/netfilter/nft_dict.c
+
+diff --git a/include/net/netfilter/nf_conntrack_dict.h b/include/net/netfilter/nf_conntrack_dict.h
+new file mode 100644
+index 000000000000..750971ebc986
+--- /dev/null
++++ b/include/net/netfilter/nf_conntrack_dict.h
+@@ -0,0 +1,37 @@
++#include <linux/types.h>
++#include <linux/rhashtable.h>
++#include <linux/netfilter/nf_conntrack_common.h>
++#include <linux/netfilter/nf_conntrack_tuple_common.h>
++#include <net/net_namespace.h>
++#include <net/netfilter/nf_conntrack.h>
++#include <net/netfilter/nf_conntrack_extend.h>
++
++typedef void (*seq_printfn_t)(struct seq_file *m, char *buf);
++
++struct nf_conn_dict_pair_elem {
++	char * buf;
++	int len;
++	u32 hash;
++	seq_printfn_t printfn;
++};
++
++struct nf_conn_dict {
++	struct rhash_head node;
++	struct nf_conn_dict_pair_elem * table;
++	struct nf_conn_dict_pair_elem * key;
++	struct rhashtable pair_ht;
++};
++
++struct nf_conn_dict_pair {
++	struct rhash_head node;
++	struct nf_conn_dict_pair_elem * field;
++	struct nf_conn_dict_pair_elem * value;
++};
++
++void nf_conntrack_dict_disable(void);
++int nf_conntrack_dict_enable(void);
++struct nf_conn_dict * new_dict(u8 *key, u32 key_len, char *table, seq_printfn_t printfn);
++void destroy_dict(u8 *key, u32 key_len, char *table);
++struct nf_conn_dict * find_conntrack_dict(u8 *key, u32 key_len, char *table);
++struct nf_conn_dict_pair * find_conntrack_dict_pair(struct nf_conn_dict * dict, u32 * hash);
++void new_dict_pair(struct nf_conn_dict *dict, char * field, char * value, int len, seq_printfn_t printfn);
+diff --git a/include/uapi/linux/netfilter/nf_tables.h b/include/uapi/linux/netfilter/nf_tables.h
+index d0d758b803c3..0ec9d7ac782e 100644
+--- a/include/uapi/linux/netfilter/nf_tables.h
++++ b/include/uapi/linux/netfilter/nf_tables.h
+@@ -1187,4 +1187,19 @@ enum nft_ng_types {
+ };
+ #define NFT_NG_MAX	(__NFT_NG_MAX - 1)
+ 
++enum nft_dict_attributes {
++	NFTA_DICT_UNSPEC,
++	NFTA_DICT_SREG,
++	NFTA_DICT_DREG,
++	NFTA_DICT_TYPE,
++	NFTA_DICT_TABLE,
++	NFTA_DICT_FIELD,
++	NFTA_DICT_VALUE,
++	NFTA_DICT_LEN,
++	NFTA_DICT_SIZE,
++	__NFTA_DICT_MAX,
++};
++
++#define NFTA_DICT_MAX (__NFTA_DICT_MAX - 1)
++
+ #endif /* _LINUX_NF_TABLES_H */
+diff --git a/net/netfilter/Kconfig b/net/netfilter/Kconfig
+index 1ed3468675ac..f2fd8f650759 100644
+--- a/net/netfilter/Kconfig
++++ b/net/netfilter/Kconfig
+@@ -114,6 +114,16 @@ config NF_CONNTRACK_EVENTS
+ 
+ 	  If unsure, say `N'.
+ 
++config NF_CONNTRACK_DICT
++	tristate  'Connection tracking dictionary'
++	depends on NETFILTER_ADVANCED
++	help
++	  This option enables support for a generic dictionaries that can
++	  be used for connection tracking.  It is intended to be used with
++	  the dictionary match module
++
++	  If unsure, say `N'.
++
+ config NF_CONNTRACK_TIMEOUT
+ 	bool  'Connection tracking timeout'
+ 	depends on NETFILTER_ADVANCED
+@@ -575,6 +585,15 @@ config NFT_COMPAT
+ 	  x_tables match/target extensions over the nf_tables
+ 	  framework.
+ 
++config NFT_DICT
++	tristate "Netfilter nf_tables conntrack dict module"
++	depends on NETFILTER_XTABLES
++	depends on NF_CONNTRACK_DICT
++	select GLOB
++	help
++	  This match allows you to test and assign layer 7 fields
++	  such as username or hostname to a connection.
++
+ config NFT_HASH
+ 	tristate "Netfilter nf_tables hash module"
+ 	help
+diff --git a/net/netfilter/Makefile b/net/netfilter/Makefile
+index 99911ef6016f..b6077a1d53fe 100644
+--- a/net/netfilter/Makefile
++++ b/net/netfilter/Makefile
+@@ -6,6 +6,8 @@ nf_conntrack-$(CONFIG_NF_CONNTRACK_TIMESTAMP) += nf_conntrack_timestamp.o
+ nf_conntrack-$(CONFIG_NF_CONNTRACK_EVENTS) += nf_conntrack_ecache.o
+ nf_conntrack-$(CONFIG_NF_CONNTRACK_LABELS) += nf_conntrack_labels.o
+ 
++obj-$(CONFIG_NF_CONNTRACK_DICT) += nf_conntrack_dict.o
++
+ obj-$(CONFIG_NETFILTER) = netfilter.o
+ 
+ obj-$(CONFIG_NETFILTER_NETLINK) += nfnetlink.o
+@@ -79,6 +81,7 @@ obj-$(CONFIG_NF_TABLES)		+= nf_tables.o
+ obj-$(CONFIG_NF_TABLES_INET)	+= nf_tables_inet.o
+ obj-$(CONFIG_NF_TABLES_NETDEV)	+= nf_tables_netdev.o
+ obj-$(CONFIG_NFT_COMPAT)	+= nft_compat.o
++obj-$(CONFIG_NFT_DICT)		+= nft_dict.o
+ obj-$(CONFIG_NFT_EXTHDR)	+= nft_exthdr.o
+ obj-$(CONFIG_NFT_META)		+= nft_meta.o
+ obj-$(CONFIG_NFT_NUMGEN)	+= nft_numgen.o
+diff --git a/net/netfilter/nf_conntrack_dict.c b/net/netfilter/nf_conntrack_dict.c
+new file mode 100644
+index 000000000000..5a247f2b6210
+--- /dev/null
++++ b/net/netfilter/nf_conntrack_dict.c
+@@ -0,0 +1,1120 @@
++#include <linux/module.h>
++#include <linux/proc_fs.h>
++#include <linux/rhashtable.h>
++#include <linux/glob.h>
++#include <linux/jhash.h>
++#include <linux/parser.h>
++#include <linux/inet.h>
++#include <net/netfilter/nf_conntrack.h>
++#include <net/netfilter/nf_conntrack_dict.h>
++
++static struct proc_dir_entry *dict_dir;
++static struct rhashtable ht;
++
++struct dict_hash_cmp_arg {
++	u8	*key;
++	u32	key_len;
++	char	*table;
++};
++
++static inline int dict_hash_cmp(struct rhashtable_compare_arg *arg, const void *ptr)
++{
++	struct nf_conn_dict *dict = (struct nf_conn_dict *)ptr;
++	const struct dict_hash_cmp_arg *x = arg->key;
++	u32 key_hash, table_hash;
++
++	if(x->key_len > sizeof(u32)) {
++		key_hash = jhash(x->key, x->key_len, 0);
++	} else {
++		key_hash = *(u32 *)x->key;
++	}
++
++	if(x->table) {
++		table_hash = jhash(x->table, strlen(x->table), 0);
++		key_hash = jhash_2words(table_hash, key_hash, 0);
++	}
++
++	if(key_hash != dict->key->hash) {
++		return 1;
++	}
++
++	return 0;
++}
++
++static inline u32 dict_hash_obj(const void *data, u32 len, u32 seed)
++{
++	const struct nf_conn_dict *dict = data;
++
++	return dict->key->hash;
++}
++
++static inline u32 dict_hash_key(const void *data, u32 len, u32 seed)
++{
++	const struct dict_hash_cmp_arg *x = data;
++	u32 key_hash, table_hash;
++
++	if(x->key_len > sizeof(u32)) {
++		key_hash = jhash(x->key, x->key_len, 0);
++	} else {
++		key_hash = *(u32 *)x->key;
++	}
++
++	if(x->table) {
++		table_hash = jhash(x->table, strlen(x->table), 0);
++		key_hash = jhash_2words(table_hash, key_hash, 0);
++	}
++
++	return key_hash;
++}
++
++static const struct rhashtable_params dict_rhashtable_params = {
++	.head_offset = offsetof(struct nf_conn_dict, node),
++	.hashfn	= dict_hash_key,
++	.obj_hashfn = dict_hash_obj,
++	.obj_cmpfn = dict_hash_cmp,
++	.automatic_shrinking = true,
++};
++
++static inline int pair_hash_cmp(struct rhashtable_compare_arg *arg, const void *ptr)
++{
++	struct nf_conn_dict_pair * pair = (struct nf_conn_dict_pair *)ptr;
++	u32 hash = *(u32 *)arg->key;
++
++	return !(hash == pair->field->hash);
++}
++
++static inline u32 pair_hash_obj(const void *data, u32 len, u32 seed)
++{
++	struct nf_conn_dict_pair * pair = (struct nf_conn_dict_pair *) data;
++
++	return pair->field->hash;
++}
++
++static inline u32 pair_hash_key(const void *data, u32 len, u32 seed)
++{
++	u32 hash = *(u32 *)data;
++
++	return hash;
++}
++
++static const struct rhashtable_params pair_rhashtable_params = {
++	.head_offset = offsetof(struct nf_conn_dict_pair, node),
++	.hashfn	= pair_hash_key,
++	.obj_hashfn = pair_hash_obj,
++	.obj_cmpfn = pair_hash_cmp,
++	.automatic_shrinking = true,
++};
++
++static int show_dict(struct seq_file *m, struct nf_conn_dict *dict)
++{
++	struct rhashtable *ht = &dict->pair_ht;
++	struct rhashtable_iter hti;
++	struct nf_conn_dict_pair *pair;
++	unsigned int err;
++
++	err = rhashtable_walk_init(ht, &hti, GFP_KERNEL);
++	if (err) {
++		pr_err("%s: rhashtable_walk_init failed: allocation error: %d", __func__, err);
++		return err;
++	}
++
++	err = rhashtable_walk_start(&hti);
++	if (err && err != -EAGAIN) {
++		pr_err("%s: rhashtable_walk_start failed: %d\n", __func__, err);
++		return err;
++	}
++
++
++	while ((pair = rhashtable_walk_next(&hti)) && !IS_ERR(dict)) {
++		if(dict->table) {
++			seq_printf(m, "table: %s ", dict->table->buf);
++		} else {
++			seq_printf(m, "table: None ");
++		}
++
++	//	seq_printf(m, "id: %u ", ct_id);
++		if(dict->key->printfn) {
++			seq_printf(m, "key_");
++			(dict->key->printfn)(m, dict->key->buf);
++			seq_printf(m, " ");
++		}
++
++		seq_printf(m, "field: %s ", pair->field->buf);
++
++		if(pair->value->printfn) {
++			(pair->value->printfn)(m, pair->value->buf);
++			seq_printf(m, "\n");
++		}
++	}
++
++	rhashtable_walk_stop(&hti);
++	rhashtable_walk_exit(&hti);
++
++	return 0;
++}
++
++static int all_dict_show(struct seq_file *m, void *v)
++{
++	struct rhashtable *ht = (struct rhashtable *)m->private;
++	struct rhashtable_iter hti;
++	struct nf_conn_dict *dict;
++	unsigned int err;
++
++	err = rhashtable_walk_init(ht, &hti, GFP_KERNEL);
++	if (err) {
++		pr_err("%s: rhashtable_walk_init failed: allocation error: %d", __func__, err);
++		return err;
++	}
++
++	err = rhashtable_walk_start(&hti);
++	if (err && err != -EAGAIN) {
++		pr_err("%s: rhashtable_walk_start failed: %d\n", __func__, err);
++		return err;
++	}
++
++	while ((dict = rhashtable_walk_next(&hti)) && !IS_ERR(dict)) {
++		show_dict(m, dict);
++	}
++
++	rhashtable_walk_stop(&hti);
++	rhashtable_walk_exit(&hti);
++
++	return 0;
++}
++
++static int all_dict_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, all_dict_show, PDE_DATA(inode));
++}
++
++static const struct file_operations all_dict_file_ops = {
++	.owner   = THIS_MODULE,
++	.open    = all_dict_open,
++	.read    = seq_read,
++	.llseek  = seq_lseek,
++	.release = single_release,
++};
++
++static int all_show(struct seq_file *m, void *v)
++{
++	struct nf_conn_dict *dict = (struct nf_conn_dict *)m->private;
++
++	show_dict(m, dict);
++
++	return 0;
++}
++
++static int all_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, all_show, PDE_DATA(inode));
++}
++
++enum {
++	Opt_key_int,
++	Opt_key_ip,
++	Opt_key_ip6,
++	Opt_key_mac,
++	Opt_key_string,
++	Opt_field,
++	Opt_value,
++	Opt_ip,
++	Opt_ip6,
++	Opt_mac,
++	Opt_bool,
++	Opt_int,
++	Opt_int64,
++	Opt_table,
++	Opt_err,
++};
++
++static const match_table_t tokens = {
++	{Opt_key_int, "key_int=%u"},
++	{Opt_key_ip, "key_ip=%s"},
++	{Opt_key_ip6, "key_ip6=%s"},
++	{Opt_key_mac, "key_mac=%s"},
++	{Opt_key_string, "key_string=%s"},
++	{Opt_field, "field=%s"},
++	{Opt_value, "value=%s"},
++	{Opt_ip, "ip=%s"},
++	{Opt_ip6, "ip6=%s"},
++	{Opt_mac, "mac=%s"},
++	{Opt_bool, "bool=%s"},
++	{Opt_int, "int=%d"},
++	{Opt_int64, "int64=%s"},
++	{Opt_table, "table=%s"},
++	{Opt_err, NULL},
++};
++
++static int match_u64int(substring_t *s, u64 *result)
++{
++	char *buf;
++	int ret;
++	u64 val;
++	size_t len = s->to - s->from;
++
++	buf = kmalloc(len + 1, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	memcpy(buf, s->from, len);
++	buf[len] = '\0';
++
++	ret = kstrtoull(buf, 0, &val);
++	if(!ret)
++		*result = val;
++
++	kfree(buf);
++	return ret;
++}
++
++static int match_uint(substring_t *s, unsigned int *result)
++{
++	char *buf;
++	int ret;
++	unsigned int val;
++	size_t len = s->to - s->from;
++
++	buf = kmalloc(len + 1, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	memcpy(buf, s->from, len);
++	buf[len] = '\0';
++
++	ret = kstrtouint(buf, 0, &val);
++	if(!ret)
++		*result = val;
++
++	kfree(buf);
++	return ret;
++}
++
++static void seq_print_ip(struct seq_file *m, char *buf)
++{
++	seq_printf(m, "ip: %pI4", buf);
++}
++
++static void seq_print_ip6(struct seq_file *m, char *buf)
++{
++	seq_printf(m, "ip6: %pI6", buf);
++}
++
++static void seq_print_mac(struct seq_file *m, char *buf)
++{
++	seq_printf(m, "mac: %02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
++}
++
++static void seq_print_string(struct seq_file *m, char *buf)
++{
++	seq_printf(m, "string: %s", buf);
++}
++
++static void seq_print_bool(struct seq_file *m, char *buf)
++{
++	if(buf[0] == 1) {
++		seq_printf(m, "bool: true");
++	} else {
++		seq_printf(m, "bool: false");
++	}
++}
++
++static void seq_print_integer(struct seq_file *m, char *buf)
++{
++	seq_printf(m, "int: %u", *(int *)buf);
++}
++
++static void seq_print_integer64(struct seq_file *m, char *buf)
++{
++	seq_printf(m, "int64: %llu", *(u64 *)buf);
++}
++
++static ssize_t top_write(struct file *file, const char __user *buf, size_t size, loff_t *pos)
++{
++	u8 key[128];
++	char *orig, *local_buf, *p, *field = NULL, *value = NULL, *ip = NULL, *table = NULL, *string_value = NULL;
++	unsigned int len = 0, key_len = 0, integer = 0;
++	u64 integer64 = 0;
++	u8 addr[4] = {0,0,0,0};
++	u8 addr6[16] = {0,0,0,0,
++			0,0,0,0,
++			0,0,0,0,
++			0,0,0,0};
++	u8 mac[6] = {0,0,0,0,0,0};
++	u8 val = 0;
++	struct nf_conn_dict *dict = PDE_DATA(file_inode(file));
++	substring_t args[MAX_OPT_ARGS];
++	seq_printfn_t printfn = NULL;
++	seq_printfn_t key_printfn = NULL;
++
++	memset(key, 0, sizeof(key));
++
++	orig = local_buf = kzalloc(size, GFP_KERNEL);
++	if(!local_buf) {
++		pr_err("%s: Could not allocate local buffer!\n", __func__);
++		goto err;
++	}
++
++	if (copy_from_user(local_buf, buf, size) != 0) {
++		pr_err("%s: copy_from_user failed!\n", __func__);
++		goto free_local_buf;
++	}
++
++	while ((p = strsep(&local_buf, ","))) {
++		int token;
++
++		if (!*p)
++			continue;
++
++		token = match_token(p, tokens, args);
++		switch (token) {
++			case Opt_key_int:
++				{
++					unsigned int temp, ret = 0;
++					ret = match_uint(&args[0], &temp);
++					if(ret) {
++						pr_err("%s: Opt_key_int failed %d\n", __func__, ret);
++						goto free_local_buf;
++					}
++					key_len = sizeof(temp);
++					memcpy(key, &temp, key_len);
++					key_printfn = &seq_print_integer;
++					break;
++				}
++			case Opt_key_ip:
++				{
++					char *temp;
++					temp = match_strdup(&args[0]);
++					in4_pton(temp, -1, key, -1, NULL);
++					key_len = 4;
++					kfree(temp);
++					key_printfn = &seq_print_ip;
++					break;
++				}
++			case Opt_key_ip6:
++				{
++					char *temp;
++					temp = match_strdup(&args[0]);
++					in6_pton(temp, -1, key, -1, NULL);
++					key_len = 16;
++					kfree(temp);
++					key_printfn = &seq_print_ip6;
++					break;
++				}
++			case Opt_key_mac:
++				{
++					char *temp;
++					temp = match_strdup(&args[0]);
++					sscanf(temp, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx", &key[0], &key[1], &key[2], &key[3], &key[4], &key[5]);
++					key_len = 6;
++					kfree(temp);
++					key_printfn = &seq_print_mac;
++					break;
++				}
++			case Opt_key_string:
++				{
++					char *temp;
++					temp = match_strdup(&args[0]);
++					key_len = strlen(temp);
++					memcpy(key, temp, key_len);
++					kfree(temp);
++					key_printfn = &seq_print_string;
++					break;
++				}
++			case Opt_field:
++				{
++					field = match_strdup(&args[0]);
++					break;
++				}
++			case Opt_value:
++				{
++					string_value = match_strdup(&args[0]);
++					value = string_value;
++					len = strlen(value);
++					printfn = &seq_print_string;
++					break;
++				}
++			case Opt_ip:
++				{
++					ip = match_strdup(&args[0]);
++					in4_pton(ip, -1, addr, -1, NULL);
++					value = addr;
++					len = sizeof(addr);
++					printfn = &seq_print_ip;
++					kfree(ip);
++					break;
++				}
++			case Opt_ip6:
++				{
++					ip = match_strdup(&args[0]);
++					in6_pton(ip, -1, addr6, -1, NULL);
++					value = addr6;
++					len = sizeof(addr6);
++					printfn = &seq_print_ip6;
++					kfree(ip);
++					break;
++				}
++			case Opt_mac:
++				{
++					ip = match_strdup(&args[0]);
++					sscanf(ip, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx", &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
++					value = mac;
++					len = sizeof(mac);
++					printfn = &seq_print_mac;
++					kfree(ip);
++					break;
++				}
++			case Opt_bool:
++				{
++					ip = match_strdup(&args[0]);
++					if(!strcmp(ip, "true")) {
++						val = 1;
++					} else if (!strcmp(ip, "false")) {
++						val = 0;
++					} else {
++						kfree(ip);
++						pr_err("%s: Opt_true true or false required\n", __func__);
++						goto free_local_buf;
++					}
++					value = &val;
++					len = 1;
++					printfn = &seq_print_bool;
++					kfree(ip);
++					break;
++				}
++			case Opt_int:
++				{
++					int ret = 0;
++					ret = match_int(&args[0], &integer);
++					if(ret) {
++						pr_err("%s: Opt_int failed %d\n", __func__, ret);
++						goto free_local_buf;
++					}
++					value = (char *)&integer;
++					len = sizeof(int);
++					printfn = &seq_print_integer;
++					break;
++				}
++			case Opt_int64:
++				{
++					int ret = 0;
++					ret = match_u64int(&args[0], &integer64);
++					if(ret) {
++						pr_err("%s: Opt_int64 failed %d\n", __func__, ret);
++						goto free_local_buf;
++					}
++					value = (char *)&integer64;
++					len = sizeof(u64);
++					printfn = &seq_print_integer64;
++					break;
++				}
++			case Opt_table:
++				{
++					table = match_strdup(&args[0]);
++					break;
++				}
++			default:
++				pr_err("unrecognized option \"%s\" "
++				       "or missing value\n", p);
++				break;
++		}
++	}
++
++	if(key_len != 0 && field && value && len != 0) {
++		dict = find_conntrack_dict(key, key_len, table);
++		if(dict) {
++			new_dict_pair(dict, field, value, len, printfn);
++		} else {
++			struct nf_conn_dict * new;
++
++			new = new_dict(key, key_len, table, key_printfn);
++			if(new) {
++				new_dict_pair(new, field, value, len, printfn);
++			}
++		}
++	} else {
++		pr_err("%s: Insuffient input\n", __func__);
++	}
++
++	kfree(field);
++	if(string_value)
++		kfree(string_value);
++	if(table)
++		kfree(table);
++free_local_buf:
++	kfree(orig);
++err:
++	return size;
++}
++
++static const struct file_operations write_file_ops = {
++	.owner   = THIS_MODULE,
++	.open    = all_open,
++	.read    = seq_read,
++	.write   = top_write,
++	.llseek  = seq_lseek,
++	.release = single_release,
++};
++
++static struct nf_conn_dict *read_dict = NULL;
++static int top_show(struct seq_file *m, void *v)
++{
++	if(read_dict) {
++		show_dict(m, read_dict);
++	}
++
++	return 0;
++}
++
++static int top_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, top_show, PDE_DATA(inode));
++}
++
++static ssize_t read_id_write(struct file *file, const char __user *buf, size_t size, loff_t *pos)
++{
++	u8 key[128];
++	char * orig, * local_buf, * p,* table = NULL;
++	substring_t args[MAX_OPT_ARGS];
++	unsigned int key_len = 0;
++
++	memset(key, 0, sizeof(key));
++
++	orig = local_buf = kzalloc(size, GFP_KERNEL);
++	if(!local_buf) {
++		pr_err("%s: Could not allocate local buffer!\n", __func__);
++		goto err;
++	}
++
++	if (copy_from_user(local_buf, buf, size) != 0) {
++		pr_err("%s: copy_from_user failed!\n", __func__);
++		goto free_local_buf;
++	}
++
++	while ((p = strsep(&local_buf, ","))) {
++		int token;
++
++		if (!*p)
++			continue;
++
++		token = match_token(p, tokens, args);
++		switch (token) {
++			case Opt_key_int:
++				{
++					unsigned int temp, ret = 0;
++					ret = match_uint(&args[0], &temp);
++					if(ret) {
++						pr_err("%s: Opt_key_int failed %d\n", __func__, ret);
++						goto free_local_buf;
++					}
++					key_len = sizeof(temp);
++					memcpy(key, &temp, key_len);
++					break;
++				}
++			case Opt_key_ip:
++				{
++					char *temp;
++					temp = match_strdup(&args[0]);
++					in4_pton(temp, -1, key, -1, NULL);
++					key_len = 4;
++					kfree(temp);
++					break;
++				}
++			case Opt_key_ip6:
++				{
++					char *temp;
++					temp = match_strdup(&args[0]);
++					in6_pton(temp, -1, key, -1, NULL);
++					key_len = 16;
++					kfree(temp);
++					break;
++				}
++			case Opt_key_mac:
++				{
++					char *temp;
++					temp = match_strdup(&args[0]);
++					sscanf(temp, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx", &key[0], &key[1], &key[2], &key[3], &key[4], &key[5]);
++					key_len = 6;
++					kfree(temp);
++					break;
++				}
++			case Opt_key_string:
++				{
++					char *temp;
++					temp = match_strdup(&args[0]);
++					key_len = strlen(temp);
++					memcpy(key, temp, key_len);
++					kfree(temp);
++					break;
++				}
++			case Opt_table:
++				{
++					table = match_strdup(&args[0]);
++					break;
++				}
++			default:
++				pr_err("unrecognized option \"%s\" "
++				       "or missing value\n", p);
++				break;
++		}
++	}
++
++	read_dict = find_conntrack_dict(key, key_len, table);
++
++	if(table)
++		kfree(table);
++free_local_buf:
++	kfree(orig);
++err:
++	return size;
++}
++
++static const struct file_operations read_file_ops = {
++	.owner   = THIS_MODULE,
++	.open    = top_open,
++	.read    = seq_read,
++	.write   = read_id_write,
++	.llseek  = seq_lseek,
++	.release = single_release,
++};
++
++static ssize_t delete_id_write(struct file *file, const char __user *buf, size_t size, loff_t *pos)
++{
++	u8 key[128];
++	char * orig, * local_buf, * p,* table = NULL;
++	substring_t args[MAX_OPT_ARGS];
++	unsigned int key_len = 0;
++
++	memset(key, 0, sizeof(key));
++
++	orig = local_buf = kzalloc(size, GFP_KERNEL);
++	if(!local_buf) {
++		pr_err("%s: Could not allocate local buffer!\n", __func__);
++		goto err;
++	}
++
++	if (copy_from_user(local_buf, buf, size) != 0) {
++		pr_err("%s: copy_from_user failed!\n", __func__);
++		goto free_local_buf;
++	}
++
++	while ((p = strsep(&local_buf, ","))) {
++		int token;
++
++		if (!*p)
++			continue;
++
++		token = match_token(p, tokens, args);
++		switch (token) {
++			case Opt_key_int:
++				{
++					unsigned int temp, ret = 0;
++					ret = match_uint(&args[0], &temp);
++					if(ret) {
++						pr_err("%s: Opt_key_int failed %d\n", __func__, ret);
++						goto free_local_buf;
++					}
++					key_len = sizeof(temp);
++					memcpy(key, &temp, key_len);
++					break;
++				}
++			case Opt_key_ip:
++				{
++					char *temp;
++					temp = match_strdup(&args[0]);
++					in4_pton(temp, -1, key, -1, NULL);
++					key_len = 4;
++					kfree(temp);
++					break;
++				}
++			case Opt_key_ip6:
++				{
++					char *temp;
++					temp = match_strdup(&args[0]);
++					in6_pton(temp, -1, key, -1, NULL);
++					key_len = 16;
++					kfree(temp);
++					break;
++				}
++			case Opt_key_mac:
++				{
++					char *temp;
++					temp = match_strdup(&args[0]);
++					sscanf(temp, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx", &key[0], &key[1], &key[2], &key[3], &key[4], &key[5]);
++					key_len = 6;
++					kfree(temp);
++					break;
++				}
++			case Opt_key_string:
++				{
++					char *temp;
++					temp = match_strdup(&args[0]);
++					key_len = strlen(temp);
++					memcpy(key, temp, key_len);
++					kfree(temp);
++					break;
++				}
++			case Opt_table:
++				{
++					table = match_strdup(&args[0]);
++					break;
++				}
++			default:
++				pr_err("unrecognized option \"%s\" "
++				       "or missing value\n", p);
++				break;
++		}
++	}
++
++	destroy_dict(key, key_len, table);
++
++	if(table)
++		kfree(table);
++free_local_buf:
++	kfree(orig);
++err:
++	return size;
++}
++
++static const struct file_operations delete_file_ops = {
++	.owner   = THIS_MODULE,
++	.open    = top_open,
++	.read    = seq_read,
++	.write   = delete_id_write,
++	.llseek  = seq_lseek,
++	.release = single_release,
++};
++
++static struct nf_conn_dict_pair_elem * alloc_dict_pair_elem(int size)
++{
++	struct nf_conn_dict_pair_elem * new;
++
++	new = kzalloc(sizeof(*new), GFP_KERNEL);
++	if(!new) {
++		pr_err("%s: Could not allocate new pair string\n", __func__);
++		goto err;
++	}
++
++	new->buf = kzalloc(size, GFP_KERNEL);
++	if(!new->buf) {
++		pr_err("%s: Could not allocate new string\n", __func__);
++		goto err_free_new;
++	}
++
++	return new;
++
++err_free_new:
++	kfree(new);
++err:
++	return NULL;
++}
++
++static void free_dict_pair_elem(struct nf_conn_dict_pair_elem * elem)
++{
++	kfree(elem->buf);
++	kfree(elem);
++}
++
++static void free_pair(struct nf_conn_dict_pair *pair)
++{
++	free_dict_pair_elem(pair->field);
++	free_dict_pair_elem(pair->value);
++	kfree(pair);
++}
++
++void new_dict_pair(struct nf_conn_dict *dict, char * field, char * value, int len, seq_printfn_t printfn)
++{
++	struct nf_conn_dict_pair * pair;
++	struct nf_conn_dict_pair_elem * new_value, * old_value;
++	int ret;
++	u32 hash;
++
++	new_value = alloc_dict_pair_elem(len + 1);
++	if(!new_value) {
++		pr_err("%s: Could not allocate new_value\n", __func__);
++		return;
++	}
++
++	memcpy(new_value->buf, value, len);
++	new_value->len = len;
++	new_value->hash = jhash(new_value->buf, new_value->len, 0);
++	new_value->printfn = printfn;
++
++	hash = jhash(field, strlen(field), 0);
++
++	rcu_read_lock();
++	pair = rhashtable_lookup_fast(&dict->pair_ht, &hash, pair_rhashtable_params);
++	rcu_read_unlock();
++	if(!pair) {
++		pair = kzalloc(sizeof(*pair), GFP_KERNEL);
++		if(!pair) {
++			pr_err("%s: Could not allocate pair structure\n", __func__);
++			free_dict_pair_elem(new_value);
++			return;
++		}
++
++		pair->field = alloc_dict_pair_elem(strlen(field) + 1);
++		if(!pair->field) {
++			pr_err("%s: Could not allocate pair->field\n", __func__);
++			free_dict_pair_elem(new_value);
++			kfree(pair);
++			return;
++		}
++
++		strcpy(pair->field->buf, field);
++		pair->field->len = strlen(pair->field->buf);
++		pair->field->hash = hash;
++		//pair->ct_id = dict->key;
++		pair->value = new_value;
++
++		ret = rhashtable_lookup_insert_key(&dict->pair_ht, &pair->field->hash, &pair->node, pair_rhashtable_params);
++		if(ret < 0) {
++			pr_err("%s: Unable to insert pair into hashtable: %d\n", __func__, ret);
++			free_pair(pair);
++			return;
++		}
++
++	} else {
++		old_value = rcu_dereference(pair->value);
++		rcu_assign_pointer(pair->value, new_value);
++		free_dict_pair_elem(old_value);
++	}
++
++	return;
++}
++EXPORT_SYMBOL_GPL(new_dict_pair);
++
++struct nf_conn_dict * new_dict(u8 *key, u32 key_len, char *table, seq_printfn_t printfn)
++{
++	struct nf_conn_dict * dict;
++	int ret;
++	struct dict_hash_cmp_arg arg = {
++		.key = key,
++		.key_len = key_len,
++		.table = table,
++	};
++
++	dict = kzalloc(sizeof(*dict), GFP_KERNEL);
++	if(!dict) {
++		pr_err("%s: Could not allocate dict structure\n", __func__);
++		return NULL;
++	}
++
++	dict->key = alloc_dict_pair_elem(key_len);
++	if(!dict->key) {
++		pr_err("%s: Could not allocate dict key structure\n", __func__);
++		kfree(dict);
++		return NULL;
++	}
++	memcpy(dict->key->buf, key, key_len);
++	dict->key->len = key_len;
++	dict->key->printfn = printfn;
++
++	if(dict->key->len > sizeof(u32)) {
++		dict->key->hash = jhash(dict->key->buf, dict->key->len, 0);
++	} else {
++		dict->key->hash = *(u32 *)dict->key->buf;
++	}
++
++	if(table) {
++		dict->table = alloc_dict_pair_elem(strlen(table) + 1);
++		if(!dict->table) {
++			pr_err("%s: Could not allocate dict key structure\n", __func__);
++			kfree(dict->key);
++			kfree(dict);
++			return NULL;
++		}
++		strcpy(dict->table->buf, table);
++		dict->table->len = strlen(dict->table->buf);
++		dict->table->hash = jhash(dict->table->buf, dict->table->len, 0);
++
++		dict->key->hash = jhash_2words(dict->table->hash, dict->key->hash, 0);
++	}
++
++	ret = rhashtable_lookup_insert_key(&ht, &arg, &dict->node, dict_rhashtable_params);
++	if(ret < 0) {
++		pr_err("%s: Unable to insert dict into hashtable: %d\n", __func__, ret);
++		kfree(dict);
++		return NULL;
++	}
++
++	ret = rhashtable_init(&dict->pair_ht, &pair_rhashtable_params);
++	if(ret < 0) {
++		pr_err("%s: Unable to initialize pair hashtable: %d\n", __func__, ret);
++		return NULL;
++	}
++
++	return dict;
++}
++
++static void free_dict_pair(void *ptr, void *arg)
++{
++	struct nf_conn_dict_pair * pair = (struct nf_conn_dict_pair *)ptr;
++
++	free_pair(pair);
++}
++
++static void __free_dict(struct nf_conn_dict * dict)
++{
++	if(!dict)
++		return;
++
++	rhashtable_free_and_destroy(&dict->pair_ht, free_dict_pair, NULL);
++
++	if(dict->table) {
++		free_dict_pair_elem(dict->table);
++	}
++
++	free_dict_pair_elem(dict->key);
++	kfree(dict);
++}
++
++static void free_dict(void *ptr, void *arg)
++{
++	struct nf_conn_dict * dict = (struct nf_conn_dict *)ptr;
++
++	__free_dict(dict);
++}
++
++struct nf_conn_dict * find_conntrack_dict(u8 *key, u32 key_len, char *table)
++{
++	struct nf_conn_dict * dict;
++	struct dict_hash_cmp_arg arg = {
++		.key = key,
++		.key_len = key_len,
++		.table = table,
++	};
++
++	rcu_read_lock();
++	dict = rhashtable_lookup_fast(&ht, &arg, dict_rhashtable_params);
++	rcu_read_unlock();
++
++	return dict;
++}
++EXPORT_SYMBOL_GPL(find_conntrack_dict);
++
++struct nf_conn_dict_pair * find_conntrack_dict_pair(struct nf_conn_dict * dict, u32 * hash)
++{
++	struct nf_conn_dict_pair * pair;
++
++	rcu_read_lock();
++	pair = rhashtable_lookup_fast(&dict->pair_ht, hash, pair_rhashtable_params);
++	rcu_read_unlock();
++
++	return pair;
++}
++EXPORT_SYMBOL_GPL(find_conntrack_dict_pair);
++
++void destroy_dict(u8 *key, u32 key_len, char *table)
++{
++	struct nf_conn_dict * dict;
++	int ret;
++
++	dict = find_conntrack_dict(key, key_len, table);
++	if(!dict) {
++		return;
++	}
++
++	ret = rhashtable_remove_fast(&ht, &dict->node, dict_rhashtable_params);
++	if(ret < 0) {
++		pr_err("%s: Unable to remove seession from hashtable: %d\n", __func__, ret);
++		return;
++	}
++
++	__free_dict(dict);
++}
++
++static int __net_init dict_net_init(struct net *net)
++{
++	int ret = 0;
++	struct proc_dir_entry * temp;
++
++	dict_dir = proc_net_mkdir(net, "dict", net->proc_net);
++	if (!dict_dir) {
++		pr_err("cannot create dict proc entry");
++		return -ENOMEM;
++	}
++
++	temp = proc_create_data("all", 0440, dict_dir, &all_dict_file_ops, &ht);
++	if (!temp) {
++		pr_err("cannot create all proc");
++		remove_proc_entry("dict", net->proc_net);
++		return -ENOMEM;
++	}
++
++	temp = proc_create_data("write", 0440, dict_dir, &write_file_ops, NULL);
++	if (!temp) {
++		remove_proc_entry("all", dict_dir);
++		pr_err("cannot create write proc");
++		return -ENOMEM;
++	}
++
++	temp = proc_create_data("read", 0440, dict_dir, &read_file_ops, NULL);
++	if (!temp) {
++		remove_proc_entry("write", dict_dir);
++		remove_proc_entry("all", dict_dir);
++		pr_err("cannot create read proc");
++		return -ENOMEM;
++	}
++
++	temp = proc_create_data("delete", 0440, dict_dir, &delete_file_ops, NULL);
++	if (!temp) {
++		remove_proc_entry("read", dict_dir);
++		remove_proc_entry("write", dict_dir);
++		remove_proc_entry("all", dict_dir);
++		pr_err("cannot create delete proc");
++		return -ENOMEM;
++	}
++
++
++	return ret;
++}
++
++static void __net_exit dict_net_exit(struct net *net)
++{
++	remove_proc_entry("delete", dict_dir);
++	remove_proc_entry("read", dict_dir);
++	remove_proc_entry("write", dict_dir);
++	remove_proc_entry("all", dict_dir);
++	remove_proc_entry("dict", net->proc_net);
++}
++
++static struct pernet_operations dict_net_ops = {
++	.init = dict_net_init,
++	.exit = dict_net_exit,
++};
++
++void nf_conntrack_dict_exit(void)
++{
++	unregister_pernet_subsys(&dict_net_ops);
++	rhashtable_free_and_destroy(&ht, free_dict, NULL);
++}
++
++int nf_conntrack_dict_init(void)
++{
++	int err = 0;
++
++	err = rhashtable_init(&ht, &dict_rhashtable_params);
++	if(err < 0) {
++		pr_err("%s: Unable to initialize hashtable: %d\n", __func__, err);
++		goto err;
++	}
++
++	err = register_pernet_subsys(&dict_net_ops);
++	if (err) {
++		goto err_destroy_rhashtable;
++	}
++
++	return 0;
++
++err_destroy_rhashtable:
++	rhashtable_free_and_destroy(&ht, free_dict, NULL);
++err:
++	return err;
++}
++
++MODULE_AUTHOR("Brett Mastbergen <bmastbergen@untangle.com>");
++MODULE_DESCRIPTION("Conntrack dict support");
++MODULE_LICENSE("GPL");
++
++module_init(nf_conntrack_dict_init);
++module_exit(nf_conntrack_dict_exit);
+diff --git a/net/netfilter/nft_dict.c b/net/netfilter/nft_dict.c
+new file mode 100644
+index 000000000000..d6280bd590e3
+--- /dev/null
++++ b/net/netfilter/nft_dict.c
+@@ -0,0 +1,192 @@
++#include <linux/glob.h>
++#include <linux/tcp.h>
++#include <net/netfilter/nf_tables.h>
++#include <net/netfilter/nf_conntrack.h>
++#include <net/netfilter/nf_conntrack_dict.h>
++
++#define DICT_FIELD_SIZE 128
++#define DICT_VALUE_SIZE 128
++struct nft_dict {
++	enum nft_registers      sreg:8;
++	enum nft_registers      dreg:8;
++	char field[DICT_FIELD_SIZE];
++	u8 field_len;
++	u32 field_hash;
++	char value[DICT_VALUE_SIZE];
++	u8 value_len;
++	u32 value_hash;
++	u32 type;
++	char table[DICT_VALUE_SIZE];
++	char *ptable;
++	u32 len;
++	u32 size;
++};
++
++static const struct nla_policy nft_dict_policy[NFTA_DICT_MAX + 1] = {
++	[NFTA_DICT_SREG]	= { .type = NLA_U32 },
++	[NFTA_DICT_DREG]	= { .type = NLA_U32 },
++	[NFTA_DICT_TYPE]	= { .type = NLA_U32 },
++	[NFTA_DICT_LEN]		= { .type = NLA_U32 },
++	[NFTA_DICT_SIZE]	= { .type = NLA_U32 },
++	[NFTA_DICT_FIELD]	= { .type = NLA_STRING, .len = DICT_FIELD_SIZE },
++	[NFTA_DICT_VALUE]	= { .type = NLA_STRING, .len = DICT_VALUE_SIZE },
++	[NFTA_DICT_TABLE]	= { .type = NLA_STRING, .len = DICT_VALUE_SIZE },
++};
++
++static void nft_dict_get_eval(const struct nft_expr *expr, struct nft_regs *regs, const struct nft_pktinfo *pkt)
++{
++	struct nft_dict *priv = nft_expr_priv(expr);
++	u8 *key = (u8 *)&regs->data[priv->sreg];
++	void *data = &regs->data[priv->dreg];
++	struct nf_conn_dict * dict;
++	struct nf_conn_dict_pair * pair;
++
++	dict = find_conntrack_dict(key, priv->len, priv->ptable);
++	if(!dict) {
++		goto err;
++	}
++
++	pair = find_conntrack_dict_pair(dict, &priv->field_hash);
++	if(!pair) {
++		goto err;
++	}
++
++	if(priv->value[0] != '\0') {
++		regs->verdict.code = NFT_BREAK;
++		rcu_read_lock();
++		if(priv->value_hash != pair->value->hash) {
++			if(glob_match(priv->value, pair->value->buf)) {
++				regs->verdict.code = NFT_CONTINUE;
++			}
++		} else {
++			regs->verdict.code = NFT_CONTINUE;
++		}
++		rcu_read_unlock();
++	} else {
++		memset(data, 0, priv->size);
++		if(pair->value->len > priv->size) {
++			memcpy(data, &pair->value->hash, sizeof(pair->value->hash));
++		} else {
++			memcpy(data, pair->value->buf, pair->value->len);
++		}
++	}
++	return;
++err:
++	regs->verdict.code = NFT_BREAK;
++}
++
++static int nft_dict_init(const struct nft_ctx *ctx, const struct nft_expr *expr, const struct nlattr * const tb[])
++{
++	struct nft_dict *priv = nft_expr_priv(expr);
++
++	if (!tb[NFTA_DICT_SREG] ||
++	    !tb[NFTA_DICT_LEN] ||
++	    !tb[NFTA_DICT_FIELD])
++		return -EINVAL;
++
++	memset(priv, 0, sizeof(*priv));
++	priv->sreg = nft_parse_register(tb[NFTA_DICT_SREG]);
++
++	if(tb[NFTA_DICT_DREG]) {
++		priv->dreg = nft_parse_register(tb[NFTA_DICT_DREG]);
++	}
++
++	nla_strlcpy(priv->field, tb[NFTA_DICT_FIELD], DICT_FIELD_SIZE);
++	priv->field_len = strlen(priv->field);
++	priv->field_hash = jhash(priv->field, priv->field_len, 0);
++
++	if(tb[NFTA_DICT_VALUE]) {
++		nla_strlcpy(priv->value, tb[NFTA_DICT_VALUE], DICT_VALUE_SIZE);
++		priv->value_len = strlen(priv->value);
++		priv->value_hash = jhash(priv->value, priv->value_len, 0);
++	}
++
++	if(tb[NFTA_DICT_TABLE]) {
++		nla_strlcpy(priv->table, tb[NFTA_DICT_TABLE], DICT_VALUE_SIZE);
++		priv->ptable = priv->table;
++	} else {
++		priv->ptable = NULL;
++	}
++
++	if(tb[NFTA_DICT_TYPE]) {
++		priv->type = ntohl(nla_get_be32(tb[NFTA_DICT_TYPE]));
++	}
++	if(tb[NFTA_DICT_SIZE]) {
++		priv->size = ntohl(nla_get_be32(tb[NFTA_DICT_SIZE]));
++	}
++	priv->len = ntohl(nla_get_be32(tb[NFTA_DICT_LEN]));
++
++	return nft_validate_register_load(priv->sreg, priv->len);
++}
++
++static int nft_dict_dump(struct sk_buff *skb, const struct nft_expr *expr)
++{
++	const struct nft_dict *priv = nft_expr_priv(expr);
++
++	if (nft_dump_register(skb, NFTA_DICT_SREG, priv->sreg))
++		return -1;
++
++	if(priv->dreg != 0) {
++		if (nft_dump_register(skb, NFTA_DICT_DREG, priv->dreg))
++			return -1;
++	}
++
++	if(priv->type != 0) {
++		if (nla_put_be32(skb, NFTA_DICT_TYPE, htonl(priv->type)))
++			return -1;
++	}
++
++	if(priv->size != 0) {
++		if (nla_put_be32(skb, NFTA_DICT_SIZE, htonl(priv->size)))
++			return -1;
++	}
++
++	if(nla_put_string(skb, NFTA_DICT_FIELD, priv->field))
++		return -1;
++
++	if(priv->value[0] != '\0') {
++		if(nla_put_string(skb, NFTA_DICT_VALUE, priv->value))
++			return -1;
++	}
++
++	if(priv->table[0] != '\0') {
++		if(nla_put_string(skb, NFTA_DICT_TABLE, priv->table))
++			return -1;
++	}
++
++	return 0;
++}
++
++static struct nft_expr_type nft_dict_type;
++static const struct nft_expr_ops nft_dict_ops = {
++	.eval = nft_dict_get_eval,
++	.size = NFT_EXPR_SIZE(sizeof(struct nft_dict)),
++	.init = nft_dict_init,
++	.dump = nft_dict_dump,
++	.type = &nft_dict_type,
++};
++
++static struct nft_expr_type nft_dict_type __read_mostly = {
++	.name = "dict",
++	.ops = &nft_dict_ops,
++	.owner = THIS_MODULE,
++	.policy = nft_dict_policy,
++	.maxattr = NFTA_DICT_MAX,
++};
++
++static int __init nft_dict_module_init(void)
++{
++	return nft_register_expr(&nft_dict_type);
++};
++
++static void __exit nft_dict_module_exit(void)
++{
++	nft_unregister_expr(&nft_dict_type);
++}
++
++module_init(nft_dict_module_init);
++module_exit(nft_dict_module_exit);
++
++MODULE_AUTHOR("Brett Mastbergen");
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("Generic field/value pair matching for conntrack");
+-- 
+2.11.0
+

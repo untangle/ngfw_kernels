@@ -1,3 +1,9 @@
+linux (4.9.82-1+deb9u3+untangle4) unstable; urgency=medium
+
+  * Add new dict support
+
+ -- Brett Mastbergen <bmastbergen@untangle.com>  Thu, 28 Jun 2018 13:53:05 -0400
+
 linux (4.9.82-1+deb9u3+untangle3) unstable; urgency=medium
 
   * Add conndict support (configured as a livepatch module)
