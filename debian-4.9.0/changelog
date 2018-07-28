@@ -1,3 +1,10 @@
+linux (4.9.82-1+deb9u3+untangle5) unstable; urgency=medium
+
+  * Fix auto load of nft_dict
+  * Add set support to nft_dict 
+
+ -- Brett Mastbergen <bmastbergen@untangle.com>  Fri, 27 Jul 2018 20:20:08 -0400
+
 linux (4.9.82-1+deb9u3+untangle4) unstable; urgency=medium
 
   * Add new dict support

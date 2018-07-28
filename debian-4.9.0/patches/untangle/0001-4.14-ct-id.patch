@@ -1,4 +1,4 @@
-From f9a905bb9c99b5eb6071f1f9ae9a327042e59aeb Mon Sep 17 00:00:00 2001
+From f19de2563ca003fbae319b160942db855481bf15 Mon Sep 17 00:00:00 2001
 From: Brett Mastbergen <bmastbergen@untangle.com>
 Date: Fri, 22 Jun 2018 14:52:40 -0400
 Subject: [PATCH 1/2] 4.14 ct id
@@ -21,10 +21,10 @@ index c6c4477c136b..d0d758b803c3 100644
  
  /**
 diff --git a/net/netfilter/nft_ct.c b/net/netfilter/nft_ct.c
-index 6837348c8993..06707e96b75d 100644
+index d7b0d171172a..0d84b13ac254 100644
 --- a/net/netfilter/nft_ct.c
 +++ b/net/netfilter/nft_ct.c
-@@ -135,6 +135,11 @@ static void nft_ct_get_eval(const struct nft_expr *expr,
+@@ -134,6 +134,11 @@ static void nft_ct_get_eval(const struct nft_expr *expr,
  	case NFT_CT_PROTOCOL:
  		*dest = nf_ct_protonum(ct);
  		return;
@@ -36,7 +36,7 @@ index 6837348c8993..06707e96b75d 100644
  	default:
  		break;
  	}
-@@ -321,6 +326,9 @@ static int nft_ct_get_init(const struct nft_ctx *ctx,
+@@ -320,6 +325,9 @@ static int nft_ct_get_init(const struct nft_ctx *ctx,
  			priv->dir = IP_CT_DIR_MAX;
  		len = sizeof(u64);
  		break;
@@ -47,5 +47,5 @@ index 6837348c8993..06707e96b75d 100644
  		return -EOPNOTSUPP;
  	}
 -- 
-2.11.0
+2.14.1
 

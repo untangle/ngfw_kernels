@@ -1,26 +1,26 @@
-From f22d31808e8d58fd90204899c79e5d47dea4dd78 Mon Sep 17 00:00:00 2001
+From c5714742b67c0b5b2bf1c318b0d9e93dcca40ed3 Mon Sep 17 00:00:00 2001
 From: Brett Mastbergen <bmastbergen@untangle.com>
 Date: Tue, 26 Jun 2018 13:22:09 -0400
 Subject: [PATCH 2/2] 4.14 dict
 
 ---
- include/net/netfilter/nf_conntrack_dict.h |   37 +
- include/uapi/linux/netfilter/nf_tables.h  |   15 +
- net/netfilter/Kconfig                     |   18 +
+ include/net/netfilter/nf_conntrack_dict.h |   45 ++
+ include/uapi/linux/netfilter/nf_tables.h  |   16 +
+ net/netfilter/Kconfig                     |   19 +
  net/netfilter/Makefile                    |    3 +
- net/netfilter/nf_conntrack_dict.c         | 1120 +++++++++++++++++++++++++++++
- net/netfilter/nft_dict.c                  |  192 +++++
- 6 files changed, 1385 insertions(+)
+ net/netfilter/nf_conntrack_dict.c         | 1128 +++++++++++++++++++++++++++++
+ net/netfilter/nft_dict.c                  |  260 +++++++
+ 6 files changed, 1471 insertions(+)
  create mode 100644 include/net/netfilter/nf_conntrack_dict.h
  create mode 100644 net/netfilter/nf_conntrack_dict.c
  create mode 100644 net/netfilter/nft_dict.c
 
 diff --git a/include/net/netfilter/nf_conntrack_dict.h b/include/net/netfilter/nf_conntrack_dict.h
 new file mode 100644
-index 000000000000..750971ebc986
+index 000000000000..10986069fee1
 --- /dev/null
 +++ b/include/net/netfilter/nf_conntrack_dict.h
-@@ -0,0 +1,37 @@
+@@ -0,0 +1,45 @@
 +#include <linux/types.h>
 +#include <linux/rhashtable.h>
 +#include <linux/netfilter/nf_conntrack_common.h>
@@ -51,6 +51,14 @@ index 000000000000..750971ebc986
 +	struct nf_conn_dict_pair_elem * value;
 +};
 +
++struct nf_conn_dict * new_dict(u8 *key, u32 key_len, char *table, seq_printfn_t printfn);
++void seq_print_ip(struct seq_file *m, char *buf);
++void seq_print_ip6(struct seq_file *m, char *buf);
++void seq_print_mac(struct seq_file *m, char *buf);
++void seq_print_string(struct seq_file *m, char *buf);
++void seq_print_bool(struct seq_file *m, char *buf);
++void seq_print_integer(struct seq_file *m, char *buf);
++void seq_print_integer64(struct seq_file *m, char *buf);
 +void nf_conntrack_dict_disable(void);
 +int nf_conntrack_dict_enable(void);
 +struct nf_conn_dict * new_dict(u8 *key, u32 key_len, char *table, seq_printfn_t printfn);
@@ -59,10 +67,10 @@ index 000000000000..750971ebc986
 +struct nf_conn_dict_pair * find_conntrack_dict_pair(struct nf_conn_dict * dict, u32 * hash);
 +void new_dict_pair(struct nf_conn_dict *dict, char * field, char * value, int len, seq_printfn_t printfn);
 diff --git a/include/uapi/linux/netfilter/nf_tables.h b/include/uapi/linux/netfilter/nf_tables.h
-index d0d758b803c3..0ec9d7ac782e 100644
+index d0d758b803c3..4be131ef1336 100644
 --- a/include/uapi/linux/netfilter/nf_tables.h
 +++ b/include/uapi/linux/netfilter/nf_tables.h
-@@ -1187,4 +1187,19 @@ enum nft_ng_types {
+@@ -1187,4 +1187,20 @@ enum nft_ng_types {
  };
  #define NFT_NG_MAX	(__NFT_NG_MAX - 1)
  
@@ -76,6 +84,7 @@ index d0d758b803c3..0ec9d7ac782e 100644
 +	NFTA_DICT_VALUE,
 +	NFTA_DICT_LEN,
 +	NFTA_DICT_SIZE,
++	NFTA_DICT_SET,
 +	__NFTA_DICT_MAX,
 +};
 +
@@ -83,7 +92,7 @@ index d0d758b803c3..0ec9d7ac782e 100644
 +
  #endif /* _LINUX_NF_TABLES_H */
 diff --git a/net/netfilter/Kconfig b/net/netfilter/Kconfig
-index 1ed3468675ac..f2fd8f650759 100644
+index e8d56d9a4df2..e98bf2a4ac24 100644
 --- a/net/netfilter/Kconfig
 +++ b/net/netfilter/Kconfig
 @@ -114,6 +114,16 @@ config NF_CONNTRACK_EVENTS
@@ -120,7 +129,7 @@ index 1ed3468675ac..f2fd8f650759 100644
  	tristate "Netfilter nf_tables hash module"
  	help
 diff --git a/net/netfilter/Makefile b/net/netfilter/Makefile
-index 99911ef6016f..b6077a1d53fe 100644
+index c23c3c84416f..24ba6811bbbc 100644
 --- a/net/netfilter/Makefile
 +++ b/net/netfilter/Makefile
 @@ -6,6 +6,8 @@ nf_conntrack-$(CONFIG_NF_CONNTRACK_TIMESTAMP) += nf_conntrack_timestamp.o
@@ -142,10 +151,10 @@ index 99911ef6016f..b6077a1d53fe 100644
  obj-$(CONFIG_NFT_NUMGEN)	+= nft_numgen.o
 diff --git a/net/netfilter/nf_conntrack_dict.c b/net/netfilter/nf_conntrack_dict.c
 new file mode 100644
-index 000000000000..5a247f2b6210
+index 000000000000..d85aeeaf9934
 --- /dev/null
 +++ b/net/netfilter/nf_conntrack_dict.c
-@@ -0,0 +1,1120 @@
+@@ -0,0 +1,1128 @@
 +#include <linux/module.h>
 +#include <linux/proc_fs.h>
 +#include <linux/rhashtable.h>
@@ -437,27 +446,31 @@ index 000000000000..5a247f2b6210
 +	return ret;
 +}
 +
-+static void seq_print_ip(struct seq_file *m, char *buf)
++void seq_print_ip(struct seq_file *m, char *buf)
 +{
 +	seq_printf(m, "ip: %pI4", buf);
 +}
++EXPORT_SYMBOL(seq_print_ip);
 +
-+static void seq_print_ip6(struct seq_file *m, char *buf)
++void seq_print_ip6(struct seq_file *m, char *buf)
 +{
 +	seq_printf(m, "ip6: %pI6", buf);
 +}
++EXPORT_SYMBOL(seq_print_ip6);
 +
-+static void seq_print_mac(struct seq_file *m, char *buf)
++void seq_print_mac(struct seq_file *m, char *buf)
 +{
 +	seq_printf(m, "mac: %02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
 +}
++EXPORT_SYMBOL(seq_print_mac);
 +
-+static void seq_print_string(struct seq_file *m, char *buf)
++void seq_print_string(struct seq_file *m, char *buf)
 +{
 +	seq_printf(m, "string: %s", buf);
 +}
++EXPORT_SYMBOL(seq_print_string);
 +
-+static void seq_print_bool(struct seq_file *m, char *buf)
++void seq_print_bool(struct seq_file *m, char *buf)
 +{
 +	if(buf[0] == 1) {
 +		seq_printf(m, "bool: true");
@@ -465,16 +478,19 @@ index 000000000000..5a247f2b6210
 +		seq_printf(m, "bool: false");
 +	}
 +}
++EXPORT_SYMBOL(seq_print_bool);
 +
-+static void seq_print_integer(struct seq_file *m, char *buf)
++void seq_print_integer(struct seq_file *m, char *buf)
 +{
 +	seq_printf(m, "int: %u", *(int *)buf);
 +}
++EXPORT_SYMBOL(seq_print_integer);
 +
-+static void seq_print_integer64(struct seq_file *m, char *buf)
++void seq_print_integer64(struct seq_file *m, char *buf)
 +{
 +	seq_printf(m, "int64: %llu", *(u64 *)buf);
 +}
++EXPORT_SYMBOL(seq_print_integer64);
 +
 +static ssize_t top_write(struct file *file, const char __user *buf, size_t size, loff_t *pos)
 +{
@@ -1093,6 +1109,7 @@ index 000000000000..5a247f2b6210
 +
 +	return dict;
 +}
++EXPORT_SYMBOL_GPL(new_dict);
 +
 +static void free_dict_pair(void *ptr, void *arg)
 +{
@@ -1268,12 +1285,13 @@ index 000000000000..5a247f2b6210
 +module_exit(nf_conntrack_dict_exit);
 diff --git a/net/netfilter/nft_dict.c b/net/netfilter/nft_dict.c
 new file mode 100644
-index 000000000000..d6280bd590e3
+index 000000000000..fccfd1c8e2de
 --- /dev/null
 +++ b/net/netfilter/nft_dict.c
-@@ -0,0 +1,192 @@
+@@ -0,0 +1,260 @@
 +#include <linux/glob.h>
 +#include <linux/tcp.h>
++#include <linux/proc_fs.h>
 +#include <net/netfilter/nf_tables.h>
 +#include <net/netfilter/nf_conntrack.h>
 +#include <net/netfilter/nf_conntrack_dict.h>
@@ -1294,6 +1312,7 @@ index 000000000000..d6280bd590e3
 +	char *ptable;
 +	u32 len;
 +	u32 size;
++	enum nft_registers      set:8;
 +};
 +
 +static const struct nla_policy nft_dict_policy[NFTA_DICT_MAX + 1] = {
@@ -1305,7 +1324,28 @@ index 000000000000..d6280bd590e3
 +	[NFTA_DICT_FIELD]	= { .type = NLA_STRING, .len = DICT_FIELD_SIZE },
 +	[NFTA_DICT_VALUE]	= { .type = NLA_STRING, .len = DICT_VALUE_SIZE },
 +	[NFTA_DICT_TABLE]	= { .type = NLA_STRING, .len = DICT_VALUE_SIZE },
++	[NFTA_DICT_SET]		= { .type = NLA_U32 },
 +};
++
++static seq_printfn_t print_func_by_type(int type)
++{
++	switch(type) {
++		case 7:
++			return &seq_print_ip;
++		case 8:
++			return &seq_print_ip6;
++		case 9:
++			return &seq_print_mac;
++		case 39:
++			return &seq_print_integer;
++		case 40:
++			return &seq_print_integer64;
++		case 41:
++			return &seq_print_bool;
++		default:
++			return &seq_print_string;
++	}
++}
 +
 +static void nft_dict_get_eval(const struct nft_expr *expr, struct nft_regs *regs, const struct nft_pktinfo *pkt)
 +{
@@ -1314,34 +1354,69 @@ index 000000000000..d6280bd590e3
 +	void *data = &regs->data[priv->dreg];
 +	struct nf_conn_dict * dict;
 +	struct nf_conn_dict_pair * pair;
++	char *value;
++	unsigned int len;
 +
 +	dict = find_conntrack_dict(key, priv->len, priv->ptable);
-+	if(!dict) {
-+		goto err;
-+	}
 +
-+	pair = find_conntrack_dict_pair(dict, &priv->field_hash);
-+	if(!pair) {
-+		goto err;
-+	}
++	if(priv->set) {
++		if(priv->value[0] != '\0') {
++			value = priv->value;
++			len = strlen(value);
++		} else {
++			value = (char *)&regs->data[priv->set];
++			len = priv->size;
++		}
 +
-+	if(priv->value[0] != '\0') {
-+		regs->verdict.code = NFT_BREAK;
-+		rcu_read_lock();
-+		if(priv->value_hash != pair->value->hash) {
-+			if(glob_match(priv->value, pair->value->buf)) {
++		if(dict) {
++			new_dict_pair(dict, priv->field, value, len, print_func_by_type(priv->type));
++		} else {
++			struct nf_conn_dict * new;
++
++			if(0 == strcmp(priv->table, "session")) {
++				new = new_dict(key, priv->len, priv->table, &seq_print_integer);
++			} else if(0 == strcmp(priv->table, "device")) {
++				new = new_dict(key, priv->len, priv->table, &seq_print_mac);
++			} else if(0 == strcmp(priv->table, "host")) {
++				new = new_dict(key, priv->len, priv->table, &seq_print_ip);
++			} else if(0 == strcmp(priv->table, "user")) {
++				new = new_dict(key, priv->len, priv->table, &seq_print_string);
++			} else {
++				new = new_dict(key, priv->len, priv->table, &seq_print_integer);
++			}
++
++			if(new) {
++				new_dict_pair(new, priv->field, value, len, print_func_by_type(priv->type));
++			}
++		}
++	} else {
++		if(!dict) {
++			goto err;
++		}
++
++		pair = find_conntrack_dict_pair(dict, &priv->field_hash);
++		if(!pair) {
++			goto err;
++		}
++
++		if(priv->value[0] != '\0') {
++			regs->verdict.code = NFT_BREAK;
++			rcu_read_lock();
++			if(priv->value_hash != pair->value->hash) {
++				if(glob_match(priv->value, pair->value->buf)) {
++					regs->verdict.code = NFT_CONTINUE;
++				}
++			} else {
 +				regs->verdict.code = NFT_CONTINUE;
 +			}
++			rcu_read_unlock();
 +		} else {
-+			regs->verdict.code = NFT_CONTINUE;
-+		}
-+		rcu_read_unlock();
-+	} else {
-+		memset(data, 0, priv->size);
-+		if(pair->value->len > priv->size) {
-+			memcpy(data, &pair->value->hash, sizeof(pair->value->hash));
-+		} else {
-+			memcpy(data, pair->value->buf, pair->value->len);
++			memset(data, 0, priv->size);
++			if(pair->value->len > priv->size) {
++				memcpy(data, &pair->value->hash, sizeof(pair->value->hash));
++			} else {
++				memcpy(data, pair->value->buf, pair->value->len);
++			}
 +		}
 +	}
 +	return;
@@ -1390,6 +1465,10 @@ index 000000000000..d6280bd590e3
 +	}
 +	priv->len = ntohl(nla_get_be32(tb[NFTA_DICT_LEN]));
 +
++	if(tb[NFTA_DICT_SET]) {
++		priv->set = nft_parse_register(tb[NFTA_DICT_SET]);
++	}
++
 +	return nft_validate_register_load(priv->sreg, priv->len);
 +}
 +
@@ -1428,6 +1507,11 @@ index 000000000000..d6280bd590e3
 +			return -1;
 +	}
 +
++	if(priv->set != 0) {
++		if (nft_dump_register(skb, NFTA_DICT_SET, priv->set))
++			return -1;
++	}
++
 +	return 0;
 +}
 +
@@ -1463,7 +1547,8 @@ index 000000000000..d6280bd590e3
 +
 +MODULE_AUTHOR("Brett Mastbergen");
 +MODULE_LICENSE("GPL");
++MODULE_ALIAS_NFT_EXPR("dict");
 +MODULE_DESCRIPTION("Generic field/value pair matching for conntrack");
 -- 
-2.11.0
+2.14.1
 
