@@ -1,3 +1,9 @@
+linux (4.9.110-3+deb9u1+untangle2) unstable; urgency=medium
+
+  * dict: Fix buffer over-read
+
+ -- Brett Mastbergen <bmastbergen@untangle.com>  Wed, 12 Sep 2018 13:15:45 -0400
+
 linux (4.9.110-3+deb9u1+untangle1) unstable; urgency=medium
 
   * Latest official stretch kernel, from Security Team (Closes: CVE-2018-5390)

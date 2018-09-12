@@ -505,14 +505,14 @@ index 000000000000..d85aeeaf9934
 +			0,0,0,0};
 +	u8 mac[6] = {0,0,0,0,0,0};
 +	u8 val = 0;
-+	struct nf_conn_dict *dict = PDE_DATA(file_inode(file));
++	struct nf_conn_dict *dict;
 +	substring_t args[MAX_OPT_ARGS];
 +	seq_printfn_t printfn = NULL;
 +	seq_printfn_t key_printfn = NULL;
 +
 +	memset(key, 0, sizeof(key));
 +
-+	orig = local_buf = kzalloc(size, GFP_KERNEL);
++	orig = local_buf = kzalloc(size + 1, GFP_KERNEL);
 +	if(!local_buf) {
 +		pr_err("%s: Could not allocate local buffer!\n", __func__);
 +		goto err;
@@ -743,7 +743,7 @@ index 000000000000..d85aeeaf9934
 +
 +	memset(key, 0, sizeof(key));
 +
-+	orig = local_buf = kzalloc(size, GFP_KERNEL);
++	orig = local_buf = kzalloc(size + 1, GFP_KERNEL);
 +	if(!local_buf) {
 +		pr_err("%s: Could not allocate local buffer!\n", __func__);
 +		goto err;
@@ -850,7 +850,7 @@ index 000000000000..d85aeeaf9934
 +
 +	memset(key, 0, sizeof(key));
 +
-+	orig = local_buf = kzalloc(size, GFP_KERNEL);
++	orig = local_buf = kzalloc(size + 1, GFP_KERNEL);
 +	if(!local_buf) {
 +		pr_err("%s: Could not allocate local buffer!\n", __func__);
 +		goto err;
