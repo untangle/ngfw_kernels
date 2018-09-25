@@ -1,3 +1,9 @@
+linux (4.9.110-3+deb9u1+untangle3) unstable; urgency=medium
+
+  * dict: Add flush support
+
+ -- Brett Mastbergen <bmastbergen@untangle.com>  Tue, 25 Sep 2018 12:20:40 -0400
+
 linux (4.9.110-3+deb9u1+untangle2) unstable; urgency=medium
 
   * dict: Fix buffer over-read

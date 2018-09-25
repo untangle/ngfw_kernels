@@ -1,16 +1,16 @@
-From c5714742b67c0b5b2bf1c318b0d9e93dcca40ed3 Mon Sep 17 00:00:00 2001
+From 773387122ce1389d53d939bb1906f27fc8d5ee4f Mon Sep 17 00:00:00 2001
 From: Brett Mastbergen <bmastbergen@untangle.com>
 Date: Tue, 26 Jun 2018 13:22:09 -0400
-Subject: [PATCH 2/2] 4.14 dict
+Subject: [PATCH] 4.14 dict
 
 ---
  include/net/netfilter/nf_conntrack_dict.h |   45 ++
- include/uapi/linux/netfilter/nf_tables.h  |   16 +
+ include/uapi/linux/netfilter/nf_tables.h  |   17 +
  net/netfilter/Kconfig                     |   19 +
  net/netfilter/Makefile                    |    3 +
- net/netfilter/nf_conntrack_dict.c         | 1128 +++++++++++++++++++++++++++++
- net/netfilter/nft_dict.c                  |  260 +++++++
- 6 files changed, 1471 insertions(+)
+ net/netfilter/nf_conntrack_dict.c         | 1129 +++++++++++++++++++++++++++++
+ net/netfilter/nft_dict.c                  |  279 +++++++
+ 6 files changed, 1492 insertions(+)
  create mode 100644 include/net/netfilter/nf_conntrack_dict.h
  create mode 100644 net/netfilter/nf_conntrack_dict.c
  create mode 100644 net/netfilter/nft_dict.c
@@ -67,10 +67,10 @@ index 000000000000..10986069fee1
 +struct nf_conn_dict_pair * find_conntrack_dict_pair(struct nf_conn_dict * dict, u32 * hash);
 +void new_dict_pair(struct nf_conn_dict *dict, char * field, char * value, int len, seq_printfn_t printfn);
 diff --git a/include/uapi/linux/netfilter/nf_tables.h b/include/uapi/linux/netfilter/nf_tables.h
-index d0d758b803c3..4be131ef1336 100644
+index dc3db1801fa5..a18899cbbe9f 100644
 --- a/include/uapi/linux/netfilter/nf_tables.h
 +++ b/include/uapi/linux/netfilter/nf_tables.h
-@@ -1187,4 +1187,20 @@ enum nft_ng_types {
+@@ -1463,4 +1463,21 @@ enum nft_ng_types {
  };
  #define NFT_NG_MAX	(__NFT_NG_MAX - 1)
  
@@ -85,6 +85,7 @@ index d0d758b803c3..4be131ef1336 100644
 +	NFTA_DICT_LEN,
 +	NFTA_DICT_SIZE,
 +	NFTA_DICT_SET,
++	NFTA_DICT_FLUSH,
 +	__NFTA_DICT_MAX,
 +};
 +
@@ -92,10 +93,10 @@ index d0d758b803c3..4be131ef1336 100644
 +
  #endif /* _LINUX_NF_TABLES_H */
 diff --git a/net/netfilter/Kconfig b/net/netfilter/Kconfig
-index e8d56d9a4df2..e98bf2a4ac24 100644
+index a5ab7098e217..1aeafa4d2680 100644
 --- a/net/netfilter/Kconfig
 +++ b/net/netfilter/Kconfig
-@@ -114,6 +114,16 @@ config NF_CONNTRACK_EVENTS
+@@ -124,6 +124,16 @@ config NF_CONNTRACK_EVENTS
  
  	  If unsure, say `N'.
  
@@ -1187,6 +1188,7 @@ index 000000000000..d85aeeaf9934
 +
 +	__free_dict(dict);
 +}
++EXPORT_SYMBOL_GPL(destroy_dict);
 +
 +static int __net_init dict_net_init(struct net *net)
 +{
@@ -1285,10 +1287,10 @@ index 000000000000..d85aeeaf9934
 +module_exit(nf_conntrack_dict_exit);
 diff --git a/net/netfilter/nft_dict.c b/net/netfilter/nft_dict.c
 new file mode 100644
-index 000000000000..fccfd1c8e2de
+index 000000000000..1f801d418fb0
 --- /dev/null
 +++ b/net/netfilter/nft_dict.c
-@@ -0,0 +1,260 @@
+@@ -0,0 +1,279 @@
 +#include <linux/glob.h>
 +#include <linux/tcp.h>
 +#include <linux/proc_fs.h>
@@ -1313,6 +1315,7 @@ index 000000000000..fccfd1c8e2de
 +	u32 len;
 +	u32 size;
 +	enum nft_registers      set:8;
++	u32 flush;
 +};
 +
 +static const struct nla_policy nft_dict_policy[NFTA_DICT_MAX + 1] = {
@@ -1325,6 +1328,7 @@ index 000000000000..fccfd1c8e2de
 +	[NFTA_DICT_VALUE]	= { .type = NLA_STRING, .len = DICT_VALUE_SIZE },
 +	[NFTA_DICT_TABLE]	= { .type = NLA_STRING, .len = DICT_VALUE_SIZE },
 +	[NFTA_DICT_SET]		= { .type = NLA_U32 },
++	[NFTA_DICT_FLUSH]	= { .type = NLA_U32 },
 +};
 +
 +static seq_printfn_t print_func_by_type(int type)
@@ -1356,6 +1360,11 @@ index 000000000000..fccfd1c8e2de
 +	struct nf_conn_dict_pair * pair;
 +	char *value;
 +	unsigned int len;
++
++	if(priv->flush) {
++		destroy_dict(key, priv->len, priv->ptable);
++		return;
++	}
 +
 +	dict = find_conntrack_dict(key, priv->len, priv->ptable);
 +
@@ -1429,8 +1438,7 @@ index 000000000000..fccfd1c8e2de
 +	struct nft_dict *priv = nft_expr_priv(expr);
 +
 +	if (!tb[NFTA_DICT_SREG] ||
-+	    !tb[NFTA_DICT_LEN] ||
-+	    !tb[NFTA_DICT_FIELD])
++	    !tb[NFTA_DICT_LEN])
 +		return -EINVAL;
 +
 +	memset(priv, 0, sizeof(*priv));
@@ -1440,9 +1448,11 @@ index 000000000000..fccfd1c8e2de
 +		priv->dreg = nft_parse_register(tb[NFTA_DICT_DREG]);
 +	}
 +
-+	nla_strlcpy(priv->field, tb[NFTA_DICT_FIELD], DICT_FIELD_SIZE);
-+	priv->field_len = strlen(priv->field);
-+	priv->field_hash = jhash(priv->field, priv->field_len, 0);
++	if(tb[NFTA_DICT_FIELD]) {
++		nla_strlcpy(priv->field, tb[NFTA_DICT_FIELD], DICT_FIELD_SIZE);
++		priv->field_len = strlen(priv->field);
++		priv->field_hash = jhash(priv->field, priv->field_len, 0);
++	}
 +
 +	if(tb[NFTA_DICT_VALUE]) {
 +		nla_strlcpy(priv->value, tb[NFTA_DICT_VALUE], DICT_VALUE_SIZE);
@@ -1467,6 +1477,10 @@ index 000000000000..fccfd1c8e2de
 +
 +	if(tb[NFTA_DICT_SET]) {
 +		priv->set = nft_parse_register(tb[NFTA_DICT_SET]);
++	}
++
++	if(tb[NFTA_DICT_FLUSH]) {
++		priv->flush = ntohl(nla_get_be32(tb[NFTA_DICT_FLUSH]));
 +	}
 +
 +	return nft_validate_register_load(priv->sreg, priv->len);
@@ -1494,8 +1508,10 @@ index 000000000000..fccfd1c8e2de
 +			return -1;
 +	}
 +
-+	if(nla_put_string(skb, NFTA_DICT_FIELD, priv->field))
-+		return -1;
++	if(priv->field) {
++		if(nla_put_string(skb, NFTA_DICT_FIELD, priv->field))
++			return -1;
++	}
 +
 +	if(priv->value[0] != '\0') {
 +		if(nla_put_string(skb, NFTA_DICT_VALUE, priv->value))
@@ -1509,6 +1525,11 @@ index 000000000000..fccfd1c8e2de
 +
 +	if(priv->set != 0) {
 +		if (nft_dump_register(skb, NFTA_DICT_SET, priv->set))
++			return -1;
++	}
++
++	if(priv->flush != 0) {
++		if (nla_put_be32(skb, NFTA_DICT_FLUSH, htonl(priv->flush)))
 +			return -1;
 +	}
 +
@@ -1550,5 +1571,5 @@ index 000000000000..fccfd1c8e2de
 +MODULE_ALIAS_NFT_EXPR("dict");
 +MODULE_DESCRIPTION("Generic field/value pair matching for conntrack");
 -- 
-2.14.1
+2.11.0
 
