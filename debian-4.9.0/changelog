@@ -1,3 +1,9 @@
+linux (4.9.110-3+deb9u1+untangle4) unstable; urgency=medium
+
+  * Add upstream patches to support XL710 fiber card with latest firmware
+
+ -- Brett Mastbergen <bmastbergen@untangle.com>  Fri, 09 Nov 2018 14:10:30 -0400
+
 linux (4.9.110-3+deb9u1+untangle3) unstable; urgency=medium
 
   * dict: Add flush support
