@@ -1,3 +1,9 @@
+linux (4.9.133-3.1+untangle1) unstable; urgency=medium
+
+  * Latest official stretch kernel
+
+ -- Sebastien Delafond <sdelafond@gmail.com>  Wed, 27 Feb 2019 10:16:24 +0100
+
 linux (4.9.110-3+deb9u1+untangle4) unstable; urgency=medium
 
   * Add upstream patches to support XL710 fiber card with latest firmware
