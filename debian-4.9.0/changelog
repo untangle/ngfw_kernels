@@ -1,3 +1,9 @@
+linux (4.9.168-1+deb9u3+untangle1) unstable; urgency=medium
+
+  * Latest official stretch kernel
+
+ -- Sebastien Delafond <sdelafond@gmail.com>  Wed, 27 Feb 2019 10:16:24 +0100
+
 linux (4.9.133-3.1+untangle1) unstable; urgency=medium
 
   * Latest official stretch kernel
