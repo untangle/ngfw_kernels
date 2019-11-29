@@ -7,9 +7,9 @@
 include kernel.conf
 
 ORIG_TARBALL := linux_$(UPSTREAM_VERSION).orig.tar.xz
-ORIG_TARBALL_URL := http://download.untangle.com/kernels/$(ORIG_TARBALL)
+ORIG_TARBALL_URL := https://downloads.untangle.com/public/kernels//$(ORIG_TARBALL)
 DEBIAN_TARBALL := linux_$(UPSTREAM_VERSION)-$(DEBIAN_VERSION).debian.tar.xz
-DEBIAN_TARBALL_URL := http://download.untangle.com/kernels/$(DEBIAN_TARBALL)
+DEBIAN_TARBALL_URL := https://downloads.untangle.com/public/kernels//$(DEBIAN_TARBALL)
 
 KERNEL_DIR := linux-$(UPSTREAM_VERSION)
 KDSC := linux_$(UPSTREAM_VERSION)-$(DEBIAN_VERSION).dsc

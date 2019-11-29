@@ -1,7 +1,7 @@
 BUILD_DEPS := gcc-5-arm-linux-gnueabihf device-tree-compiler u-boot-tools cgpt vboot-kernel-utils
 
 TARBALL := chromeos-3.14.tar.bz2
-TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
+TARBALL_URL := https://downloads.untangle.com/public/kernels//$(TARBALL)
 KERNEL_DIR := chromeos-3.14
 KERNEL_IMAGE := $(KERNEL_DIR)/arch/arm/boot/zImage
 ITF_IMAGE := $(KERNEL_DIR)/arch/arm/boot/vmlinux.itf

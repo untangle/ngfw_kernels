@@ -1,5 +1,5 @@
 TARBALL := linux-3.10.49+ddwrt24710.tar.bz2
-TARBALL_URL := http://download.untangle.com/kernels/$(TARBALL)
+TARBALL_URL := https://downloads.untangle.com/public/kernels//$(TARBALL)
 KERNEL_DIR := linux-3.10.49
 UIMAGE := $(KERNEL_DIR)/linux-3.10.49/arch/arm/boot/uImage
 CONFIG_ORIG := config_northstar_smp.config
