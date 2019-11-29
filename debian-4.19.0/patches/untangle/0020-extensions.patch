@@ -1,0 +1,335 @@
+diff -urN linux-4.9.30.orig/include/linux/in.h linux-4.9.30/include/linux/in.h
+--- linux-4.9.30.orig/include/linux/in.h	2017-10-26 19:22:11.827664059 +0000
++++ linux-4.9.30/include/linux/in.h	2017-10-26 19:22:24.161261674 +0000
+@@ -18,6 +18,12 @@
+ #ifndef _LINUX_IN_H
+ #define _LINUX_IN_H
+ 
++#include <linux/types.h>
++
++struct ip_sendnfmark_opts {
++    u32 on;
++    u32 mark;
++};
+ 
+ #include <linux/errno.h>
+ #include <uapi/linux/in.h>
+diff -urN linux-4.9.30.orig/include/net/ip.h linux-4.9.30/include/net/ip.h
+--- linux-4.9.30.orig/include/net/ip.h	2017-10-26 19:22:11.905667839 +0000
++++ linux-4.9.30/include/net/ip.h	2017-10-26 19:22:24.161261674 +0000
+@@ -67,6 +67,11 @@
+ 	__be32			addr;
+ 	int			oif;
+ 	struct ip_options_rcu	*opt;
++
++	/* Extensions */
++	u16 pkt_udp_sport;
++	u32 nfmark;
++
+ 	__u8			tx_flags;
+ 	__u8			ttl;
+ 	__s16			tos;
+diff -urN linux-4.9.30.orig/include/uapi/linux/in.h linux-4.9.30/include/uapi/linux/in.h
+--- linux-4.9.30.orig/include/uapi/linux/in.h	2017-10-26 19:22:11.941669583 +0000
++++ linux-4.9.30/include/uapi/linux/in.h	2017-10-26 19:22:24.161261674 +0000
+@@ -118,6 +118,10 @@
+ #define IP_CHECKSUM	23
+ #define IP_BIND_ADDRESS_NO_PORT	24
+ 
++/* Extensions */
++#define IP_SADDR	24
++#define IP_SENDNFMARK	25
++
+ /* IP_MTU_DISCOVER values */
+ #define IP_PMTUDISC_DONT		0	/* Never send DF frames */
+ #define IP_PMTUDISC_WANT		1	/* Use per route hints	*/
+diff -urN linux-4.9.30.orig/include/uapi/linux/udp.h linux-4.9.30/include/uapi/linux/udp.h
+--- linux-4.9.30.orig/include/uapi/linux/udp.h	2017-10-26 19:22:11.958670407 +0000
++++ linux-4.9.30/include/uapi/linux/udp.h	2017-10-26 19:22:24.161261674 +0000
+@@ -32,6 +32,9 @@
+ #define UDP_NO_CHECK6_TX 101	/* Disable sending checksum for UDP6X */
+ #define UDP_NO_CHECK6_RX 102	/* Disable accpeting checksum for UDP6 */
+ 
++/* UDP ancillary data types */
++#define UDP_SPORT 1
++
+ /* UDP encapsulation types */
+ #define UDP_ENCAP_ESPINUDP_NON_IKE	1 /* draft-ietf-ipsec-nat-t-ike-00/01 */
+ #define UDP_ENCAP_ESPINUDP	2 /* draft-ietf-ipsec-udp-encaps-06 */
+diff -urN linux-4.9.30.orig/net/ipv4/icmp.c linux-4.9.30/net/ipv4/icmp.c
+--- linux-4.9.30.orig/net/ipv4/icmp.c	2017-10-26 19:22:12.045674623 +0000
++++ linux-4.9.30/net/ipv4/icmp.c	2017-10-26 19:22:24.162261722 +0000
+@@ -405,6 +405,8 @@
+ 		return;
+ 	inet = inet_sk(sk);
+ 
++	memset(&ipc, 0, sizeof(ipc));
++
+ 	icmp_param->data.icmph.checksum = 0;
+ 
+ 	inet->tos = ip_hdr(skb)->tos;
+@@ -695,6 +697,7 @@
+ 	icmp_param->offset = skb_network_offset(skb_in);
+ 	inet_sk(sk)->tos = tos;
+ 	sk->sk_mark = mark;
++       memset(&ipc, 0, sizeof(ipc));
+ 	ipc.addr = iph->saddr;
+ 	ipc.opt = &icmp_param->replyopts.opt;
+ 	ipc.tx_flags = 0;
+diff -urN linux-4.9.30.orig/net/ipv4/ip_output.c linux-4.9.30/net/ipv4/ip_output.c
+--- linux-4.9.30.orig/net/ipv4/ip_output.c	2017-10-26 19:22:12.046674672 +0000
++++ linux-4.9.30/net/ipv4/ip_output.c	2017-10-26 19:22:24.162261722 +0000
+@@ -473,7 +473,7 @@
+ 
+ 	/* TODO : should we use skb->sk here instead of sk ? */
+ 	skb->priority = sk->sk_priority;
+-	skb->mark = sk->sk_mark;
++	skb->mark |= sk->sk_mark;
+ 
+ 	res = ip_local_out(net, sk, skb);
+ 	rcu_read_unlock();
+@@ -886,7 +886,7 @@
+ 			    struct page_frag *pfrag,
+ 			    int getfrag(void *from, char *to, int offset,
+ 					int len, int odd, struct sk_buff *skb),
+-			    void *from, int length, int transhdrlen,
++			    void *from, int length, int transhdrlen, struct ipcm_cookie *ipc,
+ 			    unsigned int flags)
+ {
+ 	struct inet_sock *inet = inet_sk(sk);
+@@ -1041,6 +1041,8 @@
+ 						 fragheaderlen);
+ 			data += fragheaderlen + exthdrlen;
+ 
++			skb->mark = ipc->nfmark;
++
+ 			if (fraggap) {
+ 				skb->csum = skb_copy_and_csum_bits(
+ 					skb_prev, maxfraglen,
+@@ -1203,7 +1205,7 @@
+ 
+ 	return __ip_append_data(sk, fl4, &sk->sk_write_queue, &inet->cork.base,
+ 				sk_page_frag(sk), getfrag,
+-				from, length, transhdrlen, flags);
++                            from, length, transhdrlen, ipc, flags);
+ }
+ 
+ ssize_t	ip_append_page(struct sock *sk, struct flowi4 *fl4, struct page *page,
+@@ -1437,7 +1439,7 @@
+ 	}
+ 
+ 	skb->priority = (cork->tos != -1) ? cork->priority: sk->sk_priority;
+-	skb->mark = sk->sk_mark;
++	skb->mark |= sk->sk_mark;
+ 	/*
+ 	 * Steal rt from cork.dst to avoid a pair of atomic_inc/atomic_dec
+ 	 * on dst refcount
+@@ -1527,7 +1529,7 @@
+ 
+ 	err = __ip_append_data(sk, fl4, &queue, &cork,
+ 			       &current->task_frag, getfrag,
+-			       from, length, transhdrlen, flags);
++                           from, length, transhdrlen, ipc, flags);
+ 	if (err) {
+ 		__ip_flush_pending_frames(sk, &queue, &cork);
+ 		return ERR_PTR(err);
+@@ -1571,6 +1573,7 @@
+ 	if (__ip_options_echo(&replyopts.opt.opt, skb, sopt))
+ 		return;
+ 
++	memset(&ipc, 0, sizeof(ipc));
+ 	ipc.addr = daddr;
+ 	ipc.opt = NULL;
+ 	ipc.tx_flags = 0;
+diff -urN linux-4.9.30.orig/net/ipv4/ip_sockglue.c linux-4.9.30/net/ipv4/ip_sockglue.c
+--- linux-4.9.30.orig/net/ipv4/ip_sockglue.c	2017-10-26 19:22:12.046674672 +0000
++++ linux-4.9.30/net/ipv4/ip_sockglue.c	2017-10-26 19:22:24.163261770 +0000
+@@ -296,6 +296,23 @@
+ 			ipc->tos = val;
+ 			ipc->priority = rt_tos2priority(ipc->tos);
+ 			break;
++                case IP_SADDR:
++                {
++                    struct in_addr *in;
++                    if (cmsg->cmsg_len != CMSG_LEN(sizeof(struct in_addr))) 
++                        return -EINVAL;
++                    in = (struct in_addr *)CMSG_DATA(cmsg);
++                    ipc->addr = in->s_addr;
++                    break;
++                }
++
++                case IP_SENDNFMARK:
++                {
++                   if (cmsg->cmsg_len != CMSG_LEN(sizeof(u32))) 
++                       return -EINVAL;
++                   ipc->nfmark = *(u32 *)CMSG_DATA(cmsg);
++                   break;
++                }
+ 
+ 		default:
+ 			return -EINVAL;
+@@ -725,6 +742,25 @@
+ 			}
+ 		}
+ 		break;
++
++	case IP_SENDNFMARK:
++	{
++		struct ip_sendnfmark_opts nfopt;
++
++		if (optlen != sizeof(struct ip_sendnfmark_opts))
++		    goto e_inval;
++		if (copy_from_user(&nfopt, optval, sizeof(struct ip_sendnfmark_opts))) {
++		    err = -EFAULT;
++		    break;
++		}
++		/* Changed semantics for version 2.6.32 and above -- reset to 0 when
++		not 'on' */
++		if (nfopt.on)
++		    sk->sk_mark = nfopt.mark;
++		else
++		    sk->sk_mark = 0;
++		break;
++	}
+ 	case IP_TOS:	/* This sets both TOS and Precedence */
+ 		if (sk->sk_type == SOCK_STREAM) {
+ 			val &= ~INET_ECN_MASK;
+@@ -1369,6 +1405,23 @@
+ 	case IP_CHECKSUM:
+ 		val = (inet->cmsg_flags & IP_CMSG_CHECKSUM) != 0;
+ 		break;
++        case IP_SENDNFMARK:
++        {
++            struct ip_sendnfmark_opts opts;
++
++	    /* Changed semantics for version 2.6.32 and above -- always on */
++	    opts.on = 1;
++            opts.mark =  sk->sk_mark;
++	    release_sock(sk);
++            
++            if (len < sizeof(struct ip_sendnfmark_opts)) {
++                return -EINVAL;
++            }
++            if(copy_to_user(optval, &opts, sizeof(struct ip_sendnfmark_opts))) {
++                return -EFAULT;
++            }
++            return 0;
++        }
+ 	case IP_TOS:
+ 		val = inet->tos;
+ 		break;
+diff -urN linux-4.9.30.orig/net/ipv4/raw.c linux-4.9.30/net/ipv4/raw.c
+--- linux-4.9.30.orig/net/ipv4/raw.c	2017-10-26 19:22:12.048674768 +0000
++++ linux-4.9.30/net/ipv4/raw.c	2017-10-26 19:22:24.163261770 +0000
+@@ -543,6 +543,8 @@
+ 		daddr = inet->inet_daddr;
+ 	}
+ 
++	memset(&ipc, 0, sizeof(ipc));
++
+ 	ipc.sockc.tsflags = sk->sk_tsflags;
+ 	ipc.addr = inet->inet_saddr;
+ 	ipc.opt = NULL;
+diff -urN linux-4.9.30.orig/net/ipv4/udp.c linux-4.9.30/net/ipv4/udp.c
+--- linux-4.9.30.orig/net/ipv4/udp.c	2017-10-26 19:22:12.051674914 +0000
++++ linux-4.9.30/net/ipv4/udp.c	2017-10-26 19:22:41.950123601 +0000
+@@ -486,6 +486,33 @@
+ 	return result;
+ }
+ 
++static int udp_cmsg_send(struct sock *sk, struct msghdr *msg, struct ipcm_cookie *ipc)
++{
++    struct cmsghdr *cmsg;
++
++    for (cmsg = CMSG_FIRSTHDR(msg); cmsg;
++         cmsg = CMSG_NXTHDR(msg, cmsg)) {
++
++        if (cmsg->cmsg_level == SOL_UDP) {
++            switch (cmsg->cmsg_type) {
++
++            case UDP_SPORT:
++                if (cmsg->cmsg_len != CMSG_LEN(sizeof(u_short)))
++                    return -EINVAL;
++                ipc->pkt_udp_sport = *(u_short*)CMSG_DATA(cmsg);
++                break;
++
++            default:
++                printk("Unknown cmsg_type: %i\n",cmsg->cmsg_type);
++                return -EINVAL;
++            }
++        }
++    }
++
++    return ip_cmsg_send(sk,msg,ipc, false);
++}
++
++
+ /* UDP is nearly always wildcards out the wazoo, it makes no sense to try
+  * harder than this. -DaveM
+  */
+@@ -805,7 +832,8 @@
+ 	 * Create a UDP header
+ 	 */
+ 	uh = udp_hdr(skb);
+-	uh->source = inet->inet_sport;
++	//uh->source = inet->inet_sport;
++        uh->source = fl4->fl4_sport;
+ 	uh->dest = fl4->fl4_dport;
+ 	uh->len = htons(len);
+ 	uh->check = 0;
+@@ -882,7 +910,7 @@
+ 	int free = 0;
+ 	int connected = 0;
+ 	__be32 daddr, faddr, saddr;
+-	__be16 dport;
++	__be16 dport, sport;
+ 	u8  tos;
+ 	int err, is_udplite = IS_UDPLITE(sk);
+ 	int corkreq = up->corkflag || msg->msg_flags&MSG_MORE;
+@@ -900,6 +928,7 @@
+ 	if (msg->msg_flags & MSG_OOB) /* Mirror BSD error message compatibility */
+ 		return -EOPNOTSUPP;
+ 
++	memset(&ipc, 0, sizeof(ipc));
+ 	ipc.opt = NULL;
+ 	ipc.tx_flags = 0;
+ 	ipc.ttl = 0;
+@@ -957,7 +986,7 @@
+ 	ipc.oif = sk->sk_bound_dev_if;
+ 
+ 	if (msg->msg_controllen) {
+-		err = ip_cmsg_send(sk, msg, &ipc, sk->sk_family == AF_INET6);
++               err = udp_cmsg_send(sk, msg, &ipc);
+ 		if (unlikely(err)) {
+ 			kfree(ipc.opt);
+ 			return err;
+@@ -979,6 +1008,11 @@
+ 		rcu_read_unlock();
+ 	}
+ 
++	sport = inet->inet_sport;
++
++	if (ipc.pkt_udp_sport)
++		sport = ipc.pkt_udp_sport;
++
+ 	saddr = ipc.addr;
+ 	ipc.addr = faddr = daddr;
+ 
+@@ -1019,7 +1053,7 @@
+ 		flowi4_init_output(fl4, ipc.oif, sk->sk_mark, tos,
+ 				   RT_SCOPE_UNIVERSE, sk->sk_protocol,
+ 				   flow_flags,
+-				   faddr, saddr, dport, inet->inet_sport);
++                   faddr, saddr, dport, sport);
+ 
+ 		security_sk_classify_flow(sk, flowi4_to_flowi(fl4));
+ 		rt = ip_route_output_flow(net, fl4, sk);
+@@ -1075,7 +1109,7 @@
+ 	fl4->daddr = daddr;
+ 	fl4->saddr = saddr;
+ 	fl4->fl4_dport = dport;
+-	fl4->fl4_sport = inet->inet_sport;
++	fl4->fl4_sport = sport;
+ 	up->pending = AF_INET;
+ 
+ do_append_data:

@@ -1,0 +1,5 @@
+linux (4.19.67-2+deb10u2+untangle1) unstable; urgency=medium
+
+  * Latest official stretch kernel
+
+ -- Sebastien Delafond <sdelafond@gmail.com>  Fri, 22 Nov 2019 08:42:53 +0100

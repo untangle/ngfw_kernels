@@ -1,0 +1,26 @@
+diff -u -N -r ./debian/config/defines ./debian/config/defines
+--- ./debian/config/defines	2014-10-30 17:30:43.000000000 -0700
++++ ./debian/config/defines	2014-12-11 05:33:37.000000000 -0800
+@@ -88,7 +88,11 @@
+ compiler: gcc-6
+ featuresets:
+  none
++ untangle
+  rt
+ 
++[featureset-untangle_base]
++enabled: true
++
+ [build]
+ debug-info: true
+diff -u -N -r ./debian/config/featureset-untangle/defines ./debian/config/featureset-untangle/defines
+--- ./debian/config/featureset-untangle/defines	1969-12-31 16:00:00.000000000 -0800
++++ ./debian/config/featureset-untangle/defines	2014-12-11 05:33:37.000000000 -0800
+@@ -0,0 +1,7 @@
++[abi]
++ignore-changes: *
++
++[description]
++part-long-untangle: Enables Untangle Required Kernel Extensions. Intended for IP network gateways.
++part-short-untangle: Untangle kernel 
++parts: untangle

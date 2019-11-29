@@ -1,0 +1,31 @@
+From c332ed4200cb5aed3cde97f44404c56a483165b3 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
+Date: Thu, 18 May 2017 11:26:41 +0200
+Subject: [PATCH 09/12] iptables socket
+
+---
+ net/netfilter/xt_socket.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/net/netfilter/xt_socket.c b/net/netfilter/xt_socket.c
+index b10ade2..d844787 100644
+--- a/net/netfilter/xt_socket.c
++++ b/net/netfilter/xt_socket.c
+@@ -246,6 +246,14 @@ socket_match(const struct sk_buff *skb, struct xt_action_param *par,
+ 			sk = NULL;
+ 	}
+
++	/* Untangle hack - or the socket mark to the packet if found
++	 * We do this because there is no conntrack, and it is necessary
++	 * to restore the QoS/bandwidth control mark on packets
++	 * returning to nonlocally bound sockets */
++	if (sk != NULL) {
++		pskb->mark |= sk->sk_mark;
++	}
++
+	return sk != NULL;
+ }
+ 
+-- 
+2.8.1
+
