@@ -31,3 +31,8 @@ imq-Apply-4.9-patch.patch
     This patch allows ingress shaping and shaping over multiple interfaces.  Patch retreived from:
     https://github.com/imq/linuximq/blob/master/kernel/v4.x/linux-4.9-imq.diff
 
+iptables-mac.patch
+    Changes to iptables mac matcher to allow creating iptables rules that match individual bytes of the source MAC address. This is
+    needed so the uvm can pass both the source and destination interface marks in the source mac address for packets reinjected on the utun
+    device. This allows us to create two rules per interface that restore both marks instead of the NxN number of rules that would be required
+    without the ability to isolate specific bytes of the MAC address.
