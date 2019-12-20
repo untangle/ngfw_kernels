@@ -1,3 +1,9 @@
+linux (4.9.189-3+untangle2) unstable; urgency=medium
+
+  * Added patch from mahotz for tweaked xt_mac
+
+ -- Brett Mastbergen <bmastbergen@untangle.com>  Fri, 20 Dec 2019 16:20:56 -0500
+
 linux (4.9.189-3+untangle1) unstable; urgency=medium
 
   * Latest official stretch kernel
