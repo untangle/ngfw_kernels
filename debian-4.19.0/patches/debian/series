@@ -3,4 +3,5 @@
 0130-amd64-defines.patch
 0140-arm64-defines.patch
 0200-kernel-config.patch
+0210-kernel-config-no-system-trusted-keys.patch
 0300-relax-gencontrol-version-check.patch
