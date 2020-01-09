@@ -4,7 +4,7 @@
 0060-iptables-tune.patch
 0090-iptables-socket.patch
 0100-physdev.patch
-0110-imq-Apply-4.9-patch.patch
+0110-imq-Apply-4.16-patch.patch
 0170-i40e-Add-support-for-25G-devices.patch
 0190-i40e-relax-warning-message-in-case-of-version-mismat.patch
 0210-i40e-refactor-FW-version-checking.patch
