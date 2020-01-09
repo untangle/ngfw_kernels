@@ -1,7 +1,24 @@
-diff -urN linux-4.9.30.orig/include/net/netns/ipv4.h linux-4.9.30/include/net/netns/ipv4.h
---- linux-4.9.30.orig/include/net/netns/ipv4.h	2017-10-26 19:22:11.910668081 +0000
-+++ linux-4.9.30/include/net/netns/ipv4.h	2017-10-26 19:56:20.075784532 +0000
-@@ -60,6 +60,7 @@
+From 916e727c19740ab290210fabbd76f0949d4f6188 Mon Sep 17 00:00:00 2001
+From: Brett Mastbergen <bmastbergen@untangle.com>
+Date: Mon, 13 Jan 2020 16:33:01 -0500
+Subject: [PATCH 4/8] iptables-tune
+
+This adds the "tune" table in netfilter which comes at the very end
+which is used for various tasks in our networking setup.
+---
+ include/net/netns/ipv4.h            |   1 +
+ include/uapi/linux/netfilter_ipv4.h |   3 +-
+ net/ipv4/netfilter/Kconfig          |  12 ++++
+ net/ipv4/netfilter/Makefile         |   1 +
+ net/ipv4/netfilter/iptable_tune.c   | 102 ++++++++++++++++++++++++++++
+ 5 files changed, 118 insertions(+), 1 deletion(-)
+ create mode 100644 net/ipv4/netfilter/iptable_tune.c
+
+diff --git a/include/net/netns/ipv4.h b/include/net/netns/ipv4.h
+index 366e2a60010e..21209ff525d3 100644
+--- a/include/net/netns/ipv4.h
++++ b/include/net/netns/ipv4.h
+@@ -77,6 +77,7 @@ struct netns_ipv4 {
  	struct xt_table		*iptable_filter;
  	struct xt_table		*iptable_mangle;
  	struct xt_table		*iptable_raw;
@@ -9,10 +26,11 @@ diff -urN linux-4.9.30.orig/include/net/netns/ipv4.h linux-4.9.30/include/net/ne
  	struct xt_table		*arptable_filter;
  #ifdef CONFIG_SECURITY
  	struct xt_table		*iptable_security;
-diff -urN linux-4.9.30.orig/include/uapi/linux/netfilter_ipv4.h linux-4.9.30/include/uapi/linux/netfilter_ipv4.h
---- linux-4.9.30.orig/include/uapi/linux/netfilter_ipv4.h	2017-10-26 19:22:11.950670020 +0000
-+++ linux-4.9.30/include/uapi/linux/netfilter_ipv4.h	2017-10-26 19:56:20.075784532 +0000
-@@ -67,7 +67,8 @@
+diff --git a/include/uapi/linux/netfilter_ipv4.h b/include/uapi/linux/netfilter_ipv4.h
+index c3b060775e13..8ad7f9da5ab6 100644
+--- a/include/uapi/linux/netfilter_ipv4.h
++++ b/include/uapi/linux/netfilter_ipv4.h
+@@ -69,7 +69,8 @@ enum nf_ip_hook_priorities {
  	NF_IP_PRI_NAT_SRC = 100,
  	NF_IP_PRI_SELINUX_LAST = 225,
  	NF_IP_PRI_CONNTRACK_HELPER = 300,
@@ -22,10 +40,44 @@ diff -urN linux-4.9.30.orig/include/uapi/linux/netfilter_ipv4.h linux-4.9.30/inc
  	NF_IP_PRI_LAST = INT_MAX,
  };
  
-diff -urN linux-4.9.30.orig/net/ipv4/netfilter/iptable_tune.c linux-4.9.30/net/ipv4/netfilter/iptable_tune.c
---- linux-4.9.30.orig/net/ipv4/netfilter/iptable_tune.c	1970-01-01 00:00:00.000000000 +0000
-+++ linux-4.9.30/net/ipv4/netfilter/iptable_tune.c	2017-10-26 19:56:33.467438173 +0000
-@@ -0,0 +1,108 @@
+diff --git a/net/ipv4/netfilter/Kconfig b/net/ipv4/netfilter/Kconfig
+index 184bf2e0a1ed..f02cfd1b4fdd 100644
+--- a/net/ipv4/netfilter/Kconfig
++++ b/net/ipv4/netfilter/Kconfig
+@@ -420,3 +420,15 @@ endif # IP_NF_ARPTABLES
+ 
+ endmenu
+ 
++# tune + specific targets
++config IP_NF_TUNE
++	tristate  'tune table support (adds a chain after POSTROUTING nat)'
++	depends on IP_NF_IPTABLES
++	help
++	  This option adds a `tune' table to iptables. This table is the very
++	  last in the netfilter framework and hooks in at the POSTROUTING
++	  chain.
++	
++	  If you want to compile it as a module, say M here and read
++	  <file:Documentation/modules.txt>.  If unsure, say `N'.
++
+diff --git a/net/ipv4/netfilter/Makefile b/net/ipv4/netfilter/Makefile
+index 367993adf4d3..853da12fe519 100644
+--- a/net/ipv4/netfilter/Makefile
++++ b/net/ipv4/netfilter/Makefile
+@@ -50,6 +50,7 @@ obj-$(CONFIG_IP_NF_FILTER) += iptable_filter.o
+ obj-$(CONFIG_IP_NF_MANGLE) += iptable_mangle.o
+ obj-$(CONFIG_IP_NF_NAT) += iptable_nat.o
+ obj-$(CONFIG_IP_NF_RAW) += iptable_raw.o
++obj-$(CONFIG_IP_NF_TUNE) += iptable_tune.o
+ obj-$(CONFIG_IP_NF_SECURITY) += iptable_security.o
+ 
+ # matches
+diff --git a/net/ipv4/netfilter/iptable_tune.c b/net/ipv4/netfilter/iptable_tune.c
+new file mode 100644
+index 000000000000..c976e3406229
+--- /dev/null
++++ b/net/ipv4/netfilter/iptable_tune.c
+@@ -0,0 +1,102 @@
 +/* 
 + * 
 + * (C) 2015 David Han <dhan@untangle.com>
@@ -60,12 +112,6 @@ diff -urN linux-4.9.30.orig/net/ipv4/netfilter/iptable_tune.c linux-4.9.30/net/i
 +iptable_tune_hook(void *priv, struct sk_buff *skb,
 +		    const struct nf_hook_state *state)
 +{
-+	if (state->hook == NF_INET_LOCAL_OUT &&
-+	    (skb->len < sizeof(struct iphdr) ||
-+	     ip_hdrlen(skb) < sizeof(struct iphdr)))
-+		/* root is playing with raw sockets. */
-+		return NF_ACCEPT;
-+
 +	return ipt_do_table(skb, state, state->net->ipv4.iptable_tune);
 +}
 +
@@ -134,33 +180,6 @@ diff -urN linux-4.9.30.orig/net/ipv4/netfilter/iptable_tune.c linux-4.9.30/net/i
 +
 +module_init(iptable_tune_init);
 +module_exit(iptable_tune_exit);
-diff -urN linux-4.9.30.orig/net/ipv4/netfilter/Kconfig linux-4.9.30/net/ipv4/netfilter/Kconfig
---- linux-4.9.30.orig/net/ipv4/netfilter/Kconfig	2017-10-26 19:22:12.047674720 +0000
-+++ linux-4.9.30/net/ipv4/netfilter/Kconfig	2017-10-26 19:56:20.075784532 +0000
-@@ -408,3 +408,15 @@
- 
- endmenu
- 
-+# tune + specific targets
-+config IP_NF_TUNE
-+	tristate  'tune table support (adds a chain after POSTROUTING nat)'
-+	depends on IP_NF_IPTABLES
-+	help
-+	  This option adds a `tune' table to iptables. This table is the very
-+	  last in the netfilter framework and hooks in at the POSTROUTING
-+	  chain.
-+	
-+	  If you want to compile it as a module, say M here and read
-+	  <file:Documentation/modules.txt>.  If unsure, say `N'.
-+
-diff -urN linux-4.9.30.orig/net/ipv4/netfilter/Makefile linux-4.9.30/net/ipv4/netfilter/Makefile
---- linux-4.9.30.orig/net/ipv4/netfilter/Makefile	2017-10-26 19:22:12.047674720 +0000
-+++ linux-4.9.30/net/ipv4/netfilter/Makefile	2017-10-26 19:56:20.075784532 +0000
-@@ -47,6 +47,7 @@
- obj-$(CONFIG_IP_NF_MANGLE) += iptable_mangle.o
- obj-$(CONFIG_IP_NF_NAT) += iptable_nat.o
- obj-$(CONFIG_IP_NF_RAW) += iptable_raw.o
-+obj-$(CONFIG_IP_NF_TUNE) += iptable_tune.o
- obj-$(CONFIG_IP_NF_SECURITY) += iptable_security.o
- 
- # matches
+-- 
+2.17.1
+

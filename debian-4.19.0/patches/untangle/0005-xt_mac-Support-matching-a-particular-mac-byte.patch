@@ -1,20 +1,22 @@
-From 215be5f9356c73fe367a8c3c58eb3c50fd72ec02 Mon Sep 17 00:00:00 2001
+From 10dbe3d7d872488752e0182fe3cede7be460959c Mon Sep 17 00:00:00 2001
 From: mahotz <mahotz@untangle.com>
 Date: Fri, 20 Dec 2019 12:32:25 -0700
-Subject: [PATCH] Changes to iptables mac matcher to allow creating iptables
- rules that match individual bytes of the source MAC address. This is needed
- so the uvm can pass both the source and destination interface marks in the
- source mac address for packets reinjected on the utun device. This allows us
- to create two rules per interface that restore both marks instead of the NxN
- number of rules that would be required without the ability to isolate
- specific bytes of the MAC address.
+Subject: [PATCH 5/8] xt_mac: Support matching a particular mac byte
 
+Changes to iptables mac matcher to allow creating iptables rules
+that match individual bytes of the source MAC address. This is
+needed so the uvm can pass both the source and destination interface
+marks in the source mac address for packets reinjected on the utun
+device. This allows us to create two rules per interface that
+restore both marks instead of the NxN number of rules that would be
+required without the ability to isolate specific bytes of the MAC
+address.
 ---
  net/netfilter/xt_mac.c | 31 +++++++++++++++++++++++++++++--
  1 file changed, 29 insertions(+), 2 deletions(-)
 
 diff --git a/net/netfilter/xt_mac.c b/net/netfilter/xt_mac.c
-index d5b4fd4..c6b96f0 100644
+index d5b4fd4f91ed..c6b96f09f782 100644
 --- a/net/netfilter/xt_mac.c
 +++ b/net/netfilter/xt_mac.c
 @@ -20,11 +20,33 @@
@@ -67,5 +69,5 @@ index d5b4fd4..c6b96f0 100644
  	return ret;
  }
 -- 
-2.11.0
+2.17.1
 

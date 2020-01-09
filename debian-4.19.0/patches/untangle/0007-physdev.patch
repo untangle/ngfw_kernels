@@ -1,15 +1,29 @@
-From 15f0eb48e6c66275904c64e3a9de80f859ca5b6f Mon Sep 17 00:00:00 2001
+From 191fefda41a5148d815ee0de76ec2cfe544e2e57 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
-Date: Thu, 18 May 2017 11:28:37 +0200
-Subject: [PATCH 10/12] physdev
+Date: Thu, 9 Jan 2020 15:39:42 +0100
+Subject: [PATCH 7/8] physdev
 
+The patch is trying to find the bridge port in bridge fdb inside
+xt_physdev module, so the physoutdev field can match in the FORWARD
+chain.  The kernel without patch can't find the bridge port as the
+patcket hasn't reach the Bridge code internal yet.
+
+Back to Linux kernel 2.6.18, the kernel is trying to make packet go
+through bridge forwarding desicion first and then go through
+forwarding chain.
+
+Following two patchs are original changes in kernel tree at timeframe
+about 2.6.18 that removed the physoutdev matching in the FORWARD chain.
+
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/patch/net/netfilter/xt_physdev.c?id=10ea6ac895418bd0d23900e3330daa6ba0836d26
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/patch/net/netfilter/xt_physdev.c?id=2bf540b73ed5b304e84bb4d4c390d49d1cfa0ef8
 ---
- net/bridge/br_nf_core.c    | 90 ++++++++++++++++++++++++++++++++++++++++++++++
- net/netfilter/xt_physdev.c | 52 +++++++++++++++------------
- 2 files changed, 119 insertions(+), 23 deletions(-)
+ net/bridge/br_nf_core.c    | 90 ++++++++++++++++++++++++++++++++++++++
+ net/netfilter/xt_physdev.c | 50 ++++++++++++---------
+ 2 files changed, 119 insertions(+), 21 deletions(-)
 
 diff --git a/net/bridge/br_nf_core.c b/net/bridge/br_nf_core.c
-index 20cbb72..a7a0da8 100644
+index 8e2d7cfa4e16..162d25d97d67 100644
 --- a/net/bridge/br_nf_core.c
 +++ b/net/bridge/br_nf_core.c
 @@ -19,12 +19,24 @@
@@ -28,7 +42,7 @@ index 20cbb72..a7a0da8 100644
 +        skb->nf_bridge = kzalloc(sizeof(struct nf_bridge_info), GFP_ATOMIC);
 +
 +            if (likely(skb->nf_bridge))
-+                        atomic_set(&(skb->nf_bridge->use), 1);
++                        refcount_set(&(skb->nf_bridge->use), 1);
 +
 +                return skb->nf_bridge;
 +
@@ -37,7 +51,7 @@ index 20cbb72..a7a0da8 100644
  static void fake_update_pmtu(struct dst_entry *dst, struct sock *sk,
  			     struct sk_buff *skb, u32 mtu)
  {
-@@ -93,3 +105,81 @@ void br_nf_core_fini(void)
+@@ -92,3 +104,81 @@ void br_nf_core_fini(void)
  {
  	dst_entries_destroy(&fake_dst_ops);
  }
@@ -49,7 +63,7 @@ index 20cbb72..a7a0da8 100644
 +	struct net_bridge_fdb_entry *fdb;
 +
 +	rcu_read_lock();
-+	fdb = __br_fdb_get(br, addr, 0 /* vid ??? FIXME */ );
++	fdb = br_fdb_find_rcu(br, addr, 0 /* vid ??? FIXME */ );
 +	rcu_read_unlock();
 +	return fdb;
 +}
@@ -120,7 +134,7 @@ index 20cbb72..a7a0da8 100644
 +
 +EXPORT_SYMBOL(get_outdev);
 diff --git a/net/netfilter/xt_physdev.c b/net/netfilter/xt_physdev.c
-index bb33598..752e17d 100644
+index 05f00fb20b04..b324826e0d62 100644
 --- a/net/netfilter/xt_physdev.c
 +++ b/net/netfilter/xt_physdev.c
 @@ -15,6 +15,8 @@
@@ -178,11 +192,11 @@ index bb33598..752e17d 100644
  match_outdev:
 -	if (!(info->bitmask & XT_PHYSDEV_OP_OUT))
 +    if (!(info->bitmask & (XT_PHYSDEV_OP_ISOUT | XT_PHYSDEV_OP_OUT)))
- 		return true;
- 
++		return true;
++
 +	m_dev = dev_get_by_name(&init_net, info->physoutdev );
 +
-+	get_outdev(skb, par->out, m_dev);
++	get_outdev(skb, xt_out(par), m_dev);
 +	dev_put(m_dev);
 +	if (!(nf_bridge = skb->nf_bridge)) {
 +		if ((info->bitmask & XT_PHYSDEV_OP_ISOUT) &&
@@ -191,7 +205,7 @@ index bb33598..752e17d 100644
 +		if ((info->bitmask & XT_PHYSDEV_OP_OUT) &&
 +		    !(info->invert & XT_PHYSDEV_OP_OUT))
 +			return false;
-+		return true;
+ 		return true;
 +	}
 +
 +	if (info->bitmask & XT_PHYSDEV_OP_ISOUT &&
@@ -200,10 +214,10 @@ index bb33598..752e17d 100644
 +
 +	physdev = nf_bridge_get_physoutdev(skb);
 +	outdev = physdev ? physdev->name : NULL;
-+
+ 
  	if (!outdev)
  		return false;
-@@ -102,17 +119,6 @@ static int physdev_mt_check(const struct xt_mtchk_param *par)
+@@ -101,15 +118,6 @@ static int physdev_mt_check(const struct xt_mtchk_param *par)
  	if (!(info->bitmask & XT_PHYSDEV_OP_MASK) ||
  	    info->bitmask & ~XT_PHYSDEV_OP_MASK)
  		return -EINVAL;
@@ -212,15 +226,13 @@ index bb33598..752e17d 100644
 -	     info->invert & XT_PHYSDEV_OP_BRIDGED) &&
 -	    par->hook_mask & ((1 << NF_INET_LOCAL_OUT) |
 -	    (1 << NF_INET_FORWARD) | (1 << NF_INET_POST_ROUTING))) {
--		pr_info("using --physdev-out and --physdev-is-out are only "
--			"supported in the FORWARD and POSTROUTING chains with "
--			"bridged traffic.\n");
+-		pr_info_ratelimited("--physdev-out and --physdev-is-out only supported in the FORWARD and POSTROUTING chains with bridged traffic\n");
 -		if (par->hook_mask & (1 << NF_INET_LOCAL_OUT))
 -			return -EINVAL;
 -	}
- 	return 0;
- }
  
+ 	if (!brnf_probed) {
+ 		brnf_probed = true;
 -- 
-2.8.1
+2.17.1
 
