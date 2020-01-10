@@ -1,20 +1,20 @@
-From c332ed4200cb5aed3cde97f44404c56a483165b3 Mon Sep 17 00:00:00 2001
+From f73e3af699ed6e724381ba723876de3e053fa049 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
-Date: Thu, 18 May 2017 11:26:41 +0200
-Subject: [PATCH 09/12] iptables socket
+Date: Thu, 9 Jan 2020 15:38:02 +0100
+Subject: [PATCH 5/9] iptables socket
 
 ---
- net/netfilter/xt_socket.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ net/netfilter/xt_socket.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/net/netfilter/xt_socket.c b/net/netfilter/xt_socket.c
-index b10ade2..d844787 100644
+index ada144e..9c6a148 100644
 --- a/net/netfilter/xt_socket.c
 +++ b/net/netfilter/xt_socket.c
-@@ -246,6 +246,14 @@ socket_match(const struct sk_buff *skb, struct xt_action_param *par,
+@@ -90,6 +90,14 @@ socket_match(const struct sk_buff *skb, struct xt_action_param *par,
  			sk = NULL;
  	}
-
+ 
 +	/* Untangle hack - or the socket mark to the packet if found
 +	 * We do this because there is no conntrack, and it is necessary
 +	 * to restore the QoS/bandwidth control mark on packets
@@ -23,9 +23,9 @@ index b10ade2..d844787 100644
 +		pskb->mark |= sk->sk_mark;
 +	}
 +
-	return sk != NULL;
+ 	return sk != NULL;
  }
  
 -- 
-2.8.1
+2.23.0
 

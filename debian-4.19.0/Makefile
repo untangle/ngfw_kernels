@@ -48,9 +48,8 @@ patch-debian-stamp: extract-stamp patches/debian/*
 
 patch-untangle: patch-untangle-stamp
 patch-untangle-stamp: extract-stamp patches/untangle/*
-	mkdir -p $(KERNEL_DIR)/debian/patches/features/all/untangle
-	cp patches/untangle/*.patch $(KERNEL_DIR)/debian/patches/features/all/untangle
-	perl -pe 's|^|features/all/untangle/|' patches/untangle/series > $(KERNEL_DIR)/debian/patches/series-untangle
+	mkdir -p $(KERNEL_DIR)/debian/patches-untangle
+	cp patches/untangle/* $(KERNEL_DIR)/debian/patches-untangle
 	touch $@
 
 version: version-stamp
@@ -60,10 +59,6 @@ version-stamp: changelog
 	touch $@
 
 patch: patch-debian patch-untangle version
-	# FIXME: make this a debian patch ?
-	perl -i -pe 's/fuzz=0/fuzz=3 || true/' ${KERNEL_DIR}/debian/rules.defs*
-	perl -i -pe 's/fuzz=0/fuzz=3 || true/' ${KERNEL_DIR}/debian/rules.gen*
-	perl -i -pe 's/fuzz=0/fuzz=3 || true/' ${KERNEL_DIR}/debian/rules.real*
 
 pkgs:	kpkg-arch kpkg-indep
 

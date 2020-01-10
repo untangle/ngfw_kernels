@@ -1,15 +1,15 @@
-From 15f0eb48e6c66275904c64e3a9de80f859ca5b6f Mon Sep 17 00:00:00 2001
+From ceac6228825c353bfd1d94884efc167ce217c19d Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
-Date: Thu, 18 May 2017 11:28:37 +0200
-Subject: [PATCH 10/12] physdev
+Date: Thu, 9 Jan 2020 15:39:42 +0100
+Subject: [PATCH 6/9] physdev
 
 ---
- net/bridge/br_nf_core.c    | 90 ++++++++++++++++++++++++++++++++++++++++++++++
- net/netfilter/xt_physdev.c | 52 +++++++++++++++------------
- 2 files changed, 119 insertions(+), 23 deletions(-)
+ net/bridge/br_nf_core.c    | 90 ++++++++++++++++++++++++++++++++++++++
+ net/netfilter/xt_physdev.c | 50 ++++++++++++---------
+ 2 files changed, 119 insertions(+), 21 deletions(-)
 
 diff --git a/net/bridge/br_nf_core.c b/net/bridge/br_nf_core.c
-index 20cbb72..a7a0da8 100644
+index 8e2d7cf..62ebf2d 100644
 --- a/net/bridge/br_nf_core.c
 +++ b/net/bridge/br_nf_core.c
 @@ -19,12 +19,24 @@
@@ -37,7 +37,7 @@ index 20cbb72..a7a0da8 100644
  static void fake_update_pmtu(struct dst_entry *dst, struct sock *sk,
  			     struct sk_buff *skb, u32 mtu)
  {
-@@ -93,3 +105,81 @@ void br_nf_core_fini(void)
+@@ -92,3 +104,81 @@ void br_nf_core_fini(void)
  {
  	dst_entries_destroy(&fake_dst_ops);
  }
@@ -120,7 +120,7 @@ index 20cbb72..a7a0da8 100644
 +
 +EXPORT_SYMBOL(get_outdev);
 diff --git a/net/netfilter/xt_physdev.c b/net/netfilter/xt_physdev.c
-index bb33598..752e17d 100644
+index 05f00fb..3e1d1ef 100644
 --- a/net/netfilter/xt_physdev.c
 +++ b/net/netfilter/xt_physdev.c
 @@ -15,6 +15,8 @@
@@ -178,8 +178,8 @@ index bb33598..752e17d 100644
  match_outdev:
 -	if (!(info->bitmask & XT_PHYSDEV_OP_OUT))
 +    if (!(info->bitmask & (XT_PHYSDEV_OP_ISOUT | XT_PHYSDEV_OP_OUT)))
- 		return true;
- 
++		return true;
++
 +	m_dev = dev_get_by_name(&init_net, info->physoutdev );
 +
 +	get_outdev(skb, par->out, m_dev);
@@ -191,7 +191,7 @@ index bb33598..752e17d 100644
 +		if ((info->bitmask & XT_PHYSDEV_OP_OUT) &&
 +		    !(info->invert & XT_PHYSDEV_OP_OUT))
 +			return false;
-+		return true;
+ 		return true;
 +	}
 +
 +	if (info->bitmask & XT_PHYSDEV_OP_ISOUT &&
@@ -200,10 +200,10 @@ index bb33598..752e17d 100644
 +
 +	physdev = nf_bridge_get_physoutdev(skb);
 +	outdev = physdev ? physdev->name : NULL;
-+
+ 
  	if (!outdev)
  		return false;
-@@ -102,17 +119,6 @@ static int physdev_mt_check(const struct xt_mtchk_param *par)
+@@ -101,15 +118,6 @@ static int physdev_mt_check(const struct xt_mtchk_param *par)
  	if (!(info->bitmask & XT_PHYSDEV_OP_MASK) ||
  	    info->bitmask & ~XT_PHYSDEV_OP_MASK)
  		return -EINVAL;
@@ -212,15 +212,13 @@ index bb33598..752e17d 100644
 -	     info->invert & XT_PHYSDEV_OP_BRIDGED) &&
 -	    par->hook_mask & ((1 << NF_INET_LOCAL_OUT) |
 -	    (1 << NF_INET_FORWARD) | (1 << NF_INET_POST_ROUTING))) {
--		pr_info("using --physdev-out and --physdev-is-out are only "
--			"supported in the FORWARD and POSTROUTING chains with "
--			"bridged traffic.\n");
+-		pr_info_ratelimited("--physdev-out and --physdev-is-out only supported in the FORWARD and POSTROUTING chains with bridged traffic\n");
 -		if (par->hook_mask & (1 << NF_INET_LOCAL_OUT))
 -			return -EINVAL;
 -	}
- 	return 0;
- }
  
+ 	if (!brnf_probed) {
+ 		brnf_probed = true;
 -- 
-2.8.1
+2.23.0
 
