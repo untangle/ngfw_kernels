@@ -1,13 +1,14 @@
-From 0e815b1bdeaa4526e32419d3b0390034a32b0336 Mon Sep 17 00:00:00 2001
-From: Brett Mastbergen <bmastbergen@untangle.com>
-Date: Mon, 5 Mar 2018 11:10:58 -0500
-Subject: [PATCH] imq: Apply 4.9 patch
+From 82849ef4bdfff95c8d4c0144a96d0098f5fb2f24 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
+Date: Thu, 9 Jan 2020 15:50:38 +0100
+Subject: [PATCH 7/9] imq: Apply 4.9 patch
 
-https://github.com/imq/linuximq/blob/master/kernel/v4.x/linux-4.9-imq.diff
 ---
- drivers/net/Kconfig                     | 119 +++++
+ drivers/net/Kconfig                     | 119 ++++
+ drivers/net/Kconfig.orig                | 526 ++++++++++++++
  drivers/net/Makefile                    |   1 +
- drivers/net/imq.c                       | 907 ++++++++++++++++++++++++++++++++
+ drivers/net/Makefile.orig               |  81 +++
+ drivers/net/imq.c                       | 907 ++++++++++++++++++++++++
  include/linux/imq.h                     |  13 +
  include/linux/netdevice.h               |  13 +
  include/linux/netfilter/xt_IMQ.h        |   9 +
@@ -18,16 +19,16 @@ https://github.com/imq/linuximq/blob/master/kernel/v4.x/linux-4.9-imq.diff
  include/net/pkt_sched.h                 |   2 +
  include/net/sch_generic.h               |   7 +
  include/uapi/linux/netfilter.h          |   3 +-
- net/core/dev.c                          |  10 +
- net/core/skbuff.c                       | 114 ++++
- net/ipv6/ip6_output.c                   |  10 +-
+ net/ipv6/ip6_output.c                   |   7 +
  net/netfilter/Kconfig                   |  12 +
  net/netfilter/Makefile                  |   1 +
- net/netfilter/core.c                    |   5 +-
- net/netfilter/nf_queue.c                |  42 +-
- net/netfilter/xt_IMQ.c                  |  72 +++
+ net/netfilter/core.c                    |   9 +
+ net/netfilter/nf_queue.c                |  43 +-
+ net/netfilter/xt_IMQ.c                  |  72 ++
  net/sched/sch_generic.c                 |   8 +
- 22 files changed, 1389 insertions(+), 8 deletions(-)
+ 22 files changed, 1878 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/net/Kconfig.orig
+ create mode 100644 drivers/net/Makefile.orig
  create mode 100644 drivers/net/imq.c
  create mode 100644 include/linux/imq.h
  create mode 100644 include/linux/netfilter/xt_IMQ.h
@@ -36,10 +37,10 @@ https://github.com/imq/linuximq/blob/master/kernel/v4.x/linux-4.9-imq.diff
  create mode 100644 net/netfilter/xt_IMQ.c
 
 diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
-index 95c32f2d7601..93fada52f582 100644
+index 619bf14..643dde4 100644
 --- a/drivers/net/Kconfig
 +++ b/drivers/net/Kconfig
-@@ -260,6 +260,125 @@ config RIONET_RX_SIZE
+@@ -278,6 +278,125 @@ config RIONET_RX_SIZE
  	depends on RIONET
  	default "128"
  
@@ -165,11 +166,543 @@ index 95c32f2d7601..93fada52f582 100644
  config TUN
  	tristate "Universal TUN/TAP device driver support"
  	depends on INET
+diff --git a/drivers/net/Kconfig.orig b/drivers/net/Kconfig.orig
+new file mode 100644
+index 0000000..619bf14
+--- /dev/null
++++ b/drivers/net/Kconfig.orig
+@@ -0,0 +1,526 @@
++#
++# Network device configuration
++#
++
++menuconfig NETDEVICES
++	default y if UML
++	depends on NET
++	bool "Network device support"
++	---help---
++	  You can say N here if you don't intend to connect your Linux box to
++	  any other computer at all.
++
++	  You'll have to say Y if your computer contains a network card that
++	  you want to use under Linux. If you are going to run SLIP or PPP over
++	  telephone line or null modem cable you need say Y here. Connecting
++	  two machines with parallel ports using PLIP needs this, as well as
++	  AX.25/KISS for sending Internet traffic over amateur radio links.
++
++	  See also "The Linux Network Administrator's Guide" by Olaf Kirch and
++	  Terry Dawson. Available at <http://www.tldp.org/guides.html>.
++
++	  If unsure, say Y.
++
++# All the following symbols are dependent on NETDEVICES - do not repeat
++# that for each of the symbols.
++if NETDEVICES
++
++config MII
++	tristate
++
++config NET_CORE
++	default y
++	bool "Network core driver support"
++	---help---
++	  You can say N here if you do not intend to use any of the
++	  networking core drivers (i.e. VLAN, bridging, bonding, etc.)
++
++if NET_CORE
++
++config BONDING
++	tristate "Bonding driver support"
++	depends on INET
++	depends on IPV6 || IPV6=n
++	---help---
++	  Say 'Y' or 'M' if you wish to be able to 'bond' multiple Ethernet
++	  Channels together. This is called 'Etherchannel' by Cisco,
++	  'Trunking' by Sun, 802.3ad by the IEEE, and 'Bonding' in Linux.
++
++	  The driver supports multiple bonding modes to allow for both high
++	  performance and high availability operation.
++
++	  Refer to <file:Documentation/networking/bonding.txt> for more
++	  information.
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called bonding.
++
++config DUMMY
++	tristate "Dummy net driver support"
++	---help---
++	  This is essentially a bit-bucket device (i.e. traffic you send to
++	  this device is consigned into oblivion) with a configurable IP
++	  address. It is most commonly used in order to make your currently
++	  inactive SLIP address seem like a real address for local programs.
++	  If you use SLIP or PPP, you might want to say Y here. It won't
++	  enlarge your kernel. What a deal. Read about it in the Network
++	  Administrator's Guide, available from
++	  <http://www.tldp.org/docs.html#guide>.
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called dummy.
++
++config EQUALIZER
++	tristate "EQL (serial line load balancing) support"
++	---help---
++	  If you have two serial connections to some other computer (this
++	  usually requires two modems and two telephone lines) and you use
++	  SLIP (the protocol for sending Internet traffic over telephone
++	  lines) or PPP (a better SLIP) on them, you can make them behave like
++	  one double speed connection using this driver.  Naturally, this has
++	  to be supported at the other end as well, either with a similar EQL
++	  Linux driver or with a Livingston Portmaster 2e.
++
++	  Say Y if you want this and read
++	  <file:Documentation/networking/eql.txt>.  You may also want to read
++	  section 6.2 of the NET-3-HOWTO, available from
++	  <http://www.tldp.org/docs.html#howto>.
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called eql.  If unsure, say N.
++
++config NET_FC
++	bool "Fibre Channel driver support"
++	depends on SCSI && PCI
++	help
++	  Fibre Channel is a high speed serial protocol mainly used to connect
++	  large storage devices to the computer; it is compatible with and
++	  intended to replace SCSI.
++
++	  If you intend to use Fibre Channel, you need to have a Fibre channel
++	  adaptor card in your computer; say Y here and to the driver for your
++	  adaptor below. You also should have said Y to "SCSI support" and
++	  "SCSI generic support".
++
++config IFB
++	tristate "Intermediate Functional Block support"
++	depends on NET_CLS_ACT
++	---help---
++	  This is an intermediate driver that allows sharing of
++	  resources.
++	  To compile this driver as a module, choose M here: the module
++	  will be called ifb.  If you want to use more than one ifb
++	  device at a time, you need to compile this driver as a module.
++	  Instead of 'ifb', the devices will then be called 'ifb0',
++	  'ifb1' etc.
++	  Look at the iproute2 documentation directory for usage etc
++
++source "drivers/net/team/Kconfig"
++
++config MACVLAN
++	tristate "MAC-VLAN support"
++	---help---
++	  This allows one to create virtual interfaces that map packets to
++	  or from specific MAC addresses to a particular interface.
++
++	  Macvlan devices can be added using the "ip" command from the
++	  iproute2 package starting with the iproute2-2.6.23 release:
++
++	  "ip link add link <real dev> [ address MAC ] [ NAME ] type macvlan"
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called macvlan.
++
++config MACVTAP
++	tristate "MAC-VLAN based tap driver"
++	depends on MACVLAN
++	depends on INET
++	select TAP
++	help
++	  This adds a specialized tap character device driver that is based
++	  on the MAC-VLAN network interface, called macvtap. A macvtap device
++	  can be added in the same way as a macvlan device, using 'type
++	  macvtap', and then be accessed through the tap user space interface.
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called macvtap.
++
++
++config IPVLAN
++    tristate "IP-VLAN support"
++    depends on INET
++    depends on IPV6 || !IPV6
++    depends on NETFILTER
++    select NET_L3_MASTER_DEV
++    ---help---
++      This allows one to create virtual devices off of a main interface
++      and packets will be delivered based on the dest L3 (IPv6/IPv4 addr)
++      on packets. All interfaces (including the main interface) share L2
++      making it transparent to the connected L2 switch.
++
++      Ipvlan devices can be added using the "ip" command from the
++      iproute2 package starting with the iproute2-3.19 release:
++
++      "ip link add link <main-dev> [ NAME ] type ipvlan"
++
++      To compile this driver as a module, choose M here: the module
++      will be called ipvlan.
++
++config IPVTAP
++	tristate "IP-VLAN based tap driver"
++	depends on IPVLAN
++	depends on INET
++	select TAP
++	---help---
++	  This adds a specialized tap character device driver that is based
++	  on the IP-VLAN network interface, called ipvtap. An ipvtap device
++	  can be added in the same way as a ipvlan device, using 'type
++	  ipvtap', and then be accessed through the tap user space interface.
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called ipvtap.
++
++config VXLAN
++       tristate "Virtual eXtensible Local Area Network (VXLAN)"
++       depends on INET
++       select NET_UDP_TUNNEL
++       select GRO_CELLS
++       ---help---
++	  This allows one to create vxlan virtual interfaces that provide
++	  Layer 2 Networks over Layer 3 Networks. VXLAN is often used
++	  to tunnel virtual network infrastructure in virtualized environments.
++	  For more information see:
++	    http://tools.ietf.org/html/draft-mahalingam-dutt-dcops-vxlan-02
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called vxlan.
++
++config GENEVE
++       tristate "Generic Network Virtualization Encapsulation"
++       depends on INET && NET_UDP_TUNNEL
++       depends on IPV6 || !IPV6
++       select NET_IP_TUNNEL
++       select GRO_CELLS
++       ---help---
++	  This allows one to create geneve virtual interfaces that provide
++	  Layer 2 Networks over Layer 3 Networks. GENEVE is often used
++	  to tunnel virtual network infrastructure in virtualized environments.
++	  For more information see:
++	    http://tools.ietf.org/html/draft-gross-geneve-02
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called geneve.
++
++config GTP
++	tristate "GPRS Tunneling Protocol datapath (GTP-U)"
++	depends on INET
++	select NET_UDP_TUNNEL
++	---help---
++	  This allows one to create gtp virtual interfaces that provide
++	  the GPRS Tunneling Protocol datapath (GTP-U). This tunneling protocol
++	  is used to prevent subscribers from accessing mobile carrier core
++	  network infrastructure. This driver requires a userspace software that
++	  implements the signaling protocol (GTP-C) to update its PDP context
++	  base, such as OpenGGSN <http://git.osmocom.org/openggsn/). This
++	  tunneling protocol is implemented according to the GSM TS 09.60 and
++	  3GPP TS 29.060 standards.
++
++	  To compile this drivers as a module, choose M here: the module
++	  wil be called gtp.
++
++config MACSEC
++	tristate "IEEE 802.1AE MAC-level encryption (MACsec)"
++	select CRYPTO
++	select CRYPTO_AES
++	select CRYPTO_GCM
++	select GRO_CELLS
++	---help---
++	   MACsec is an encryption standard for Ethernet.
++
++config NETCONSOLE
++	tristate "Network console logging support"
++	---help---
++	If you want to log kernel messages over the network, enable this.
++	See <file:Documentation/networking/netconsole.txt> for details.
++
++config NETCONSOLE_DYNAMIC
++	bool "Dynamic reconfiguration of logging targets"
++	depends on NETCONSOLE && SYSFS && CONFIGFS_FS && \
++			!(NETCONSOLE=y && CONFIGFS_FS=m)
++	help
++	  This option enables the ability to dynamically reconfigure target
++	  parameters (interface, IP addresses, port numbers, MAC addresses)
++	  at runtime through a userspace interface exported using configfs.
++	  See <file:Documentation/networking/netconsole.txt> for details.
++
++config NETPOLL
++	def_bool NETCONSOLE
++	select SRCU
++
++config NET_POLL_CONTROLLER
++	def_bool NETPOLL
++
++config NTB_NETDEV
++	tristate "Virtual Ethernet over NTB Transport"
++	depends on NTB_TRANSPORT
++
++config RIONET
++	tristate "RapidIO Ethernet over messaging driver support"
++	depends on RAPIDIO
++
++config RIONET_TX_SIZE
++	int "Number of outbound queue entries"
++	depends on RIONET
++	default "128"
++
++config RIONET_RX_SIZE
++	int "Number of inbound queue entries"
++	depends on RIONET
++	default "128"
++
++config TUN
++	tristate "Universal TUN/TAP device driver support"
++	depends on INET
++	select CRC32
++	---help---
++	  TUN/TAP provides packet reception and transmission for user space
++	  programs.  It can be viewed as a simple Point-to-Point or Ethernet
++	  device, which instead of receiving packets from a physical media,
++	  receives them from user space program and instead of sending packets
++	  via physical media writes them to the user space program.
++
++	  When a program opens /dev/net/tun, driver creates and registers
++	  corresponding net device tunX or tapX.  After a program closed above
++	  devices, driver will automatically delete tunXX or tapXX device and
++	  all routes corresponding to it.
++
++	  Please read <file:Documentation/networking/tuntap.txt> for more
++	  information.
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called tun.
++
++	  If you don't know what to use this for, you don't need it.
++
++config TAP
++	tristate
++	---help---
++	  This option is selected by any driver implementing tap user space
++	  interface for a virtual interface to re-use core tap functionality.
++
++config TUN_VNET_CROSS_LE
++	bool "Support for cross-endian vnet headers on little-endian kernels"
++	default n
++	---help---
++	  This option allows TUN/TAP and MACVTAP device drivers in a
++	  little-endian kernel to parse vnet headers that come from a
++	  big-endian legacy virtio device.
++
++	  Userspace programs can control the feature using the TUNSETVNETBE
++	  and TUNGETVNETBE ioctls.
++
++	  Unless you have a little-endian system hosting a big-endian virtual
++	  machine with a legacy virtio NIC, you should say N.
++
++config VETH
++	tristate "Virtual ethernet pair device"
++	---help---
++	  This device is a local ethernet tunnel. Devices are created in pairs.
++	  When one end receives the packet it appears on its pair and vice
++	  versa.
++
++config VIRTIO_NET
++	tristate "Virtio network driver"
++	depends on VIRTIO
++	select NET_FAILOVER
++	---help---
++	  This is the virtual network driver for virtio.  It can be used with
++	  QEMU based VMMs (like KVM or Xen).  Say Y or M.
++
++config NLMON
++	tristate "Virtual netlink monitoring device"
++	---help---
++	  This option enables a monitoring net device for netlink skbs. The
++	  purpose of this is to analyze netlink messages with packet sockets.
++	  Thus applications like tcpdump will be able to see local netlink
++	  messages if they tap into the netlink device, record pcaps for further
++	  diagnostics, etc. This is mostly intended for developers or support
++	  to debug netlink issues. If unsure, say N.
++
++config NET_VRF
++	tristate "Virtual Routing and Forwarding (Lite)"
++	depends on IP_MULTIPLE_TABLES
++	depends on NET_L3_MASTER_DEV
++	depends on IPV6 || IPV6=n
++	depends on IPV6_MULTIPLE_TABLES || IPV6=n
++	---help---
++	  This option enables the support for mapping interfaces into VRF's. The
++	  support enables VRF devices.
++
++config VSOCKMON
++    tristate "Virtual vsock monitoring device"
++    depends on VHOST_VSOCK
++    ---help---
++     This option enables a monitoring net device for vsock sockets. It is
++     mostly intended for developers or support to debug vsock issues. If
++     unsure, say N.
++
++endif # NET_CORE
++
++config SUNGEM_PHY
++	tristate
++
++source "drivers/net/arcnet/Kconfig"
++
++source "drivers/atm/Kconfig"
++
++source "drivers/net/caif/Kconfig"
++
++source "drivers/net/dsa/Kconfig"
++
++source "drivers/net/ethernet/Kconfig"
++
++source "drivers/net/fddi/Kconfig"
++
++source "drivers/net/hippi/Kconfig"
++
++config NET_SB1000
++	tristate "General Instruments Surfboard 1000"
++	depends on PNP
++	---help---
++	  This is a driver for the General Instrument (also known as
++	  NextLevel) SURFboard 1000 internal
++	  cable modem. This is an ISA card which is used by a number of cable
++	  TV companies to provide cable modem access. It's a one-way
++	  downstream-only cable modem, meaning that your upstream net link is
++	  provided by your regular phone modem.
++
++	  At present this driver only compiles as a module, so say M here if
++	  you have this card. The module will be called sb1000. Then read
++	  <file:Documentation/networking/README.sb1000> for information on how
++	  to use this module, as it needs special ppp scripts for establishing
++	  a connection. Further documentation and the necessary scripts can be
++	  found at:
++
++	  <http://www.jacksonville.net/~fventuri/>
++	  <http://home.adelphia.net/~siglercm/sb1000.html>
++	  <http://linuxpower.cx/~cable/>
++
++	  If you don't have this card, of course say N.
++
++source "drivers/net/phy/Kconfig"
++
++source "drivers/net/plip/Kconfig"
++
++source "drivers/net/ppp/Kconfig"
++
++source "drivers/net/slip/Kconfig"
++
++source "drivers/s390/net/Kconfig"
++
++source "drivers/net/usb/Kconfig"
++
++source "drivers/net/wireless/Kconfig"
++
++source "drivers/net/wimax/Kconfig"
++
++source "drivers/net/wan/Kconfig"
++
++source "drivers/net/ieee802154/Kconfig"
++
++config XEN_NETDEV_FRONTEND
++	tristate "Xen network device frontend driver"
++	depends on XEN
++	select XEN_XENBUS_FRONTEND
++	default y
++	help
++	  This driver provides support for Xen paravirtual network
++	  devices exported by a Xen network driver domain (often
++	  domain 0).
++
++	  The corresponding Linux backend driver is enabled by the
++	  CONFIG_XEN_NETDEV_BACKEND option.
++
++	  If you are compiling a kernel for use as Xen guest, you
++	  should say Y here. To compile this driver as a module, chose
++	  M here: the module will be called xen-netfront.
++
++config XEN_NETDEV_BACKEND
++	tristate "Xen backend network device"
++	depends on XEN_BACKEND
++	help
++	  This driver allows the kernel to act as a Xen network driver
++	  domain which exports paravirtual network devices to other
++	  Xen domains. These devices can be accessed by any operating
++	  system that implements a compatible front end.
++
++	  The corresponding Linux frontend driver is enabled by the
++	  CONFIG_XEN_NETDEV_FRONTEND configuration option.
++
++	  The backend driver presents a standard network device
++	  endpoint for each paravirtual network device to the driver
++	  domain network stack. These can then be bridged or routed
++	  etc in order to provide full network connectivity.
++
++	  If you are compiling a kernel to run in a Xen network driver
++	  domain (often this is domain 0) you should say Y here. To
++	  compile this driver as a module, chose M here: the module
++	  will be called xen-netback.
++
++config VMXNET3
++	tristate "VMware VMXNET3 ethernet driver"
++	depends on PCI && INET
++	depends on !(PAGE_SIZE_64KB || ARM64_64K_PAGES || \
++		     IA64_PAGE_SIZE_64KB || MICROBLAZE_64K_PAGES || \
++		     PARISC_PAGE_SIZE_64KB || PPC_64K_PAGES)
++	help
++	  This driver supports VMware's vmxnet3 virtual ethernet NIC.
++	  To compile this driver as a module, choose M here: the
++	  module will be called vmxnet3.
++
++config FUJITSU_ES
++	tristate "FUJITSU Extended Socket Network Device driver"
++	depends on ACPI
++	help
++	  This driver provides support for Extended Socket network device
++          on Extended Partitioning of FUJITSU PRIMEQUEST 2000 E2 series.
++
++config THUNDERBOLT_NET
++	tristate "Networking over Thunderbolt cable"
++	depends on THUNDERBOLT && INET
++	help
++	  Select this if you want to create network between two
++	  computers over a Thunderbolt cable. The driver supports Apple
++	  ThunderboltIP protocol and allows communication with any host
++	  supporting the same protocol including Windows and macOS.
++
++	  To compile this driver a module, choose M here. The module will be
++	  called thunderbolt-net.
++
++source "drivers/net/hyperv/Kconfig"
++
++config NETDEVSIM
++	tristate "Simulated networking device"
++	depends on DEBUG_FS
++	depends on MAY_USE_DEVLINK
++	help
++	  This driver is a developer testing tool and software model that can
++	  be used to test various control path networking APIs, especially
++	  HW-offload related.
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called netdevsim.
++
++config NET_FAILOVER
++	tristate "Failover driver"
++	select FAILOVER
++	help
++	  This provides an automated failover mechanism via APIs to create
++	  and destroy a failover master netdev and manages a primary and
++	  standby slave netdevs that get registered via the generic failover
++	  infrastructure. This can be used by paravirtual drivers to enable
++	  an alternate low latency datapath. It alsoenables live migration of
++	  a VM with direct attached VF by failing over to the paravirtual
++	  datapath when the VF is unplugged.
++
++endif # NETDEVICES
 diff --git a/drivers/net/Makefile b/drivers/net/Makefile
-index 7336cbd3ef5d..d6d7ad42b866 100644
+index 0d3ba05..8235a78 100644
 --- a/drivers/net/Makefile
 +++ b/drivers/net/Makefile
-@@ -11,6 +11,7 @@ obj-$(CONFIG_DUMMY) += dummy.o
+@@ -13,6 +13,7 @@ obj-$(CONFIG_DUMMY) += dummy.o
  obj-$(CONFIG_EQUALIZER) += eql.o
  obj-$(CONFIG_IFB) += ifb.o
  obj-$(CONFIG_MACSEC) += macsec.o
@@ -177,9 +710,96 @@ index 7336cbd3ef5d..d6d7ad42b866 100644
  obj-$(CONFIG_MACVLAN) += macvlan.o
  obj-$(CONFIG_MACVTAP) += macvtap.o
  obj-$(CONFIG_MII) += mii.o
+diff --git a/drivers/net/Makefile.orig b/drivers/net/Makefile.orig
+new file mode 100644
+index 0000000..0d3ba05
+--- /dev/null
++++ b/drivers/net/Makefile.orig
+@@ -0,0 +1,81 @@
++# SPDX-License-Identifier: GPL-2.0
++#
++# Makefile for the Linux network device drivers.
++#
++
++#
++# Networking Core Drivers
++#
++obj-$(CONFIG_BONDING) += bonding/
++obj-$(CONFIG_IPVLAN) += ipvlan/
++obj-$(CONFIG_IPVTAP) += ipvlan/
++obj-$(CONFIG_DUMMY) += dummy.o
++obj-$(CONFIG_EQUALIZER) += eql.o
++obj-$(CONFIG_IFB) += ifb.o
++obj-$(CONFIG_MACSEC) += macsec.o
++obj-$(CONFIG_MACVLAN) += macvlan.o
++obj-$(CONFIG_MACVTAP) += macvtap.o
++obj-$(CONFIG_MII) += mii.o
++obj-$(CONFIG_MDIO) += mdio.o
++obj-$(CONFIG_NET) += Space.o loopback.o
++obj-$(CONFIG_NETCONSOLE) += netconsole.o
++obj-y += phy/
++obj-$(CONFIG_RIONET) += rionet.o
++obj-$(CONFIG_NET_TEAM) += team/
++obj-$(CONFIG_TUN) += tun.o
++obj-$(CONFIG_TAP) += tap.o
++obj-$(CONFIG_VETH) += veth.o
++obj-$(CONFIG_VIRTIO_NET) += virtio_net.o
++obj-$(CONFIG_VXLAN) += vxlan.o
++obj-$(CONFIG_GENEVE) += geneve.o
++obj-$(CONFIG_GTP) += gtp.o
++obj-$(CONFIG_NLMON) += nlmon.o
++obj-$(CONFIG_NET_VRF) += vrf.o
++obj-$(CONFIG_VSOCKMON) += vsockmon.o
++
++#
++# Networking Drivers
++#
++obj-$(CONFIG_ARCNET) += arcnet/
++obj-$(CONFIG_DEV_APPLETALK) += appletalk/
++obj-$(CONFIG_CAIF) += caif/
++obj-$(CONFIG_CAN) += can/
++obj-y += dsa/
++obj-$(CONFIG_ETHERNET) += ethernet/
++obj-$(CONFIG_FDDI) += fddi/
++obj-$(CONFIG_HIPPI) += hippi/
++obj-$(CONFIG_HAMRADIO) += hamradio/
++obj-$(CONFIG_PLIP) += plip/
++obj-$(CONFIG_PPP) += ppp/
++obj-$(CONFIG_PPP_ASYNC) += ppp/
++obj-$(CONFIG_PPP_BSDCOMP) += ppp/
++obj-$(CONFIG_PPP_DEFLATE) += ppp/
++obj-$(CONFIG_PPP_MPPE) += ppp/
++obj-$(CONFIG_PPP_SYNC_TTY) += ppp/
++obj-$(CONFIG_PPPOE) += ppp/
++obj-$(CONFIG_PPPOL2TP) += ppp/
++obj-$(CONFIG_PPTP) += ppp/
++obj-$(CONFIG_SLIP) += slip/
++obj-$(CONFIG_SLHC) += slip/
++obj-$(CONFIG_NET_SB1000) += sb1000.o
++obj-$(CONFIG_SUNGEM_PHY) += sungem_phy.o
++obj-$(CONFIG_WAN) += wan/
++obj-$(CONFIG_WLAN) += wireless/
++obj-$(CONFIG_WIMAX) += wimax/
++obj-$(CONFIG_IEEE802154) += ieee802154/
++
++obj-$(CONFIG_VMXNET3) += vmxnet3/
++obj-$(CONFIG_XEN_NETDEV_FRONTEND) += xen-netfront.o
++obj-$(CONFIG_XEN_NETDEV_BACKEND) += xen-netback/
++
++obj-$(CONFIG_USB_NET_DRIVERS) += usb/
++
++obj-$(CONFIG_HYPERV_NET) += hyperv/
++obj-$(CONFIG_NTB_NETDEV) += ntb_netdev.o
++
++obj-$(CONFIG_FUJITSU_ES) += fjes/
++
++thunderbolt-net-y += thunderbolt.o
++obj-$(CONFIG_THUNDERBOLT_NET) += thunderbolt-net.o
++obj-$(CONFIG_NETDEVSIM) += netdevsim/
++obj-$(CONFIG_NET_FAILOVER) += net_failover.o
 diff --git a/drivers/net/imq.c b/drivers/net/imq.c
 new file mode 100644
-index 000000000000..bc3b997e3503
+index 0000000..bc3b997
 --- /dev/null
 +++ b/drivers/net/imq.c
 @@ -0,0 +1,907 @@
@@ -1092,7 +1712,7 @@ index 000000000000..bc3b997e3503
 +MODULE_ALIAS_RTNL_LINK("imq");
 diff --git a/include/linux/imq.h b/include/linux/imq.h
 new file mode 100644
-index 000000000000..1babb0978a2a
+index 0000000..1babb09
 --- /dev/null
 +++ b/include/linux/imq.h
 @@ -0,0 +1,13 @@
@@ -1110,10 +1730,10 @@ index 000000000000..1babb0978a2a
 +#endif /* _IMQ_H */
 +
 diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index 47c7f5b8f675..932e6bd5821a 100644
+index 8c2fec0..15b75ac 100644
 --- a/include/linux/netdevice.h
 +++ b/include/linux/netdevice.h
-@@ -3679,6 +3679,19 @@ static inline void netif_tx_unlock_bh(struct net_device *dev)
+@@ -3929,6 +3929,19 @@ static inline void netif_tx_unlock_bh(struct net_device *dev)
  	}						\
  }
  
@@ -1135,7 +1755,7 @@ index 47c7f5b8f675..932e6bd5821a 100644
  	unsigned int i;
 diff --git a/include/linux/netfilter/xt_IMQ.h b/include/linux/netfilter/xt_IMQ.h
 new file mode 100644
-index 000000000000..9b072300fd6b
+index 0000000..9b07230
 --- /dev/null
 +++ b/include/linux/netfilter/xt_IMQ.h
 @@ -0,0 +1,9 @@
@@ -1150,7 +1770,7 @@ index 000000000000..9b072300fd6b
 +
 diff --git a/include/linux/netfilter_ipv4/ipt_IMQ.h b/include/linux/netfilter_ipv4/ipt_IMQ.h
 new file mode 100644
-index 000000000000..7af320fc70d5
+index 0000000..7af320f
 --- /dev/null
 +++ b/include/linux/netfilter_ipv4/ipt_IMQ.h
 @@ -0,0 +1,10 @@
@@ -1166,7 +1786,7 @@ index 000000000000..7af320fc70d5
 +
 diff --git a/include/linux/netfilter_ipv6/ip6t_IMQ.h b/include/linux/netfilter_ipv6/ip6t_IMQ.h
 new file mode 100644
-index 000000000000..198ac01f894a
+index 0000000..198ac01
 --- /dev/null
 +++ b/include/linux/netfilter_ipv6/ip6t_IMQ.h
 @@ -0,0 +1,10 @@
@@ -1181,10 +1801,10 @@ index 000000000000..198ac01f894a
 +#endif /* _IP6T_IMQ_H */
 +
 diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
-index 601dfa849d30..8cc0545cea15 100644
+index 28baccb..3c85dd4 100644
 --- a/include/linux/skbuff.h
 +++ b/include/linux/skbuff.h
-@@ -39,6 +39,10 @@
+@@ -40,6 +40,10 @@
  #include <linux/in6.h>
  #include <linux/if_packet.h>
  #include <net/flow.h>
@@ -1195,7 +1815,7 @@ index 601dfa849d30..8cc0545cea15 100644
  
  /* The interface for checksum offload between the stack and networking drivers
   * is as follows...
-@@ -654,6 +658,9 @@ struct sk_buff {
+@@ -698,6 +702,9 @@ struct sk_buff {
  	 * first. This is owned by whoever has the skb queued ATM.
  	 */
  	char			cb[48] __aligned(8);
@@ -1203,11 +1823,11 @@ index 601dfa849d30..8cc0545cea15 100644
 +	void			*cb_next;
 +#endif
  
- 	unsigned long		_skb_refdst;
- 	void			(*destructor)(struct sk_buff *skb);
-@@ -663,6 +670,9 @@ struct sk_buff {
+ 	union {
+ 		struct {
+@@ -713,6 +720,9 @@ struct sk_buff {
  #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
- 	struct nf_conntrack	*nfct;
+ 	unsigned long		 _nfct;
  #endif
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
 +       struct nf_queue_entry   *nf_queue_entry;
@@ -1215,19 +1835,19 @@ index 601dfa849d30..8cc0545cea15 100644
  #if IS_ENABLED(CONFIG_BRIDGE_NETFILTER)
  	struct nf_bridge_info	*nf_bridge;
  #endif
-@@ -743,6 +753,9 @@ struct sk_buff {
- 	__u8			offload_fwd_mark:1;
- #endif
- 	/* 2, 4 or 5 bit hole */
+@@ -793,6 +803,9 @@ struct sk_buff {
+ #ifdef CONFIG_NET_CLS_ACT
+ 	__u8			tc_skip_classify:1;
+ 	__u8			tc_at_ingress:1;
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
 +	__u8			imq_flags:IMQ_F_BITS;
 +#endif
- 
- #ifdef CONFIG_NET_SCHED
- 	__u16			tc_index;	/* traffic control index */
-@@ -903,6 +916,12 @@ void kfree_skb_list(struct sk_buff *segs);
- void skb_tx_error(struct sk_buff *skb);
+ 	__u8			tc_redirected:1;
+ 	__u8			tc_from_ingress:1;
+ #endif
+@@ -979,6 +992,12 @@ void skb_tx_error(struct sk_buff *skb);
  void consume_skb(struct sk_buff *skb);
+ void __consume_stateless_skb(struct sk_buff *skb);
  void  __kfree_skb(struct sk_buff *skb);
 +
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
@@ -1238,9 +1858,9 @@ index 601dfa849d30..8cc0545cea15 100644
  extern struct kmem_cache *skbuff_head_cache;
  
  void kfree_skb_partial(struct sk_buff *skb, bool head_stolen);
-@@ -3601,6 +3620,10 @@ static inline void __nf_copy(struct sk_buff *dst, const struct sk_buff *src,
- 	if (copy)
- 		dst->nfctinfo = src->nfctinfo;
+@@ -3904,6 +3923,10 @@ static inline void __nf_copy(struct sk_buff *dst, const struct sk_buff *src,
+ 	dst->_nfct = src->_nfct;
+ 	nf_conntrack_get(skb_nfct(src));
  #endif
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
 +       dst->imq_flags = src->imq_flags;
@@ -1250,10 +1870,10 @@ index 601dfa849d30..8cc0545cea15 100644
  	dst->nf_bridge  = src->nf_bridge;
  	nf_bridge_get(src->nf_bridge);
 diff --git a/include/net/netfilter/nf_queue.h b/include/net/netfilter/nf_queue.h
-index 2280cfe86c56..ec8fa51c4bc5 100644
+index a50a69f..1c4478d 100644
 --- a/include/net/netfilter/nf_queue.h
 +++ b/include/net/netfilter/nf_queue.h
-@@ -30,6 +30,12 @@ struct nf_queue_handler {
+@@ -31,6 +31,12 @@ struct nf_queue_handler {
  void nf_register_queue_handler(struct net *net, const struct nf_queue_handler *qh);
  void nf_unregister_queue_handler(struct net *net);
  void nf_reinject(struct nf_queue_entry *entry, unsigned int verdict);
@@ -1267,10 +1887,10 @@ index 2280cfe86c56..ec8fa51c4bc5 100644
  void nf_queue_entry_get_refs(struct nf_queue_entry *entry);
  void nf_queue_entry_release_refs(struct nf_queue_entry *entry);
 diff --git a/include/net/pkt_sched.h b/include/net/pkt_sched.h
-index cd334c9584e9..67572280b180 100644
+index 7dc769e..a910221 100644
 --- a/include/net/pkt_sched.h
 +++ b/include/net/pkt_sched.h
-@@ -105,6 +105,8 @@ int sch_direct_xmit(struct sk_buff *skb, struct Qdisc *q,
+@@ -114,6 +114,8 @@ bool sch_direct_xmit(struct sk_buff *skb, struct Qdisc *q,
  
  void __qdisc_run(struct Qdisc *q);
  
@@ -1278,12 +1898,12 @@ index cd334c9584e9..67572280b180 100644
 +
  static inline void qdisc_run(struct Qdisc *q)
  {
- 	if (qdisc_run_begin(q))
+ 	if (qdisc_run_begin(q)) {
 diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
-index f18fc1a0321f..4017d64a7728 100644
+index c44da48..acf8eae 100644
 --- a/include/net/sch_generic.h
 +++ b/include/net/sch_generic.h
-@@ -518,6 +518,13 @@ static inline int qdisc_enqueue(struct sk_buff *skb, struct Qdisc *sch,
+@@ -699,6 +699,13 @@ static inline int qdisc_enqueue(struct sk_buff *skb, struct Qdisc *sch,
  	return sch->enqueue(skb, sch, to_free);
  }
  
@@ -1298,216 +1918,24 @@ index f18fc1a0321f..4017d64a7728 100644
  {
  	return q->flags & TCQ_F_CPUSTATS;
 diff --git a/include/uapi/linux/netfilter.h b/include/uapi/linux/netfilter.h
-index d93f949d1d9a..23fb6d1b3df8 100644
+index cca10e7..4e6f12e 100644
 --- a/include/uapi/linux/netfilter.h
 +++ b/include/uapi/linux/netfilter.h
 @@ -14,7 +14,8 @@
  #define NF_QUEUE 3
  #define NF_REPEAT 4
- #define NF_STOP 5
+ #define NF_STOP 5	/* Deprecated, for userspace nf_queue compatibility. */
 -#define NF_MAX_VERDICT NF_STOP
 +#define NF_IMQ_QUEUE 6
 +#define NF_MAX_VERDICT NF_IMQ_QUEUE
  
  /* we overload the higher bits for encoding auxiliary data such as the queue
   * number or errno values. Not nice, but better than additional function
-diff --git a/net/core/dev.c b/net/core/dev.c
-index c37891828e4e..f54e86fd24da 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
-@@ -141,6 +141,9 @@
- #include <linux/netfilter_ingress.h>
- #include <linux/sctp.h>
- #include <linux/crash_dump.h>
-+#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+#include <linux/imq.h>
-+#endif
- 
- #include "net-sysfs.h"
- 
-@@ -2939,7 +2942,12 @@ static int xmit_one(struct sk_buff *skb, struct net_device *dev,
- 	unsigned int len;
- 	int rc;
- 
-+#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+	if ((!list_empty(&ptype_all) || !list_empty(&dev->ptype_all)) &&
-+		!(skb->imq_flags & IMQ_F_ENQUEUE))
-+#else
- 	if (!list_empty(&ptype_all) || !list_empty(&dev->ptype_all))
-+#endif
- 		dev_queue_xmit_nit(skb, dev);
- 
- 	len = skb->len;
-@@ -2978,6 +2986,8 @@ struct sk_buff *dev_hard_start_xmit(struct sk_buff *first, struct net_device *de
- 	return skb;
- }
- 
-+EXPORT_SYMBOL_GPL(dev_hard_start_xmit);
-+
- static struct sk_buff *validate_xmit_vlan(struct sk_buff *skb,
- 					  netdev_features_t features)
- {
-diff --git a/net/core/skbuff.c b/net/core/skbuff.c
-index aec5605944d3..84d448b9fd74 100644
---- a/net/core/skbuff.c
-+++ b/net/core/skbuff.c
-@@ -82,6 +82,87 @@ struct kmem_cache *skbuff_head_cache __read_mostly;
- static struct kmem_cache *skbuff_fclone_cache __read_mostly;
- int sysctl_max_skb_frags __read_mostly = MAX_SKB_FRAGS;
- EXPORT_SYMBOL(sysctl_max_skb_frags);
-+#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+static struct kmem_cache *skbuff_cb_store_cache __read_mostly;
-+#endif
-+
-+#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+/* Control buffer save/restore for IMQ devices */
-+struct skb_cb_table {
-+	char			cb[48] __aligned(8);
-+	void			*cb_next;
-+	atomic_t		refcnt;
-+};
-+
-+static DEFINE_SPINLOCK(skb_cb_store_lock);
-+
-+int skb_save_cb(struct sk_buff *skb)
-+{
-+	struct skb_cb_table *next;
-+
-+	next = kmem_cache_alloc(skbuff_cb_store_cache, GFP_ATOMIC);
-+	if (!next)
-+		return -ENOMEM;
-+
-+	BUILD_BUG_ON(sizeof(skb->cb) != sizeof(next->cb));
-+
-+	memcpy(next->cb, skb->cb, sizeof(skb->cb));
-+	next->cb_next = skb->cb_next;
-+
-+	atomic_set(&next->refcnt, 1);
-+
-+	skb->cb_next = next;
-+	return 0;
-+}
-+EXPORT_SYMBOL(skb_save_cb);
-+
-+int skb_restore_cb(struct sk_buff *skb)
-+{
-+	struct skb_cb_table *next;
-+
-+	if (!skb->cb_next)
-+		return 0;
-+
-+	next = skb->cb_next;
-+
-+	BUILD_BUG_ON(sizeof(skb->cb) != sizeof(next->cb));
-+
-+	memcpy(skb->cb, next->cb, sizeof(skb->cb));
-+	skb->cb_next = next->cb_next;
-+
-+	spin_lock(&skb_cb_store_lock);
-+
-+	if (atomic_dec_and_test(&next->refcnt))
-+		kmem_cache_free(skbuff_cb_store_cache, next);
-+
-+	spin_unlock(&skb_cb_store_lock);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(skb_restore_cb);
-+
-+static void skb_copy_stored_cb(struct sk_buff *   , const struct sk_buff *     ) __attribute__ ((unused));
-+static void skb_copy_stored_cb(struct sk_buff *new, const struct sk_buff *__old)
-+{
-+	struct skb_cb_table *next;
-+	struct sk_buff *old;
-+
-+	if (!__old->cb_next) {
-+		new->cb_next = NULL;
-+		return;
-+	}
-+
-+	spin_lock(&skb_cb_store_lock);
-+
-+	old = (struct sk_buff *)__old;
-+
-+	next = old->cb_next;
-+	atomic_inc(&next->refcnt);
-+	new->cb_next = next;
-+
-+	spin_unlock(&skb_cb_store_lock);
-+}
-+#endif
- 
- /**
-  *	skb_panic - private function for out-of-line support
-@@ -654,6 +735,28 @@ static void skb_release_head_state(struct sk_buff *skb)
- 		WARN_ON(in_irq());
- 		skb->destructor(skb);
- 	}
-+#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+	/*
-+	 * This should not happen. When it does, avoid memleak by restoring
-+	 * the chain of cb-backups.
-+	 */
-+	while (skb->cb_next != NULL) {
-+		if (net_ratelimit())
-+			pr_warn("IMQ: kfree_skb: skb->cb_next: %08x\n",
-+				(unsigned int)(uintptr_t)skb->cb_next);
-+
-+		skb_restore_cb(skb);
-+	}
-+	/*
-+	 * This should not happen either, nf_queue_entry is nullified in
-+	 * imq_dev_xmit(). If we have non-NULL nf_queue_entry then we are
-+	 * leaking entry pointers, maybe memory. We don't know if this is
-+	 * pointer to already freed memory, or should this be freed.
-+	 * If this happens we need to add refcounting, etc for nf_queue_entry.
-+	 */
-+	if (skb->nf_queue_entry && net_ratelimit())
-+		pr_warn("%s\n", "IMQ: kfree_skb: skb->nf_queue_entry != NULL");
-+#endif
- #if IS_ENABLED(CONFIG_NF_CONNTRACK)
- 	nf_conntrack_put(skb->nfct);
- #endif
-@@ -843,6 +946,10 @@ static void __copy_skb_header(struct sk_buff *new, const struct sk_buff *old)
- 	new->sp			= secpath_get(old->sp);
- #endif
- 	__nf_copy(new, old, false);
-+#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+	new->cb_next = NULL;
-+	/*skb_copy_stored_cb(new, old);*/
-+#endif
- 
- 	/* Note : this field could be in headers_start/headers_end section
- 	 * It is not yet because we do not want to have a 16 bit hole
-@@ -3473,6 +3580,13 @@ void __init skb_init(void)
- 						0,
- 						SLAB_HWCACHE_ALIGN|SLAB_PANIC,
- 						NULL);
-+#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
-+	skbuff_cb_store_cache = kmem_cache_create("skbuff_cb_store_cache",
-+						  sizeof(struct skb_cb_table),
-+						  0,
-+						  SLAB_HWCACHE_ALIGN|SLAB_PANIC,
-+						  NULL);
-+#endif
- }
- 
- /**
 diff --git a/net/ipv6/ip6_output.c b/net/ipv6/ip6_output.c
-index 6e01c9a8dfd3..c71054d565e9 100644
+index eed9231..943cba2 100644
 --- a/net/ipv6/ip6_output.c
 +++ b/net/ipv6/ip6_output.c
-@@ -66,9 +66,6 @@ static int ip6_finish_output2(struct net *net, struct sock *sk, struct sk_buff *
- 	struct in6_addr *nexthop;
- 	int ret;
- 
--	skb->protocol = htons(ETH_P_IPV6);
--	skb->dev = dev;
--
- 	if (ipv6_addr_is_multicast(&ipv6_hdr(skb)->daddr)) {
- 		struct inet6_dev *idev = ip6_dst_idev(skb_dst(skb));
- 
-@@ -150,6 +147,13 @@ int ip6_output(struct net *net, struct sock *sk, struct sk_buff *skb)
+@@ -168,6 +168,13 @@ int ip6_output(struct net *net, struct sock *sk, struct sk_buff *skb)
  		return 0;
  	}
  
@@ -1522,10 +1950,10 @@ index 6e01c9a8dfd3..c71054d565e9 100644
  			    net, sk, skb, NULL, dev,
  			    ip6_finish_output,
 diff --git a/net/netfilter/Kconfig b/net/netfilter/Kconfig
-index e8d56d9a4df2..1ed3468675ac 100644
+index e0fb56d..bb94907 100644
 --- a/net/netfilter/Kconfig
 +++ b/net/netfilter/Kconfig
-@@ -823,6 +823,18 @@ config NETFILTER_XT_TARGET_LOG
+@@ -920,6 +920,18 @@ config NETFILTER_XT_TARGET_LOG
  
  	  To compile it as a module, choose M here.  If unsure, say N.
  
@@ -1545,10 +1973,10 @@ index e8d56d9a4df2..1ed3468675ac 100644
  	tristate '"MARK" target support'
  	depends on NETFILTER_ADVANCED
 diff --git a/net/netfilter/Makefile b/net/netfilter/Makefile
-index c23c3c84416f..99911ef6016f 100644
+index 16895e0..18e8363 100644
 --- a/net/netfilter/Makefile
 +++ b/net/netfilter/Makefile
-@@ -119,6 +119,7 @@ obj-$(CONFIG_NETFILTER_XT_TARGET_CT) += xt_CT.o
+@@ -142,6 +142,7 @@ obj-$(CONFIG_NETFILTER_XT_TARGET_CT) += xt_CT.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_DSCP) += xt_DSCP.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_HL) += xt_HL.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_HMARK) += xt_HMARK.o
@@ -1557,27 +1985,30 @@ index c23c3c84416f..99911ef6016f 100644
  obj-$(CONFIG_NETFILTER_XT_TARGET_LOG) += xt_LOG.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_NETMAP) += xt_NETMAP.o
 diff --git a/net/netfilter/core.c b/net/netfilter/core.c
-index 004af030ef1a..768a08b117ee 100644
+index 93aaec3..05e505d 100644
 --- a/net/netfilter/core.c
 +++ b/net/netfilter/core.c
-@@ -360,8 +360,11 @@ int nf_hook_slow(struct sk_buff *skb, struct nf_hook_state *state)
- 		ret = NF_DROP_GETERR(verdict);
- 		if (ret == 0)
- 			ret = -EPERM;
--	} else if ((verdict & NF_VERDICT_MASK) == NF_QUEUE) {
-+	} else if ((verdict & NF_VERDICT_MASK) == NF_QUEUE ||
-+		   (verdict & NF_VERDICT_MASK) == NF_IMQ_QUEUE) {
- 		ret = nf_queue(skb, state, &entry, verdict);
-+		if (ret == -ECANCELED)
-+			goto next_hook;
- 		if (ret == 1 && entry)
- 			goto next_hook;
- 	}
+@@ -520,6 +520,15 @@ int nf_hook_slow(struct sk_buff *skb, struct nf_hook_state *state,
+ 			return ret;
+ 		case NF_QUEUE:
+ 			ret = nf_queue(skb, state, e, s, verdict);
++			if (ret == -ECANCELED)
++				continue;
++			if (ret == 1)
++				continue;
++			return ret;
++		case NF_IMQ_QUEUE: // nasty duplication of the above stanza
++			ret = nf_queue(skb, state, e, s, verdict);
++			if (ret == -ECANCELED)
++				continue;
+ 			if (ret == 1)
+ 				continue;
+ 			return ret;
 diff --git a/net/netfilter/nf_queue.c b/net/netfilter/nf_queue.c
-index 8f08d759844a..c12c9ebf0130 100644
+index a96a8c1..698910a 100644
 --- a/net/netfilter/nf_queue.c
 +++ b/net/netfilter/nf_queue.c
-@@ -27,6 +27,23 @@
+@@ -29,6 +29,23 @@
   * receives, no matter what.
   */
  
@@ -1601,18 +2032,18 @@ index 8f08d759844a..c12c9ebf0130 100644
  /* return EBUSY when somebody else is registered, return EEXIST if the
   * same handler is registered, return 0 in case of success. */
  void nf_register_queue_handler(struct net *net, const struct nf_queue_handler *qh)
-@@ -108,16 +125,28 @@ void nf_queue_nf_hook_drop(struct net *net, const struct nf_hook_entry *entry)
- }
+@@ -141,16 +158,28 @@ static void nf_ip6_saveroute(const struct sk_buff *skb,
  
  static int __nf_queue(struct sk_buff *skb, const struct nf_hook_state *state,
--		      unsigned int queuenum)
-+		      unsigned int verdict)
+ 		      const struct nf_hook_entries *entries,
+-		      unsigned int index, unsigned int queuenum)
++		      unsigned int index, unsigned int verdict)
  {
  	int status = -ENOENT;
  	struct nf_queue_entry *entry = NULL;
- 	const struct nf_afinfo *afinfo;
  	const struct nf_queue_handler *qh;
  	struct net *net = state->net;
+ 	unsigned int route_key_size;
 +	unsigned int queuetype = verdict & NF_VERDICT_MASK;
 +	unsigned int queuenum  = verdict >> NF_VERDICT_QBITS;
  
@@ -1632,12 +2063,12 @@ index 8f08d759844a..c12c9ebf0130 100644
  	if (!qh) {
  		status = -ESRCH;
  		goto err;
-@@ -164,8 +193,14 @@ int nf_queue(struct sk_buff *skb, struct nf_hook_state *state,
+@@ -218,8 +247,16 @@ int nf_queue(struct sk_buff *skb, struct nf_hook_state *state,
+ {
  	int ret;
  
- 	RCU_INIT_POINTER(state->hook_entries, entry);
--	ret = __nf_queue(skb, state, verdict >> NF_VERDICT_QBITS);
-+	ret = __nf_queue(skb, state, verdict);
+-	ret = __nf_queue(skb, state, entries, index, verdict >> NF_VERDICT_QBITS);
++	ret = __nf_queue(skb, state, entries, index, verdict);
  	if (ret < 0) {
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
 +		if (ret == -ECANCELED && skb->imq_flags == 0) { // down interface
@@ -1645,20 +2076,14 @@ index 8f08d759844a..c12c9ebf0130 100644
 +			return 1;
 +		}
 +#endif
- 		if (ret == -ESRCH &&
- 		    (verdict & NF_VERDICT_FLAG_QUEUE_BYPASS)) {
- 			*entryp = rcu_dereference(entry->next);
-@@ -218,6 +253,7 @@ void nf_reinject(struct nf_queue_entry *entry, unsigned int verdict)
- 		local_bh_enable();
- 		break;
- 	case NF_QUEUE:
++
 +	case NF_IMQ_QUEUE:
- 		err = nf_queue(skb, &entry->state, &hook_entry, verdict);
- 		if (err == 1) {
- 			if (hook_entry)
+ 		if (ret == -ESRCH &&
+ 		    (verdict & NF_VERDICT_FLAG_QUEUE_BYPASS))
+ 			return 1;
 diff --git a/net/netfilter/xt_IMQ.c b/net/netfilter/xt_IMQ.c
 new file mode 100644
-index 000000000000..f9c5817085eb
+index 0000000..f9c5817
 --- /dev/null
 +++ b/net/netfilter/xt_IMQ.c
 @@ -0,0 +1,72 @@
@@ -1735,10 +2160,10 @@ index 000000000000..f9c5817085eb
 +MODULE_ALIAS("ip6t_IMQ");
 +
 diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index 9016c8baf2aa..605911b75d36 100644
+index 77b289d..f5360a2 100644
 --- a/net/sched/sch_generic.c
 +++ b/net/sched/sch_generic.c
-@@ -154,6 +154,14 @@ static struct sk_buff *dequeue_skb(struct Qdisc *q, bool *validate,
+@@ -287,6 +287,14 @@ static struct sk_buff *dequeue_skb(struct Qdisc *q, bool *validate,
  	return skb;
  }
  
@@ -1754,5 +2179,5 @@ index 9016c8baf2aa..605911b75d36 100644
   * Transmit possibly several skbs, and handle the return status as
   * required. Owning running seqcount bit guarantees that
 -- 
-2.11.0
+2.23.0
 

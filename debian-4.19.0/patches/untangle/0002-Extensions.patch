@@ -1,6 +1,24 @@
-diff -urN linux-4.9.30.orig/include/linux/in.h linux-4.9.30/include/linux/in.h
---- linux-4.9.30.orig/include/linux/in.h	2017-10-26 19:22:11.827664059 +0000
-+++ linux-4.9.30/include/linux/in.h	2017-10-26 19:22:24.161261674 +0000
+From f8cab1f9f1052d95474cf41b59df757154d4d079 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
+Date: Thu, 9 Jan 2020 15:34:26 +0100
+Subject: [PATCH 2/9] Extensions
+
+---
+ include/linux/in.h       |  6 +++++
+ include/net/ip.h         |  5 ++++
+ include/uapi/linux/in.h  |  4 +++
+ include/uapi/linux/udp.h |  3 +++
+ net/ipv4/icmp.c          |  3 +++
+ net/ipv4/ip_output.c     | 13 ++++++----
+ net/ipv4/ip_sockglue.c   | 53 ++++++++++++++++++++++++++++++++++++++++
+ net/ipv4/raw.c           |  2 ++
+ net/ipv4/udp.c           | 45 +++++++++++++++++++++++++++++-----
+ 9 files changed, 123 insertions(+), 11 deletions(-)
+
+diff --git a/include/linux/in.h b/include/linux/in.h
+index 31b4937..e3781e0 100644
+--- a/include/linux/in.h
++++ b/include/linux/in.h
 @@ -18,6 +18,12 @@
  #ifndef _LINUX_IN_H
  #define _LINUX_IN_H
@@ -14,27 +32,29 @@ diff -urN linux-4.9.30.orig/include/linux/in.h linux-4.9.30/include/linux/in.h
  
  #include <linux/errno.h>
  #include <uapi/linux/in.h>
-diff -urN linux-4.9.30.orig/include/net/ip.h linux-4.9.30/include/net/ip.h
---- linux-4.9.30.orig/include/net/ip.h	2017-10-26 19:22:11.905667839 +0000
-+++ linux-4.9.30/include/net/ip.h	2017-10-26 19:22:24.161261674 +0000
-@@ -67,6 +67,11 @@
- 	__be32			addr;
- 	int			oif;
- 	struct ip_options_rcu	*opt;
+diff --git a/include/net/ip.h b/include/net/ip.h
+index cfc3dd5..e8dcadf 100644
+--- a/include/net/ip.h
++++ b/include/net/ip.h
+@@ -67,6 +67,11 @@ static inline unsigned int ip_hdrlen(const struct sk_buff *skb)
+ 	return ip_hdr(skb)->ihl * 4;
+ }
+ 
 +
 +	/* Extensions */
 +	u16 pkt_udp_sport;
 +	u32 nfmark;
 +
- 	__u8			tx_flags;
- 	__u8			ttl;
- 	__s16			tos;
-diff -urN linux-4.9.30.orig/include/uapi/linux/in.h linux-4.9.30/include/uapi/linux/in.h
---- linux-4.9.30.orig/include/uapi/linux/in.h	2017-10-26 19:22:11.941669583 +0000
-+++ linux-4.9.30/include/uapi/linux/in.h	2017-10-26 19:22:24.161261674 +0000
-@@ -118,6 +118,10 @@
- #define IP_CHECKSUM	23
+ struct ipcm_cookie {
+ 	struct sockcm_cookie	sockc;
+ 	__be32			addr;
+diff --git a/include/uapi/linux/in.h b/include/uapi/linux/in.h
+index 48e8a22..d9ab405 100644
+--- a/include/uapi/linux/in.h
++++ b/include/uapi/linux/in.h
+@@ -120,6 +120,10 @@ struct in_addr {
  #define IP_BIND_ADDRESS_NO_PORT	24
+ #define IP_RECVFRAGSIZE	25
  
 +/* Extensions */
 +#define IP_SADDR	24
@@ -43,12 +63,13 @@ diff -urN linux-4.9.30.orig/include/uapi/linux/in.h linux-4.9.30/include/uapi/li
  /* IP_MTU_DISCOVER values */
  #define IP_PMTUDISC_DONT		0	/* Never send DF frames */
  #define IP_PMTUDISC_WANT		1	/* Use per route hints	*/
-diff -urN linux-4.9.30.orig/include/uapi/linux/udp.h linux-4.9.30/include/uapi/linux/udp.h
---- linux-4.9.30.orig/include/uapi/linux/udp.h	2017-10-26 19:22:11.958670407 +0000
-+++ linux-4.9.30/include/uapi/linux/udp.h	2017-10-26 19:22:24.161261674 +0000
-@@ -32,6 +32,9 @@
- #define UDP_NO_CHECK6_TX 101	/* Disable sending checksum for UDP6X */
+diff --git a/include/uapi/linux/udp.h b/include/uapi/linux/udp.h
+index 09502de..0ed3e2d 100644
+--- a/include/uapi/linux/udp.h
++++ b/include/uapi/linux/udp.h
+@@ -34,6 +34,9 @@ struct udphdr {
  #define UDP_NO_CHECK6_RX 102	/* Disable accpeting checksum for UDP6 */
+ #define UDP_SEGMENT	103	/* Set GSO segmentation size */
  
 +/* UDP ancillary data types */
 +#define UDP_SPORT 1
@@ -56,30 +77,32 @@ diff -urN linux-4.9.30.orig/include/uapi/linux/udp.h linux-4.9.30/include/uapi/l
  /* UDP encapsulation types */
  #define UDP_ENCAP_ESPINUDP_NON_IKE	1 /* draft-ietf-ipsec-nat-t-ike-00/01 */
  #define UDP_ENCAP_ESPINUDP	2 /* draft-ietf-ipsec-udp-encaps-06 */
-diff -urN linux-4.9.30.orig/net/ipv4/icmp.c linux-4.9.30/net/ipv4/icmp.c
---- linux-4.9.30.orig/net/ipv4/icmp.c	2017-10-26 19:22:12.045674623 +0000
-+++ linux-4.9.30/net/ipv4/icmp.c	2017-10-26 19:22:24.162261722 +0000
-@@ -405,6 +405,8 @@
- 		return;
+diff --git a/net/ipv4/icmp.c b/net/ipv4/icmp.c
+index ad75c46..a078d6f 100644
+--- a/net/ipv4/icmp.c
++++ b/net/ipv4/icmp.c
+@@ -427,6 +427,8 @@ static void icmp_reply(struct icmp_bxm *icmp_param, struct sk_buff *skb)
+ 		goto out_bh_enable;
  	inet = inet_sk(sk);
  
 +	memset(&ipc, 0, sizeof(ipc));
 +
  	icmp_param->data.icmph.checksum = 0;
  
- 	inet->tos = ip_hdr(skb)->tos;
-@@ -695,6 +697,7 @@
- 	icmp_param->offset = skb_network_offset(skb_in);
- 	inet_sk(sk)->tos = tos;
- 	sk->sk_mark = mark;
+ 	ipcm_init(&ipc);
+@@ -717,6 +719,7 @@ void __icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info,
+ 	if (IS_ERR(rt))
+ 		goto out_unlock;
+ 
 +       memset(&ipc, 0, sizeof(ipc));
- 	ipc.addr = iph->saddr;
- 	ipc.opt = &icmp_param->replyopts.opt;
- 	ipc.tx_flags = 0;
-diff -urN linux-4.9.30.orig/net/ipv4/ip_output.c linux-4.9.30/net/ipv4/ip_output.c
---- linux-4.9.30.orig/net/ipv4/ip_output.c	2017-10-26 19:22:12.046674672 +0000
-+++ linux-4.9.30/net/ipv4/ip_output.c	2017-10-26 19:22:24.162261722 +0000
-@@ -473,7 +473,7 @@
+ 	/* peer icmp_ratelimit */
+ 	if (!icmpv4_xrlim_allow(net, rt, &fl4, type, code))
+ 		goto ende;
+diff --git a/net/ipv4/ip_output.c b/net/ipv4/ip_output.c
+index 73894ed..a5d8f4e 100644
+--- a/net/ipv4/ip_output.c
++++ b/net/ipv4/ip_output.c
+@@ -500,7 +500,7 @@ int __ip_queue_xmit(struct sock *sk, struct sk_buff *skb, struct flowi *fl,
  
  	/* TODO : should we use skb->sk here instead of sk ? */
  	skb->priority = sk->sk_priority;
@@ -88,7 +111,7 @@ diff -urN linux-4.9.30.orig/net/ipv4/ip_output.c linux-4.9.30/net/ipv4/ip_output
  
  	res = ip_local_out(net, sk, skb);
  	rcu_read_unlock();
-@@ -886,7 +886,7 @@
+@@ -864,7 +864,7 @@ static int __ip_append_data(struct sock *sk,
  			    struct page_frag *pfrag,
  			    int getfrag(void *from, char *to, int offset,
  					int len, int odd, struct sk_buff *skb),
@@ -97,7 +120,7 @@ diff -urN linux-4.9.30.orig/net/ipv4/ip_output.c linux-4.9.30/net/ipv4/ip_output
  			    unsigned int flags)
  {
  	struct inet_sock *inet = inet_sk(sk);
-@@ -1041,6 +1041,8 @@
+@@ -1016,6 +1016,8 @@ static int __ip_append_data(struct sock *sk,
  						 fragheaderlen);
  			data += fragheaderlen + exthdrlen;
  
@@ -106,7 +129,7 @@ diff -urN linux-4.9.30.orig/net/ipv4/ip_output.c linux-4.9.30/net/ipv4/ip_output
  			if (fraggap) {
  				skb->csum = skb_copy_and_csum_bits(
  					skb_prev, maxfraglen,
-@@ -1203,7 +1205,7 @@
+@@ -1196,7 +1198,7 @@ int ip_append_data(struct sock *sk, struct flowi4 *fl4,
  
  	return __ip_append_data(sk, fl4, &sk->sk_write_queue, &inet->cork.base,
  				sk_page_frag(sk), getfrag,
@@ -115,36 +138,37 @@ diff -urN linux-4.9.30.orig/net/ipv4/ip_output.c linux-4.9.30/net/ipv4/ip_output
  }
  
  ssize_t	ip_append_page(struct sock *sk, struct flowi4 *fl4, struct page *page,
-@@ -1437,7 +1439,7 @@
+@@ -1417,7 +1419,7 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
  	}
  
  	skb->priority = (cork->tos != -1) ? cork->priority: sk->sk_priority;
 -	skb->mark = sk->sk_mark;
 +	skb->mark |= sk->sk_mark;
+ 	skb->tstamp = cork->transmit_time;
  	/*
  	 * Steal rt from cork.dst to avoid a pair of atomic_inc/atomic_dec
- 	 * on dst refcount
-@@ -1527,7 +1529,7 @@
+@@ -1507,7 +1509,7 @@ struct sk_buff *ip_make_skb(struct sock *sk,
  
- 	err = __ip_append_data(sk, fl4, &queue, &cork,
+ 	err = __ip_append_data(sk, fl4, &queue, cork,
  			       &current->task_frag, getfrag,
 -			       from, length, transhdrlen, flags);
 +                           from, length, transhdrlen, ipc, flags);
  	if (err) {
- 		__ip_flush_pending_frames(sk, &queue, &cork);
+ 		__ip_flush_pending_frames(sk, &queue, cork);
  		return ERR_PTR(err);
-@@ -1571,6 +1573,7 @@
- 	if (__ip_options_echo(&replyopts.opt.opt, skb, sopt))
+@@ -1551,6 +1553,7 @@ void ip_send_unicast_reply(struct sock *sk, struct sk_buff *skb,
+ 	if (__ip_options_echo(net, &replyopts.opt.opt, skb, sopt))
  		return;
  
 +	memset(&ipc, 0, sizeof(ipc));
+ 	ipcm_init(&ipc);
  	ipc.addr = daddr;
- 	ipc.opt = NULL;
- 	ipc.tx_flags = 0;
-diff -urN linux-4.9.30.orig/net/ipv4/ip_sockglue.c linux-4.9.30/net/ipv4/ip_sockglue.c
---- linux-4.9.30.orig/net/ipv4/ip_sockglue.c	2017-10-26 19:22:12.046674672 +0000
-+++ linux-4.9.30/net/ipv4/ip_sockglue.c	2017-10-26 19:22:24.163261770 +0000
-@@ -296,6 +296,23 @@
+ 
+diff --git a/net/ipv4/ip_sockglue.c b/net/ipv4/ip_sockglue.c
+index b7a2612..41d1cca 100644
+--- a/net/ipv4/ip_sockglue.c
++++ b/net/ipv4/ip_sockglue.c
+@@ -316,6 +316,23 @@ int ip_cmsg_send(struct sock *sk, struct msghdr *msg, struct ipcm_cookie *ipc,
  			ipc->tos = val;
  			ipc->priority = rt_tos2priority(ipc->tos);
  			break;
@@ -168,9 +192,9 @@ diff -urN linux-4.9.30.orig/net/ipv4/ip_sockglue.c linux-4.9.30/net/ipv4/ip_sock
  
  		default:
  			return -EINVAL;
-@@ -725,6 +742,25 @@
- 			}
- 		}
+@@ -740,6 +757,25 @@ static int do_ip_setsockopt(struct sock *sk, int level,
+ 		else
+ 			inet->cmsg_flags &= ~IP_CMSG_RECVFRAGSIZE;
  		break;
 +
 +	case IP_SENDNFMARK:
@@ -194,9 +218,9 @@ diff -urN linux-4.9.30.orig/net/ipv4/ip_sockglue.c linux-4.9.30/net/ipv4/ip_sock
  	case IP_TOS:	/* This sets both TOS and Precedence */
  		if (sk->sk_type == SOCK_STREAM) {
  			val &= ~INET_ECN_MASK;
-@@ -1369,6 +1405,23 @@
- 	case IP_CHECKSUM:
- 		val = (inet->cmsg_flags & IP_CMSG_CHECKSUM) != 0;
+@@ -1382,6 +1418,23 @@ static int do_ip_getsockopt(struct sock *sk, int level, int optname,
+ 	case IP_RECVFRAGSIZE:
+ 		val = (inet->cmsg_flags & IP_CMSG_RECVFRAGSIZE) != 0;
  		break;
 +        case IP_SENDNFMARK:
 +        {
@@ -218,22 +242,24 @@ diff -urN linux-4.9.30.orig/net/ipv4/ip_sockglue.c linux-4.9.30/net/ipv4/ip_sock
  	case IP_TOS:
  		val = inet->tos;
  		break;
-diff -urN linux-4.9.30.orig/net/ipv4/raw.c linux-4.9.30/net/ipv4/raw.c
---- linux-4.9.30.orig/net/ipv4/raw.c	2017-10-26 19:22:12.048674768 +0000
-+++ linux-4.9.30/net/ipv4/raw.c	2017-10-26 19:22:24.163261770 +0000
-@@ -543,6 +543,8 @@
- 		daddr = inet->inet_daddr;
- 	}
- 
+diff --git a/net/ipv4/raw.c b/net/ipv4/raw.c
+index 2180097..9437b20 100644
+--- a/net/ipv4/raw.c
++++ b/net/ipv4/raw.c
+@@ -543,6 +543,8 @@ static int raw_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
+ 		err = -EINVAL;
+ 		if (msg->msg_namelen < sizeof(*usin))
+ 			goto out;
 +	memset(&ipc, 0, sizeof(ipc));
 +
- 	ipc.sockc.tsflags = sk->sk_tsflags;
- 	ipc.addr = inet->inet_saddr;
- 	ipc.opt = NULL;
-diff -urN linux-4.9.30.orig/net/ipv4/udp.c linux-4.9.30/net/ipv4/udp.c
---- linux-4.9.30.orig/net/ipv4/udp.c	2017-10-26 19:22:12.051674914 +0000
-+++ linux-4.9.30/net/ipv4/udp.c	2017-10-26 19:22:41.950123601 +0000
-@@ -486,6 +486,33 @@
+ 		if (usin->sin_family != AF_INET) {
+ 			pr_info_once("%s: %s forgot to set AF_INET. Fix it!\n",
+ 				     __func__, current->comm);
+diff --git a/net/ipv4/udp.c b/net/ipv4/udp.c
+index 6ab68b0..f52cb61 100644
+--- a/net/ipv4/udp.c
++++ b/net/ipv4/udp.c
+@@ -458,6 +458,33 @@ static struct sock *udp4_lib_lookup2(struct net *net,
  	return result;
  }
  
@@ -267,7 +293,7 @@ diff -urN linux-4.9.30.orig/net/ipv4/udp.c linux-4.9.30/net/ipv4/udp.c
  /* UDP is nearly always wildcards out the wazoo, it makes no sense to try
   * harder than this. -DaveM
   */
-@@ -805,7 +832,8 @@
+@@ -780,7 +807,8 @@ static int udp_send_skb(struct sk_buff *skb, struct flowi4 *fl4,
  	 * Create a UDP header
  	 */
  	uh = udp_hdr(skb);
@@ -277,7 +303,7 @@ diff -urN linux-4.9.30.orig/net/ipv4/udp.c linux-4.9.30/net/ipv4/udp.c
  	uh->dest = fl4->fl4_dport;
  	uh->len = htons(len);
  	uh->check = 0;
-@@ -882,7 +910,7 @@
+@@ -925,7 +953,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
  	int free = 0;
  	int connected = 0;
  	__be32 daddr, faddr, saddr;
@@ -286,25 +312,26 @@ diff -urN linux-4.9.30.orig/net/ipv4/udp.c linux-4.9.30/net/ipv4/udp.c
  	u8  tos;
  	int err, is_udplite = IS_UDPLITE(sk);
  	int corkreq = up->corkflag || msg->msg_flags&MSG_MORE;
-@@ -900,6 +928,7 @@
+@@ -943,6 +971,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
  	if (msg->msg_flags & MSG_OOB) /* Mirror BSD error message compatibility */
  		return -EOPNOTSUPP;
  
 +	memset(&ipc, 0, sizeof(ipc));
- 	ipc.opt = NULL;
- 	ipc.tx_flags = 0;
- 	ipc.ttl = 0;
-@@ -957,7 +986,7 @@
- 	ipc.oif = sk->sk_bound_dev_if;
+ 	getfrag = is_udplite ? udplite_getfrag : ip_generic_getfrag;
  
+ 	fl4 = &inet->cork.fl.u.ip4;
+@@ -995,8 +1024,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
  	if (msg->msg_controllen) {
--		err = ip_cmsg_send(sk, msg, &ipc, sk->sk_family == AF_INET6);
-+               err = udp_cmsg_send(sk, msg, &ipc);
- 		if (unlikely(err)) {
+ 		err = udp_cmsg_send(sk, msg, &ipc.gso_size);
+ 		if (err > 0)
+-			err = ip_cmsg_send(sk, msg, &ipc,
+-					   sk->sk_family == AF_INET6);
++			err = udp_cmsg_send(sk, msg, &ipc);
+ 		if (unlikely(err < 0)) {
  			kfree(ipc.opt);
  			return err;
-@@ -979,6 +1008,11 @@
- 		rcu_read_unlock();
+@@ -1034,6 +1062,11 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
+ 		}
  	}
  
 +	sport = inet->inet_sport;
@@ -315,16 +342,16 @@ diff -urN linux-4.9.30.orig/net/ipv4/udp.c linux-4.9.30/net/ipv4/udp.c
  	saddr = ipc.addr;
  	ipc.addr = faddr = daddr;
  
-@@ -1019,7 +1053,7 @@
+@@ -1087,7 +1120,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
  		flowi4_init_output(fl4, ipc.oif, sk->sk_mark, tos,
  				   RT_SCOPE_UNIVERSE, sk->sk_protocol,
  				   flow_flags,
--				   faddr, saddr, dport, inet->inet_sport);
-+                   faddr, saddr, dport, sport);
+-				   faddr, saddr, dport, inet->inet_sport,
++				   faddr, saddr, dport, sport,
+ 				   sk->sk_uid);
  
  		security_sk_classify_flow(sk, flowi4_to_flowi(fl4));
- 		rt = ip_route_output_flow(net, fl4, sk);
-@@ -1075,7 +1109,7 @@
+@@ -1146,7 +1179,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
  	fl4->daddr = daddr;
  	fl4->saddr = saddr;
  	fl4->fl4_dport = dport;
@@ -333,3 +360,6 @@ diff -urN linux-4.9.30.orig/net/ipv4/udp.c linux-4.9.30/net/ipv4/udp.c
  	up->pending = AF_INET;
  
  do_append_data:
+-- 
+2.23.0
+

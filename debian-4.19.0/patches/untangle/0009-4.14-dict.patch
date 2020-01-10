@@ -1,23 +1,23 @@
-From 773387122ce1389d53d939bb1906f27fc8d5ee4f Mon Sep 17 00:00:00 2001
-From: Brett Mastbergen <bmastbergen@untangle.com>
-Date: Tue, 26 Jun 2018 13:22:09 -0400
-Subject: [PATCH] 4.14 dict
+From 7903dad1f06135dc2890f3c3dc585c53721cf6f7 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
+Date: Thu, 9 Jan 2020 15:52:04 +0100
+Subject: [PATCH 9/9] 4.14 dict
 
 ---
- include/net/netfilter/nf_conntrack_dict.h |   45 ++
+ include/net/netfilter/nf_conntrack_dict.h |   45 +
  include/uapi/linux/netfilter/nf_tables.h  |   17 +
  net/netfilter/Kconfig                     |   19 +
  net/netfilter/Makefile                    |    3 +
- net/netfilter/nf_conntrack_dict.c         | 1129 +++++++++++++++++++++++++++++
- net/netfilter/nft_dict.c                  |  279 +++++++
- 6 files changed, 1492 insertions(+)
+ net/netfilter/nf_conntrack_dict.c         | 1128 +++++++++++++++++++++
+ net/netfilter/nft_dict.c                  |  279 +++++
+ 6 files changed, 1491 insertions(+)
  create mode 100644 include/net/netfilter/nf_conntrack_dict.h
  create mode 100644 net/netfilter/nf_conntrack_dict.c
  create mode 100644 net/netfilter/nft_dict.c
 
 diff --git a/include/net/netfilter/nf_conntrack_dict.h b/include/net/netfilter/nf_conntrack_dict.h
 new file mode 100644
-index 000000000000..10986069fee1
+index 0000000..1098606
 --- /dev/null
 +++ b/include/net/netfilter/nf_conntrack_dict.h
 @@ -0,0 +1,45 @@
@@ -67,12 +67,12 @@ index 000000000000..10986069fee1
 +struct nf_conn_dict_pair * find_conntrack_dict_pair(struct nf_conn_dict * dict, u32 * hash);
 +void new_dict_pair(struct nf_conn_dict *dict, char * field, char * value, int len, seq_printfn_t printfn);
 diff --git a/include/uapi/linux/netfilter/nf_tables.h b/include/uapi/linux/netfilter/nf_tables.h
-index dc3db1801fa5..a18899cbbe9f 100644
+index 5399673..cb64862 100644
 --- a/include/uapi/linux/netfilter/nf_tables.h
 +++ b/include/uapi/linux/netfilter/nf_tables.h
-@@ -1463,4 +1463,21 @@ enum nft_ng_types {
+@@ -1676,4 +1676,21 @@ enum nft_tunnel_attributes {
  };
- #define NFT_NG_MAX	(__NFT_NG_MAX - 1)
+ #define NFTA_TUNNEL_MAX	(__NFTA_TUNNEL_MAX - 1)
  
 +enum nft_dict_attributes {
 +	NFTA_DICT_UNSPEC,
@@ -93,10 +93,10 @@ index dc3db1801fa5..a18899cbbe9f 100644
 +
  #endif /* _LINUX_NF_TABLES_H */
 diff --git a/net/netfilter/Kconfig b/net/netfilter/Kconfig
-index a5ab7098e217..1aeafa4d2680 100644
+index bb94907..0aacf45 100644
 --- a/net/netfilter/Kconfig
 +++ b/net/netfilter/Kconfig
-@@ -124,6 +124,16 @@ config NF_CONNTRACK_EVENTS
+@@ -135,6 +135,16 @@ config NF_CONNTRACK_EVENTS
  
  	  If unsure, say `N'.
  
@@ -113,7 +113,7 @@ index a5ab7098e217..1aeafa4d2680 100644
  config NF_CONNTRACK_TIMEOUT
  	bool  'Connection tracking timeout'
  	depends on NETFILTER_ADVANCED
-@@ -575,6 +585,15 @@ config NFT_COMPAT
+@@ -606,6 +616,15 @@ config NFT_COMPAT
  	  x_tables match/target extensions over the nf_tables
  	  framework.
  
@@ -130,29 +130,29 @@ index a5ab7098e217..1aeafa4d2680 100644
  	tristate "Netfilter nf_tables hash module"
  	help
 diff --git a/net/netfilter/Makefile b/net/netfilter/Makefile
-index c23c3c84416f..24ba6811bbbc 100644
+index 18e8363..22a974d 100644
 --- a/net/netfilter/Makefile
 +++ b/net/netfilter/Makefile
-@@ -6,6 +6,8 @@ nf_conntrack-$(CONFIG_NF_CONNTRACK_TIMESTAMP) += nf_conntrack_timestamp.o
- nf_conntrack-$(CONFIG_NF_CONNTRACK_EVENTS) += nf_conntrack_ecache.o
- nf_conntrack-$(CONFIG_NF_CONNTRACK_LABELS) += nf_conntrack_labels.o
+@@ -14,6 +14,8 @@ nf_conntrack-$(CONFIG_NF_CONNTRACK_LABELS) += nf_conntrack_labels.o
+ nf_conntrack-$(CONFIG_NF_CT_PROTO_DCCP) += nf_conntrack_proto_dccp.o
+ nf_conntrack-$(CONFIG_NF_CT_PROTO_SCTP) += nf_conntrack_proto_sctp.o
  
 +obj-$(CONFIG_NF_CONNTRACK_DICT) += nf_conntrack_dict.o
 +
  obj-$(CONFIG_NETFILTER) = netfilter.o
  
  obj-$(CONFIG_NETFILTER_NETLINK) += nfnetlink.o
-@@ -79,6 +81,7 @@ obj-$(CONFIG_NF_TABLES)		+= nf_tables.o
- obj-$(CONFIG_NF_TABLES_INET)	+= nf_tables_inet.o
- obj-$(CONFIG_NF_TABLES_NETDEV)	+= nf_tables_netdev.o
- obj-$(CONFIG_NFT_COMPAT)	+= nft_compat.o
+@@ -87,6 +89,7 @@ nf_tables-objs := nf_tables_core.o nf_tables_api.o nft_chain_filter.o \
+ nf_tables_set-objs := nf_tables_set_core.o \
+ 		      nft_set_hash.o nft_set_bitmap.o nft_set_rbtree.o
+ 
 +obj-$(CONFIG_NFT_DICT)		+= nft_dict.o
- obj-$(CONFIG_NFT_EXTHDR)	+= nft_exthdr.o
- obj-$(CONFIG_NFT_META)		+= nft_meta.o
- obj-$(CONFIG_NFT_NUMGEN)	+= nft_numgen.o
+ obj-$(CONFIG_NF_TABLES)		+= nf_tables.o
+ obj-$(CONFIG_NF_TABLES_SET)	+= nf_tables_set.o
+ obj-$(CONFIG_NFT_COMPAT)	+= nft_compat.o
 diff --git a/net/netfilter/nf_conntrack_dict.c b/net/netfilter/nf_conntrack_dict.c
 new file mode 100644
-index 000000000000..d85aeeaf9934
+index 0000000..252d374
 --- /dev/null
 +++ b/net/netfilter/nf_conntrack_dict.c
 @@ -0,0 +1,1128 @@
@@ -1284,10 +1284,9 @@ index 000000000000..d85aeeaf9934
 +MODULE_LICENSE("GPL");
 +
 +module_init(nf_conntrack_dict_init);
-+module_exit(nf_conntrack_dict_exit);
 diff --git a/net/netfilter/nft_dict.c b/net/netfilter/nft_dict.c
 new file mode 100644
-index 000000000000..1f801d418fb0
+index 0000000..3b10943
 --- /dev/null
 +++ b/net/netfilter/nft_dict.c
 @@ -0,0 +1,279 @@
@@ -1571,5 +1570,5 @@ index 000000000000..1f801d418fb0
 +MODULE_ALIAS_NFT_EXPR("dict");
 +MODULE_DESCRIPTION("Generic field/value pair matching for conntrack");
 -- 
-2.11.0
+2.23.0
 
