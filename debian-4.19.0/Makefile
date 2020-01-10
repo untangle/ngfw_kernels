@@ -59,10 +59,6 @@ version-stamp: changelog
 	touch $@
 
 patch: patch-debian patch-untangle version
-	# FIXME: make this a debian patch ?
-	perl -i -pe 's/fuzz=0/fuzz=3 || true/' ${KERNEL_DIR}/debian/rules.defs*
-	perl -i -pe 's/fuzz=0/fuzz=3 || true/' ${KERNEL_DIR}/debian/rules.gen*
-	perl -i -pe 's/fuzz=0/fuzz=3 || true/' ${KERNEL_DIR}/debian/rules.real*
 
 pkgs:	kpkg-arch kpkg-indep
 
