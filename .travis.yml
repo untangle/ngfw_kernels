@@ -10,6 +10,7 @@ env:
   global:
     - SSH_KEY: /tmp/travis-buildbot.rsa
       VERBOSE: 1
+      DEBUG: 1
   jobs:
     - REPOSITORY: buster
       DISTRIBUTION: current
