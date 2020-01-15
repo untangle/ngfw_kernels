@@ -63,7 +63,7 @@ patch: patch-debian patch-untangle version
 pkgs:	kpkg-arch kpkg-indep
 
 deps:	force
-	sudo apt-get install ${BUILDDEPS} || echo "unable to run sudo"
+	apt install -y ${BUILDDEPS} || echo "could not install build-deps"
 
 kpkg-arch: control-real force
 	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -j ${NPROCEXP} -f debian/rules.gen binary-arch_${ARCH}_untangle
@@ -76,7 +76,7 @@ src: 	${KERNEL_DIR} control-real force
 	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_untangle setup_${ARCH}_untangle
 
 control-real: ${KERNEL_DIR}/debian/control-real
-${KERNEL_DIR}/debian/control-real: force patch
+${KERNEL_DIR}/debian/control-real: force deps patch
 	cd ${KERNEL_DIR};make -f debian/rules debian/control-real || true
 
 clean::
