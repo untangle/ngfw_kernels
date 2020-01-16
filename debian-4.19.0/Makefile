@@ -4,7 +4,7 @@
 # version-specific settings and variables can be defined in
 # kernel.conf
 
-include kernel.conf
+include $(shell dirname $(MAKEFILE_LIST))/kernel.conf
 
 ORIG_TARBALL := linux_$(UPSTREAM_VERSION).orig.tar.xz
 ORIG_TARBALL_URL := https://downloads.untangle.com/public/kernels//$(ORIG_TARBALL)
