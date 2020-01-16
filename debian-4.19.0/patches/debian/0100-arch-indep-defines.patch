@@ -1,12 +1,12 @@
 diff -u -N -r ./debian/config/defines ./debian/config/defines
 --- ./debian/config/defines	2014-10-30 17:30:43.000000000 -0700
 +++ ./debian/config/defines	2014-12-11 05:33:37.000000000 -0800
-@@ -88,7 +88,11 @@
+@@ -88,7 +88,9 @@
  compiler: gcc-6
  featuresets:
-  none
+- none
+- rt
 + untangle
-  rt
  
 +[featureset-untangle_base]
 +enabled: true
