@@ -17,7 +17,7 @@ KDSC := linux_$(UPSTREAM_VERSION)-$(DEBIAN_VERSION).dsc
 UNTANGLE_PATCH_SERIES := patches/untangle/series
 DEBIAN_PATCH_SERIES := patches/debian/series
 
-ARCH ?= $(shell dpkg-architecture -qDEB_BUILD_ARCH)
+ARCH ?= $(shell dpkg-architecture -qDEB_TARGET_ARCH_CPU)
 NPROCEXP := $(shell echo "$$((1+`grep -c processor /proc/cpuinfo`))")
 
 ifeq ($(ARCH),armhf)
