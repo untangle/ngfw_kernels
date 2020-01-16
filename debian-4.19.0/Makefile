@@ -62,8 +62,13 @@ patch: patch-debian patch-untangle version
 
 pkgs:	kpkg-arch kpkg-indep
 
-deps:	force
-	apt install -y ${BUILDDEPS}
+deps:	force control-real
+	cd $(KERNEL_DIR) ; apt build-dep -y .
+
+deps-crossbuild: force
+	apt build-dep -y --indep-only .
+	apt install -y $(BUILDDEPS)
+	apt install -y gcc-8:$(ARCH) binutils:$(ARCH) cpp-8:$(ARCH) binutils-i686-linux-gnu:$(ARCH) || apt install -f
 
 kpkg-arch: control-real force
 	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -j ${NPROCEXP} -f debian/rules.gen binary-arch_${ARCH}_untangle
