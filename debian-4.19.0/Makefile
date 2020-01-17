@@ -84,6 +84,8 @@ control-real: ${KERNEL_DIR}/debian/control-real
 ${KERNEL_DIR}/debian/control-real: force patch
 	apt install -y kernel-wedge
 	cd ${KERNEL_DIR};make -f debian/rules debian/control-real || true
+	# limit the arch-dep target to untangle kernels
+	perl -i -pe 's/(binary-arch_.*)/$$1_untangle/' $(KERNEL_DIR)/debian/rules
 
 clean::
 	rm -rf ${KERNEL_DIR} *stamp
