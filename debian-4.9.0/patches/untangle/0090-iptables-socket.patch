@@ -20,7 +20,7 @@ index b10ade2..d844787 100644
 +	 * to restore the QoS/bandwidth control mark on packets
 +	 * returning to nonlocally bound sockets */
 +	if (sk != NULL) {
-+		pskb->mark |= sk->sk_mark;
++		pskb->mark |= (sk->sk_mark & 0xFFFF0000);
 +	}
 +
 	return sk != NULL;
