@@ -16,4 +16,4 @@
 + arm64
 +
 +[arm64_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-4.9-untangle, linux-image-4.9-untangle-arm64
++provides: linux-image-untangle, linux-image-4.19-untangle, linux-image-4.19-untangle-arm64

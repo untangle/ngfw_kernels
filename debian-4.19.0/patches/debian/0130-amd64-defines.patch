@@ -17,4 +17,4 @@ diff -u -N -r ./debian/config/amd64/untangle/defines ./debian/config/amd64/untan
 + amd64
 +
 +[amd64_image]
-+provides: untangle-linux-image, linux-untangle, linux-image-4.9-untangle, linux-image-4.9-untangle-amd64
++provides: linux-image-untangle, linux-image-4.19-untangle, linux-image-4.19-untangle-amd64
