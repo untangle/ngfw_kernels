@@ -1,16 +1,16 @@
-linux (4.19.67-2+deb10u2+untangle3) unstable; urgency=medium
+linux (4.19.67-2+deb10u2+untangle3) current; urgency=medium
 
   * Harmonize "Provides:" for all images
 
  -- Sebastien Delafond <sdelafond@gmail.com>  Thu, 13 Feb 2020 10:40:36 +0100
 
-linux (4.19.67-2+deb10u2+untangle2) unstable; urgency=medium
+linux (4.19.67-2+deb10u2+untangle2) current; urgency=medium
 
   * Tweak iptables socket match hack
 
  -- Brett Mastbergen <bmastbergen@untangle.com>  Tue, 28 Jan 2020 10:06:41 -0500
 
-linux (4.19.67-2+deb10u2+untangle1) unstable; urgency=medium
+linux (4.19.67-2+deb10u2+untangle1) current; urgency=medium
 
   * Latest official stretch kernel
 
