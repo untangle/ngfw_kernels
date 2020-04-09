@@ -1,4 +1,4 @@
-linux (4.19.98-1+untangle1) unstable; urgency=medium
+linux (4.19.98-1+untangle1buster) current; urgency=medium
 
   * Latest official buster kernel
 

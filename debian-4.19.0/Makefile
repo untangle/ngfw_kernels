@@ -6,10 +6,11 @@
 
 include $(shell dirname $(MAKEFILE_LIST))/kernel.conf
 
+UNTANGLE_MIRROR := https://downloads.untangle.com/public/kernels
 ORIG_TARBALL := linux_$(UPSTREAM_VERSION).orig.tar.xz
-ORIG_TARBALL_URL := https://downloads.untangle.com/public/kernels//$(ORIG_TARBALL)
+ORIG_TARBALL_URL := $(UNTANGLE_MIRROR)/$(ORIG_TARBALL)
 DEBIAN_TARBALL := linux_$(UPSTREAM_VERSION)-$(DEBIAN_VERSION).debian.tar.xz
-DEBIAN_TARBALL_URL := https://downloads.untangle.com/public/kernels//$(DEBIAN_TARBALL)
+DEBIAN_TARBALL_URL := $(UNTANGLE_MIRROR)/$(DEBIAN_TARBALL)
 
 KERNEL_DIR := linux-$(UPSTREAM_VERSION)
 KDSC := linux_$(UPSTREAM_VERSION)-$(DEBIAN_VERSION).dsc
@@ -63,22 +64,17 @@ patch: patch-debian patch-untangle version
 pkgs:	kpkg-arch kpkg-indep
 
 deps:	force control-real
-	cd $(KERNEL_DIR) ; apt build-dep -y .
-
-deps-crossbuild: force
-	apt build-dep -y --indep-only .
-	apt install -y $(BUILDDEPS)
-	apt install -y gcc-8:$(ARCH) binutils:$(ARCH) cpp-8:$(ARCH) binutils-i686-linux-gnu:$(ARCH) || apt install -f
+	cd $(KERNEL_DIR) ; apt build-dep -y --build-profiles $(shell cat debian/untangle-build-profiles) --host-architecture $(ARCH) .
 
 kpkg-arch: control-real force
-	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -j ${NPROCEXP} -f debian/rules.gen binary-arch_${ARCH}_untangle
+	cd ${KERNEL_DIR}; ${DOPTIONS} DEB_BUILD_PROFILES="$(shell cat debian/untangle-build-profiles | sed -e 's/,/ /g')" fakeroot make -j ${NPROCEXP} -f debian/rules.gen binary-arch_${ARCH}_untangle
 kpkg-indep: control-real force
-	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -j ${NPROCEXP} -f debian/rules binary-indep
+	cd ${KERNEL_DIR}; ${DOPTIONS} DEB_BUILD_PROFILES="$(shell cat debian/untangle-build-profiles | sed -e 's/,/ /g')" fakeroot make -j ${NPROCEXP} -f debian/rules binary-indep
 
 kern:   ${KERNEL_DIR} kpkg-arch
 
 src: 	${KERNEL_DIR} control-real force
-	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_untangle setup_${ARCH}_untangle
+	cd ${KERNEL_DIR}; ${DOPTIONS} DEB_BUILD_PROFILES="$(shell cat debian/untangle-build-profiles | sed -e 's/,/ /g')" fakeroot make -f debian/rules.gen source_untangle setup_${ARCH}_untangle
 
 control-real: ${KERNEL_DIR}/debian/control-real
 ${KERNEL_DIR}/debian/control-real: force patch
