@@ -85,8 +85,8 @@ ${KERNEL_DIR}/debian/control-real: force patch
 	# has changed
 	perl -i -pe 's/debug-info:.*/debug-info: false/' $(KERNEL_DIR)/debian/config/*/defines
 	cd ${KERNEL_DIR};make -f debian/rules debian/control-real || true
-	# limit the arch-dep target to untangle kernels
-	perl -i -pe 's/(binary-arch_.*)/$$1_untangle/' $(KERNEL_DIR)/debian/rules
+	# # limit the arch-dep target to untangle kernels
+	# perl -i -pe 's/(binary-arch_.*)/$$1_untangle/' $(KERNEL_DIR)/debian/rules
 
 clean::
 	rm -rf ${KERNEL_DIR} *stamp
