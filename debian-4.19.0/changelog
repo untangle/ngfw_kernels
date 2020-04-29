@@ -1,3 +1,9 @@
+linux (4.19.98-1+untangle2buster) unstable; urgency=medium
+
+  * Build kbuild package
+
+ -- Sebastien Delafond <seb@debian.org>  Sat, 25 Apr 2020 15:21:18 +0200
+
 linux (4.19.98-1+untangle1buster) current; urgency=medium
 
   * Latest official buster kernel
