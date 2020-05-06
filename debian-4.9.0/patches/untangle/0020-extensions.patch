@@ -79,15 +79,6 @@ diff -urN linux-4.9.30.orig/net/ipv4/icmp.c linux-4.9.30/net/ipv4/icmp.c
 diff -urN linux-4.9.30.orig/net/ipv4/ip_output.c linux-4.9.30/net/ipv4/ip_output.c
 --- linux-4.9.30.orig/net/ipv4/ip_output.c	2017-10-26 19:22:12.046674672 +0000
 +++ linux-4.9.30/net/ipv4/ip_output.c	2017-10-26 19:22:24.162261722 +0000
-@@ -473,7 +473,7 @@
- 
- 	/* TODO : should we use skb->sk here instead of sk ? */
- 	skb->priority = sk->sk_priority;
--	skb->mark = sk->sk_mark;
-+	skb->mark |= sk->sk_mark;
- 
- 	res = ip_local_out(net, sk, skb);
- 	rcu_read_unlock();
 @@ -886,7 +886,7 @@
  			    struct page_frag *pfrag,
  			    int getfrag(void *from, char *to, int offset,
@@ -115,15 +106,6 @@ diff -urN linux-4.9.30.orig/net/ipv4/ip_output.c linux-4.9.30/net/ipv4/ip_output
  }
  
  ssize_t	ip_append_page(struct sock *sk, struct flowi4 *fl4, struct page *page,
-@@ -1437,7 +1439,7 @@
- 	}
- 
- 	skb->priority = (cork->tos != -1) ? cork->priority: sk->sk_priority;
--	skb->mark = sk->sk_mark;
-+	skb->mark |= sk->sk_mark;
- 	/*
- 	 * Steal rt from cork.dst to avoid a pair of atomic_inc/atomic_dec
- 	 * on dst refcount
 @@ -1527,7 +1529,7 @@
  
  	err = __ip_append_data(sk, fl4, &queue, &cork,
