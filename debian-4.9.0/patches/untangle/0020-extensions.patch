@@ -106,6 +106,15 @@ diff -urN linux-4.9.30.orig/net/ipv4/ip_output.c linux-4.9.30/net/ipv4/ip_output
  }
  
  ssize_t	ip_append_page(struct sock *sk, struct flowi4 *fl4, struct page *page,
+@@ -1437,7 +1439,7 @@
+ 	}
+ 
+ 	skb->priority = (cork->tos != -1) ? cork->priority: sk->sk_priority;
+-	skb->mark = sk->sk_mark;
++	skb->mark |= sk->sk_mark;
+ 	/*
+ 	 * Steal rt from cork.dst to avoid a pair of atomic_inc/atomic_dec
+ 	 * on dst refcount
 @@ -1527,7 +1529,7 @@
  
  	err = __ip_append_data(sk, fl4, &queue, &cork,
