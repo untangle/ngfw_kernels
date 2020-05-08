@@ -1,3 +1,9 @@
+linux (4.9.189-3+untangle5) unstable; urgency=medium
+
+  * Restore socket mark orring in the case of __ip_make_skb
+
+ -- Brett Mastbergen <bmastbergen@untangle.com>  Thu, 07 May 2020 12:25:41 -0400
+
 linux (4.9.189-3+untangle4) unstable; urgency=medium
 
   * Remove socket mark orring with packet mark change from extensions patch 
