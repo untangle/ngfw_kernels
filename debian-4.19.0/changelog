@@ -1,3 +1,9 @@
+linux (4.19.98-1+untangle3buster) current-release151; urgency=medium
+
+  * Remove socket mark orring with packet mark change from extensions patch
+
+ -- Brett Mastbergen <bmastbergen@untangle.com>  Fri, 08 May 2020 13:52:33 -0400
+
 linux (4.19.98-1+untangle2buster) unstable; urgency=medium
 
   * Build kbuild package
