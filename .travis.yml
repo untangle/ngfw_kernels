@@ -1,5 +1,7 @@
 sudo: required
 
+if: branch =~ /^(master|release-\d\d.\d)$/ AND type IN (api)
+
 git:
   depth: false
 
