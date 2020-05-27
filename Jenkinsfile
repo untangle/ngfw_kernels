@@ -28,7 +28,7 @@ pipeline {
 
             stage('Build amd64') {
               steps {
-                buildMFW("buster", architecture, upload, buildDir)
+                build("buster", architecture, upload, buildDir)
               }
             }
           }
@@ -51,7 +51,7 @@ pipeline {
 
             stage('Build i386') {
               steps {
-                buildMFW("buster", architecture, upload, buildDir)
+                build("buster", architecture, upload, buildDir)
               }
             }
           }
