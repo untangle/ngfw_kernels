@@ -1,6 +1,6 @@
 void buildKernel(String repository, String architecture, String upload, String buildDir) {
   sh "docker pull untangleinc/ngfw:${repository}-build-${architecture}"
-  sh "PKGTOOLS_COMMIT=origin/${env.BRANCH_NAME} ${buildDir}/docker-compose -f docker-compose.build.yml run pkgtools"
+  sh "PKGTOOLS_COMMIT=origin/${env.BRANCH_NAME} docker-compose -f ${buildDir}/docker-compose.build.yml run pkgtools"
 //  sh "ARCHITECTURE=${architecture} VERBOSE=1 UPLOAD=${upload} docker-compose -f ${buildDir}/docker-compose.build.yml run build"
   sh "ARCHITECTURE=${architecture} TRAVIS_BRANCH=${env.BRANCH_NAME} VERBOSE=1 UPLOAD= docker-compose -f ${buildDir}/docker-compose.build.yml run build"
 }
