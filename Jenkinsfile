@@ -1,4 +1,4 @@
-void buildKernelString repository, String architecture, String upload, String buildDir) {
+void buildKernel(String repository, String architecture, String upload, String buildDir) {
   sh "docker pull untangleinc/ngfw:${repository}-build-${architecture}"
   sh "PKGTOOLS_COMMIT=origin/${env.BRANCH_NAME} ${buildDir}/docker-compose -f docker-compose.build.yml run pkgtools"
 //  sh "ARCHITECTURE=${architecture} VERBOSE=1 UPLOAD=${upload} docker-compose -f ${buildDir}/docker-compose.build.yml run build"
@@ -29,7 +29,7 @@ pipeline {
 
             stage('Build amd64') {
               steps {
-                buildKernelrepository, architecture, upload, buildDir)
+                buildKernel(repository, architecture, upload, buildDir)
               }
             }
           }
@@ -53,7 +53,7 @@ pipeline {
 
             stage('Build buster/i386') {
               steps {
-                buildKernelrepository, architecture, upload, buildDir)
+                buildKernel(repository, architecture, upload, buildDir)
               }
             }
           }
