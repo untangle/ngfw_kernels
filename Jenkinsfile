@@ -16,6 +16,7 @@ pipeline {
 	  agent { label 'mfw' }
 
           environment {
+	    repository = "buster"
             architecture = "amd64"
 	    upload = "ftp"
             buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${architecture}"
@@ -28,7 +29,7 @@ pipeline {
 
             stage('Build amd64') {
               steps {
-                build("buster", architecture, upload, buildDir)
+                build(repository, architecture, upload, buildDir)
               }
             }
           }
@@ -39,6 +40,7 @@ pipeline {
 	  agent { label 'mfw' }
 
           environment {
+	    repository = "buster"
             architecture = "i386"
 	    upload = "ftp"
             buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${architecture}"
@@ -51,7 +53,7 @@ pipeline {
 
             stage('Build i386') {
               steps {
-                build("buster", architecture, upload, buildDir)
+                build(repository, architecture, upload, buildDir)
               }
             }
           }
