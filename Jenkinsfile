@@ -1,4 +1,4 @@
-void build(String repository, String architecture, String upload, String buildDir) {
+void buildKernelString repository, String architecture, String upload, String buildDir) {
   sh "docker pull untangleinc/ngfw:${repository}-build-${architecture}"
   sh "PKGTOOLS_COMMIT=origin/${env.BRANCH_NAME} ${buildDir}/docker-compose -f docker-compose.build.yml run pkgtools"
 //  sh "ARCHITECTURE=${architecture} VERBOSE=1 UPLOAD=${upload} docker-compose -f ${buildDir}/docker-compose.build.yml run build"
@@ -12,7 +12,7 @@ pipeline {
     stage('Build') {
 
       parallel {
-        stage('amd64') {
+        stage('buster/amd64') {
 	  agent { label 'mfw' }
 
           environment {
@@ -23,20 +23,20 @@ pipeline {
           }
 
 	  stages {
-            stage('Prep WS amd64') {
+            stage('Prep WS buster/amd64') {
               steps { dir(buildDir) { checkout scm } }
             }
 
             stage('Build amd64') {
               steps {
-                build(repository, architecture, upload, buildDir)
+                buildKernelrepository, architecture, upload, buildDir)
               }
             }
           }
 
         }
 
-        stage('i386') {
+        stage('buster/i386') {
 	  agent { label 'mfw' }
 
           environment {
@@ -47,13 +47,13 @@ pipeline {
           }
 
 	  stages {
-            stage('Prep WS i386') {
+            stage('Prep WS buster/i386') {
               steps { dir(buildDir) { checkout scm } }
             }
 
-            stage('Build i386') {
+            stage('Build buster/i386') {
               steps {
-                build(repository, architecture, upload, buildDir)
+                buildKernelrepository, architecture, upload, buildDir)
               }
             }
           }
