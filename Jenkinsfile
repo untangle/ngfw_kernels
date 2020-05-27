@@ -24,7 +24,9 @@ pipeline {
 
 	  stages {
             stage('Prep WS buster/amd64') {
-              steps { dir(buildDir) { checkout scm } }
+              steps { 
+                sh "rm -fr ${buildDir"}
+                dir(buildDir) { checkout scm } }
             }
 
             stage('Build amd64') {
@@ -48,7 +50,9 @@ pipeline {
 
 	  stages {
             stage('Prep WS buster/i386') {
-              steps { dir(buildDir) { checkout scm } }
+              steps {
+                sh "rm -fr ${buildDir"}
+                dir(buildDir) { checkout scm } }
             }
 
             stage('Build buster/i386') {
