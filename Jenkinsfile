@@ -19,13 +19,12 @@ pipeline {
 	    repository = "buster"
             architecture = "amd64"
 	    upload = "ftp"
-            buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${architecture}"
+            buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${architecture}-${env.BUILD_NUMBER}"
           }
 
 	  stages {
             stage('Prep WS buster/amd64') {
               steps { 
-                sh "rm -fr ${buildDir}"
                 dir(buildDir) { checkout scm } }
             }
 
@@ -45,13 +44,12 @@ pipeline {
 	    repository = "buster"
             architecture = "i386"
 	    upload = "ftp"
-            buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${architecture}"
+            buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${architecture}-${env.BUILD_NUMBER}"
           }
 
 	  stages {
             stage('Prep WS buster/i386') {
               steps {
-                sh "rm -fr ${buildDir}"
                 dir(buildDir) { checkout scm } }
             }
 
