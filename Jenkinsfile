@@ -33,7 +33,6 @@ pipeline {
               }
             }
           }
-
         }
 
         stage('buster/i386') {
@@ -58,10 +57,35 @@ pipeline {
               }
             }
           }
+        }
+
+        stage('buster/arm64') {
+	  agent { label 'mfw' }
+
+          environment {
+	    repository = "buster"
+            architecture = "arm64"
+	    upload = "ftp"
+            buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${architecture}-${env.BUILD_NUMBER}"
+          }
+
+	  stages {
+            stage('Prep WS buster/arm64') {
+              steps {
+                dir(buildDir) { checkout scm } }
+            }
+
+            stage('Build buster/arm64') {
+              steps {
+                buildKernel(repository, architecture, upload, buildDir)
+              }
+            }
+          }
 
         }
 
       }
+
     }
   }
 }
