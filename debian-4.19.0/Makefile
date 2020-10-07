@@ -36,7 +36,7 @@ $(DEBIAN_TARBALL):
 
 extract: extract-stamp
 extract-stamp: $(ORIG_TARBALL) $(DEBIAN_TARBALL)
-	dpkg-source -x ${KDSC}
+	dpkg-source -x --no-check ${KDSC}
 	touch $@
 
 patch-debian: patch-debian-stamp
