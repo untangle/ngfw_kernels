@@ -6,4 +6,5 @@
 0210-kernel-config-no-system-trusted-keys.patch
 0220-serial-config.patch
 0300-relax-gencontrol-version-check.patch
+0310-drivers-net-ethernet-intel-i225.patch
 0400-build-profiles.patch
