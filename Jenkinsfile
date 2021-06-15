@@ -12,12 +12,12 @@ pipeline {
 
       parallel {
         stage('buster/amd64') {
-	  agent { label 'mfw' }
+	  agent { label 'docker && internal' }
 
           environment {
 	    repository = "buster"
             architecture = "amd64"
-	    upload = "ftp"
+	    upload = "scp"
             buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${architecture}-${env.BUILD_NUMBER}"
           }
 
@@ -36,12 +36,12 @@ pipeline {
         }
 
         stage('buster/arm64') {
-	  agent { label 'mfw' }
+	  agent { label 'docker && internal' }
 
           environment {
 	    repository = "buster"
             architecture = "arm64"
-	    upload = "ftp"
+	    upload = "scp"
             buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${architecture}-${env.BUILD_NUMBER}"
           }
 
