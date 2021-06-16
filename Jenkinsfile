@@ -17,7 +17,7 @@ pipeline {
           environment {
 	    repository = "buster"
             architecture = "amd64"
-	    upload = "scp"
+	    upload = "ftp"
             buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${architecture}-${env.BUILD_NUMBER}"
           }
 
@@ -41,7 +41,7 @@ pipeline {
           environment {
 	    repository = "buster"
             architecture = "arm64"
-	    upload = "scp"
+	    upload = "ftp"
             buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${architecture}-${env.BUILD_NUMBER}"
           }
 
