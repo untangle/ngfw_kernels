@@ -1,3 +1,9 @@
+linux (4.19.146-1+untangle5buster) current; urgency=medium
+
+  * Update igc driver backport to support bridging.
+
+ -- Chris Blaise <cblaise@untangle.com>  Tue, 06 Jul 2021 18:44:00 -0400
+
 linux (4.19.146-1+untangle4buster) current; urgency=medium
 
   * Add statistics reporting for igc driver.
