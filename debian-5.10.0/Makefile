@@ -69,14 +69,14 @@ deps:	force control-real
 	cd $(KERNEL_DIR) ; apt build-dep -y --build-profiles $(shell cat debian/untangle-build-profiles) --host-architecture $(ARCH) .
 
 kpkg-arch: control-real force
-	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -j ${PARALLEL_JOBS} -f debian/rules.gen binary-arch_${ARCH}_untangle
+	$(DOPTIONS) fakeroot make -C $(KERNEL_DIR) -j ${PARALLEL_JOBS} -f debian/rules.gen binary-arch_${ARCH}_untangle
 kpkg-indep: control-real force
-	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -j ${PARALLEL_JOBS} -f debian/rules binary-indep
+	$(DOPTIONS) fakeroot make -C $(KERNEL_DIR) -j ${PARALLEL_JOBS} -f debian/rules binary-indep
 
 kern:   ${KERNEL_DIR} kpkg-arch
 
 src: 	${KERNEL_DIR} control-real force
-	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_untangle setup_${ARCH}_untangle
+	$(DOPTIONS) fakeroot make -C $(KERNEL_DIR) -f debian/rules.gen source_untangle setup_${ARCH}_untangle
 
 control-real: ${KERNEL_DIR}/debian/control-real
 ${KERNEL_DIR}/debian/control-real: force patch
