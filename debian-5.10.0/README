@@ -1,0 +1,81 @@
+Patch layout:
+=============
+
+"make patch" does 2 things:
+
+  1. copy Untangle C patches from patches/untangle to
+     linux-4.9.30/debian/patches/series-untangle; they will only be
+     applied once the kernel is about to be built
+
+  2. apply Untangle patches to the debian/ kernel build system, from
+     patches/debian, directly over linux-4.9.30/debian
+
+Note that at this point the Debian upstream patches are not applied
+(see "Development" section below for that).
+
+Dependencies:
+=============
+
+To make sure you have everything necessary:
+
+  make deps
+
+Debian packages:
+================
+
+To build arch-indep packages (headers, doc, src, etc):
+
+  make kpkg-indep
+
+To build arch-dep packages (actual kernel, modules):
+
+  make kpkg-arch
+
+To build both sets:
+
+  make pkgs
+
+Development:
+============
+
+To get a full tree, with all patches (Debian & Untangle) *applied*,
+run the following once:
+
+  make kpkg-arch
+
+The tree then lives in (on an amd64 machine):
+
+  linux-4.9.30/debian/build/build_amd64_untangle_amd64
+
+From there, the best approach is to transplant this somewhere else,
+and then set that up as a git tree so you can track and later export
+your changes:
+
+  cp -R linux-4.9.30/debian/build/build_amd64_untangle_amd64 /tmp/debian-4.9.30
+  cd /tmp/debian-4.9.30
+  git init
+  git add -A
+  git commit -m "Initial commit"
+
+You can then edit, commit, build (using "make bzImage && make
+modules"), and iterate until ready, before moving to the "Exporting
+patches" section below.
+
+Exporting patches back to the official tree:
+============================================
+
+At this point, a git diff between the initial commit (corresponding to
+the transplant) and the last one is what needs to be brought back into
+the official tree.
+
+Using git diff on each commit, and exporting each of those snippets to
+individual files under patches/untangle, is the crude way to do
+it. However, using git format-patch <initialCommit..HEAD> is both
+easier and more readable, since it will automatically include your
+commit messages at the top of each exported patch.
+
+Whatever method you choose, please keep the new patches logically
+grouped, and avoid at all costs dropping a big
+"untangle_basediff.patch" in patches/untangle: doing this makes it
+much harder than it should when we have to port the Untangle patchet
+to a different kernel version.
