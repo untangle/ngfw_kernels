@@ -1,0 +1,20 @@
+diff -u -N -r ./debian/config/amd64/defines ./debian/config/amd64/defines
+--- ./debian/config/amd64/defines	2014-11-03 15:37:27.000000000 -0800
++++ ./debian/config/amd64/defines	2014-12-11 05:33:37.000000000 -0800
+@@ -1,5 +1,6 @@
+ [base]
+ featuresets:
++ untangle
+  none
+  rt
+ kernel-arch: x86
+diff -u -N -r ./debian/config/amd64/untangle/defines ./debian/config/amd64/untangle/defines
+--- ./debian/config/amd64/untangle/defines	1969-12-31 16:00:00.000000000 -0800
++++ ./debian/config/amd64/untangle/defines	2014-12-11 05:33:37.000000000 -0800
+@@ -0,0 +1,6 @@
++[base]
++flavours:
++ amd64
++
++[amd64_image]
++provides: linux-image-untangle, linux-image-4.19-untangle, linux-image-4.19-untangle-amd64

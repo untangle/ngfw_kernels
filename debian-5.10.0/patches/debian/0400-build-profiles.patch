@@ -1,0 +1,5 @@
+diff -u -N -r ./debian/untangle-build-profiles ./debian/untangle-build-profiles
+--- ./debian/untangle-build-profiles	2020-04-09 06:45:50.000000000 -0800
++++ ./debian/untangle-build-profiles	2020-04-09 06:45:50.000000000 -0800
+@@ -0,0 +1,1 @@
++nodoc,nopython

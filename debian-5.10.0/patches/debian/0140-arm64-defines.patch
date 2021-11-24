@@ -1,0 +1,19 @@
+--- ./debian/config/arm64/defines.bak	2019-01-31 14:29:06.879739013 +0100
++++ ./debian/config/arm64/defines	2019-01-31 14:29:16.563576164 +0100
+@@ -1,6 +1,7 @@
+ [base]
+ kernel-arch: arm64
+ featuresets:
++ untangle
+  none
+ 
+ [build]
+--- ./debian/config/arm64/untangle/defines.bak	2019-01-31 14:30:53.473946081 +0100
++++ ./debian/config/arm64/untangle/defines	2019-01-31 14:30:42.442131680 +0100
+@@ -0,0 +1,6 @@
++[base]
++flavours:
++ arm64
++
++[arm64_image]
++provides: linux-image-untangle, linux-image-4.19-untangle, linux-image-4.19-untangle-arm64
