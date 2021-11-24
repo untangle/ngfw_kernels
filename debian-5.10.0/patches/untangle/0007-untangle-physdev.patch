@@ -1,4 +1,4 @@
-From 3c227e26540149470bee0699ab1f0f33d818ac75 Mon Sep 17 00:00:00 2001
+From f7b82d878b81555a9e395a20f8742fb6d563ca15 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
 Date: Thu, 9 Jan 2020 15:39:42 +0100
 Subject: [PATCH 7/8] untangle: physdev
@@ -18,50 +18,32 @@ about 2.6.18 that removed the physoutdev matching in the FORWARD chain.
 https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/patch/net/netfilter/xt_physdev.c?id=10ea6ac895418bd0d23900e3330daa6ba0836d26
 https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/patch/net/netfilter/xt_physdev.c?id=2bf540b73ed5b304e84bb4d4c390d49d1cfa0ef8
 ---
- net/bridge/br_nf_core.c    | 90 ++++++++++++++++++++++++++++++++++++++
- net/netfilter/xt_physdev.c | 48 ++++++++++++--------
- 2 files changed, 119 insertions(+), 19 deletions(-)
+ net/bridge/br_nf_core.c    | 81 ++++++++++++++++++++++++++++++++++++++
+ net/netfilter/xt_physdev.c | 48 +++++++++++++---------
+ 2 files changed, 110 insertions(+), 19 deletions(-)
 
 diff --git a/net/bridge/br_nf_core.c b/net/bridge/br_nf_core.c
-index 8c69f0c..154fd0a 100644
+index 8c69f0c..2150519 100644
 --- a/net/bridge/br_nf_core.c
 +++ b/net/bridge/br_nf_core.c
-@@ -15,12 +15,27 @@
+@@ -15,6 +15,9 @@
  #include <linux/in_route.h>
  #include <linux/inetdevice.h>
  #include <net/route.h>
 +#include <net/arp.h>
 +#include <linux/netfilter_bridge.h>
++#include <net/netfilter/br_netfilter.h>
  
  #include "br_private.h"
  #ifdef CONFIG_SYSCTL
- #include <linux/sysctl.h>
- #endif
- 
-+static inline struct nf_bridge_info *nf_bridge_alloc(struct sk_buff *skb)
-+{
-+        struct nf_bridge_info nf_b_i = nf_bridge_info_get(skb);
-+
-+        nf_b_i = kzalloc(sizeof(struct nf_bridge_info), GFP_ATOMIC);
-+
-+        if (likely(nf_b_i)) {
-+                refcount_set(&(nf_b_i)->use), 1);
-+        }
-+
-+        return nf_b_i;
-+}
-+
- static void fake_update_pmtu(struct dst_entry *dst, struct sock *sk,
- 			     struct sk_buff *skb, u32 mtu,
- 			     bool confirm_neigh)
-@@ -89,3 +101,81 @@ void br_nf_core_fini(void)
+@@ -89,3 +92,81 @@ void br_nf_core_fini(void)
  {
  	dst_entries_destroy(&fake_dst_ops);
  }
 +
 +
-+struct net_bridge_fdb_entry *br_fdb_get(struct net_bridge *br,
-+					unsigned char *addr)
++struct net_bridge_fdb_entry *br_fdb_get_2(struct net_bridge *br,
++					  unsigned char *addr)
 +{
 +	struct net_bridge_fdb_entry *fdb;
 +
@@ -122,7 +104,7 @@ index 8c69f0c..154fd0a 100644
 +
 +	dest = neigh->ha;
 +	if (!is_multicast_ether_addr(dest)) {
-+        fdb = br_fdb_get(netdev_priv(out), dest);
++        fdb = br_fdb_get_2(netdev_priv(out), dest);
 +
 +        if (fdb) {
 +            nf_bridge->physoutdev = fdb->dst->dev;
@@ -137,7 +119,7 @@ index 8c69f0c..154fd0a 100644
 +
 +EXPORT_SYMBOL(get_outdev);
 diff --git a/net/netfilter/xt_physdev.c b/net/netfilter/xt_physdev.c
-index ec6ed6f..9193b64 100644
+index ec6ed6f..dc17cad 100644
 --- a/net/netfilter/xt_physdev.c
 +++ b/net/netfilter/xt_physdev.c
 @@ -13,6 +13,8 @@
@@ -189,14 +171,14 @@ index ec6ed6f..9193b64 100644
  		return false;
  
  	if (!(info->bitmask & XT_PHYSDEV_OP_IN))
-@@ -80,9 +76,30 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
+@@ -80,8 +76,29 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
  	}
  
  match_outdev:
 -	if (!(info->bitmask & XT_PHYSDEV_OP_OUT))
 +       if (!(info->bitmask & (XT_PHYSDEV_OP_ISOUT | XT_PHYSDEV_OP_OUT)))
- 		return true;
- 
++		return true;
++
 +	m_dev = dev_get_by_name(&init_net, info->physoutdev );
 +
 +	get_outdev(skb, xt_out(par), m_dev);
@@ -208,7 +190,7 @@ index ec6ed6f..9193b64 100644
 +		if ((info->bitmask & XT_PHYSDEV_OP_OUT) &&
 +		    !(info->invert & XT_PHYSDEV_OP_OUT))
 +			return false;
-+		return true;
+ 		return true;
 +	}
 +
 +	if (info->bitmask & XT_PHYSDEV_OP_ISOUT &&
@@ -217,10 +199,9 @@ index ec6ed6f..9193b64 100644
 +
 +	physdev = nf_bridge_get_physoutdev(skb);
 +	outdev = physdev ? physdev->name : NULL;
-+
+ 
  	if (!outdev)
  		return false;
- 
 @@ -99,13 +116,6 @@ static int physdev_mt_check(const struct xt_mtchk_param *par)
  	if (!(info->bitmask & XT_PHYSDEV_OP_MASK) ||
  	    info->bitmask & ~XT_PHYSDEV_OP_MASK)
