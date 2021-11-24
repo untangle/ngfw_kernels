@@ -192,14 +192,14 @@ index ec6ed6f..9193b64 100644
  
  match_outdev:
 -	if (!(info->bitmask & XT_PHYSDEV_OP_OUT))
-+    if (!(info->bitmask & (XT_PHYSDEV_OP_ISOUT | XT_PHYSDEV_OP_OUT)))
++       if (!(info->bitmask & (XT_PHYSDEV_OP_ISOUT | XT_PHYSDEV_OP_OUT)))
  		return true;
  
 +	m_dev = dev_get_by_name(&init_net, info->physoutdev );
 +
 +	get_outdev(skb, xt_out(par), m_dev);
 +	dev_put(m_dev);
-+	if (!(nf_bridge = skb->nf_bridge)) {
++	if (!nf_bridge_info_exists(skb)) {
 +		if ((info->bitmask & XT_PHYSDEV_OP_ISOUT) &&
 +		    !(info->invert & XT_PHYSDEV_OP_ISOUT))
 +			return false;
