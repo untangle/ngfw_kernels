@@ -19,13 +19,14 @@ UNTANGLE_PATCH_SERIES := patches/untangle/series
 DEBIAN_PATCH_SERIES := patches/debian/series
 
 ARCH ?= $(shell dpkg-architecture -qDEB_BUILD_ARCH_CPU)
-NPROCEXP := $(shell echo "$$((1+`grep -c processor /proc/cpuinfo`))")
 
 ifeq ($(ARCH),armhf)
-  NPROCEXP := 1
+  PARALLEL_JOBS ?= 1
+else
+  PARALLEL_JOBS ?= $(shell echo "$$((1+`grep -c processor /proc/cpuinfo`))")
 endif
 
-DOPTIONS = DEBIAN_KERNEL_JOBS=${NPROCEXP} DEB_BUILD_OPTIONS="parallel=${NPROCEXP}" CONCURRENCY_LEVEL=${NPROCEXP} AUTOBUILD=1
+DOPTIONS := DEBIAN_KERNEL_JOBS=${PARALLEL_JOBS} DEB_BUILD_OPTIONS="parallel=${PARALLEL_JOBS}" CONCURRENCY_LEVEL=${PARALLEL_JOBS} AUTOBUILD=1 DEB_BUILD_PROFILES="$(shell sed -e 's/,/ /g' $(KERNEL_DIR)/debian/untangle-build-profiles)"
 
 all:	clean pkgs
 
@@ -68,14 +69,14 @@ deps:	force control-real
 	cd $(KERNEL_DIR) ; apt build-dep -y --build-profiles $(shell cat debian/untangle-build-profiles) --host-architecture $(ARCH) .
 
 kpkg-arch: control-real force
-	cd ${KERNEL_DIR}; ${DOPTIONS} DEB_BUILD_PROFILES="$(shell cat debian/untangle-build-profiles | sed -e 's/,/ /g')" fakeroot make -j ${NPROCEXP} -f debian/rules.gen binary-arch_${ARCH}_untangle
+	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -j ${PARALLEL_JOBS} -f debian/rules.gen binary-arch_${ARCH}_untangle
 kpkg-indep: control-real force
-	cd ${KERNEL_DIR}; ${DOPTIONS} DEB_BUILD_PROFILES="$(shell cat debian/untangle-build-profiles | sed -e 's/,/ /g')" fakeroot make -j ${NPROCEXP} -f debian/rules binary-indep
+	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -j ${PARALLEL_JOBS} -f debian/rules binary-indep
 
 kern:   ${KERNEL_DIR} kpkg-arch
 
 src: 	${KERNEL_DIR} control-real force
-	cd ${KERNEL_DIR}; ${DOPTIONS} DEB_BUILD_PROFILES="$(shell cat debian/untangle-build-profiles | sed -e 's/,/ /g')" fakeroot make -f debian/rules.gen source_untangle setup_${ARCH}_untangle
+	cd ${KERNEL_DIR}; ${DOPTIONS} fakeroot make -f debian/rules.gen source_untangle setup_${ARCH}_untangle
 
 control-real: ${KERNEL_DIR}/debian/control-real
 ${KERNEL_DIR}/debian/control-real: force patch
