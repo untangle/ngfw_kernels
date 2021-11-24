@@ -1,0 +1,45 @@
+From 1ddfaca993805bc0c7a1eb270682cd7c93308208 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
+Date: Thu, 18 May 2017 11:24:27 +0200
+Subject: [PATCH 3/8] IPSEC policy bypass
+
+This patch bypass the xfrm check on tcp receive path for reinjected
+packets from UVM.
+
+reference:
+http://bugzilla.untangle.com/show_bug.cgi?id=8948
+---
+ net/ipv4/tcp_ipv4.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/net/ipv4/tcp_ipv4.c b/net/ipv4/tcp_ipv4.c
+index b76cf96d5cfe..16f834256784 100644
+--- a/net/ipv4/tcp_ipv4.c
++++ b/net/ipv4/tcp_ipv4.c
+@@ -1790,6 +1790,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
+ 		goto discard_and_relse;
+ 	}
+ 
++        if (!(skb->mark&0x10000000))
+ 	if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb))
+ 		goto discard_and_relse;
+ 
+@@ -1830,6 +1831,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
+ 	return ret;
+ 
+ no_tcp_socket:
++        if (!(skb->mark&0x10000000))
+ 	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb))
+ 		goto discard_it;
+ 
+@@ -1856,6 +1858,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
+ 	goto discard_it;
+ 
+ do_time_wait:
++        if (!(skb->mark&0x10000000))
+ 	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb)) {
+ 		inet_twsk_put(inet_twsk(sk));
+ 		goto discard_it;
+-- 
+2.17.1
+

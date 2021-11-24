@@ -1,0 +1,61 @@
+0001-bridge-mac-ageing-fix.patch
+
+  When Untangle is "bridging" traffic it doesn't actually allow traffic
+  through the bridge, but instead it intercepts it. This causes traffic
+  not to flow via the normal methods so the "forwarding information
+  base" (FIB) of the bridge doesn't get updated. Without this patch the
+  bridge can lose information about where an IP/MAC pair lives: in this
+  case it won't know where to send the traffic and will just drop it.
+  Pinging the host will instantly resolve that state as the FIB would be
+  updated: we choose to update the FIB when a packet is received on a
+  bridge port.
+
+0002-extensions.patch
+
+  Provide extensions to cmsg so that special fields like NFMARK and
+  SADDR can be specified in cmsg ancillary data options in recvfrom and
+  sendmsg. This is used in libnetcap to send and receive UDP packets.
+
+0003-IPSEC-policy-bypass.patch
+
+  Bypass the xfrm check on TCP receive path for reinjected packets from
+  the UVM.
+
+0004-iptables-tune.patch
+
+  Add the dedicated "tune" table in netfilter: it comes at the very end
+  of the processing flow, and is used for various tasks in our
+  networking setup.
+
+0005-xt_mac-Support-matching-a-particular-mac-byte.patch
+
+  Change the iptables MAC matcher to allow creating iptables rules that
+  match individual bytes of the source MAC address. This is so the UVM
+  can pass both the source and destination interface marks in the source
+  MAC address for packets reinjected on the utun device. This allows us
+  to create only two rules per interface to restore both marks, instead
+  of the NxN number of rules that would be required without the ability
+  to isolate specific bytes of the MAC address.
+
+0006-iptables-socket.patch
+
+  Change the standard "-m socket" iptables match to also modify the
+  packet with the socket's mark if a socket is found. An iptables match
+  rule should not modify the packet, but as there is no conntrack entry
+  for packets returning to non-local sockets, we have no way to restore
+  the QoS/bandwidth control mark: without this patch, TCP ingress QoS
+  simply can't work.
+
+0007-physdev.patch
+
+  Find the bridge port in bridge FDB from the xt_physdev module, so the
+  physoutdev field can be matched in the FORWARD chain. Without this,
+  the kernel can't find the bridge port as the packet hasn't reached the
+  interned bridge code yet. The ability to match physoutdev in the
+  FORWARD chain was removed in 2.6.18, in favor of having the packet go
+  through the regular bridge forwarding decision first.
+
+0008-imq-4.16-patch.patch
+
+  Allow ingress shaping and shaping over multiple interfaces. From
+  https://github.com/imq/linuximq/blob/master/kernel/v4.x/linux-4.9-imq.diff
