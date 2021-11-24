@@ -31,7 +31,6 @@ export CONCURRENCY_LEVEL=$(PARALLEL_JOBS)
 export DEBIAN_KERNEL_JOBS=$(PARALLEL_JOBS)
 export DEB_BUILD_OPTIONS="parallel=$(PARALLEL_JOBS)"
 export AUTOBUILD=1
-export DEB_BUILD_PROFILES="$(shell sed -e 's/,/ /g' $(UNTANGLE_BUILD_PROFILES_FILE))"
 
 all:	clean pkgs
 
@@ -74,14 +73,14 @@ deps:	force control-real
 	cd $(KERNEL_DIR) ; apt build-dep -y --build-profiles $(shell cat debian/untangle-build-profiles) --host-architecture $(ARCH) .
 
 kpkg-arch: control-real force
-	fakeroot make -C $(KERNEL_DIR) -j $(PARALLEL_JOBS) -f debian/rules.gen binary-arch_$(ARCH)_untangle
+	DEB_BUILD_PROFILES="$(shell sed -e 's/,/ /g' $(UNTANGLE_BUILD_PROFILES_FILE))" fakeroot make -C $(KERNEL_DIR) -j $(PARALLEL_JOBS) -f debian/rules.gen binary-arch_$(ARCH)_untangle
 kpkg-indep: control-real force
-	fakeroot make -C $(KERNEL_DIR) -j $(PARALLEL_JOBS) -f debian/rules binary-indep
+	DEB_BUILD_PROFILES="$(shell sed -e 's/,/ /g' $(UNTANGLE_BUILD_PROFILES_FILE))" fakeroot make -C $(KERNEL_DIR) -j $(PARALLEL_JOBS) -f debian/rules binary-indep
 
 kern:   ${KERNEL_DIR} kpkg-arch
 
 src: 	${KERNEL_DIR} control-real force
-	fakeroot make -C $(KERNEL_DIR) -f debian/rules.gen source_untangle setup_$(ARCH)_untangle
+	DEB_BUILD_PROFILES="$(shell sed -e 's/,/ /g' $(UNTANGLE_BUILD_PROFILES_FILE))" fakeroot make -C $(KERNEL_DIR) -f debian/rules.gen source_untangle setup_$(ARCH)_untangle
 
 control-real: ${KERNEL_DIR}/debian/control-real
 ${KERNEL_DIR}/debian/control-real: force patch
