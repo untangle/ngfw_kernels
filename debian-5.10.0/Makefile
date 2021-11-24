@@ -79,7 +79,7 @@ src: 	${KERNEL_DIR} control-real force
 
 control-real: ${KERNEL_DIR}/debian/control-real
 ${KERNEL_DIR}/debian/control-real: force patch
-	apt install -y kernel-wedge
+	which kernel-wedge || apt install -y kernel-wedge
 	# do not build -dbg images 
 	# FIXME: this should be a proper patch in patches/debian, so
 	# we're warned early on when we bump versions and the syntax
