@@ -26,7 +26,7 @@ diff --git a/net/bridge/br_nf_core.c b/net/bridge/br_nf_core.c
 index 8c69f0c..154fd0a 100644
 --- a/net/bridge/br_nf_core.c
 +++ b/net/bridge/br_nf_core.c
-@@ -15,12 +15,24 @@
+@@ -15,12 +15,25 @@
  #include <linux/in_route.h>
  #include <linux/inetdevice.h>
  #include <net/route.h>
@@ -41,10 +41,11 @@ index 8c69f0c..154fd0a 100644
 +{
 +        skb->nf_bridge = kzalloc(sizeof(struct nf_bridge_info), GFP_ATOMIC);
 +
-+            if (likely(skb->nf_bridge))
-+                        refcount_set(&(skb->nf_bridge->use), 1);
++        if (likely(skb->nf_bridge)) {
++                refcount_set(&(skb->nf_bridge->use), 1);
++        }
 +
-+                return skb->nf_bridge;
++        return skb->nf_bridge;
 +
 +}
 +
