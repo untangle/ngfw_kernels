@@ -84,12 +84,12 @@ ${KERNEL_DIR}/debian/control-real: force patch
 	# FIXME: this should be a proper patch in patches/debian, so
 	# we're warned early on when we bump versions and the syntax
 	# has changed
-	perl -i -pe 's/debug-info:.*/debug-info: false/' $(KERNEL_DIR)/debian/config/*/defines
+	perl -i -pe 's/debug-info:.*/debug-info: false/' $(KERNEL_DIR)/debian/config/*/defines $(KERNEL_DIR)/debian/config/defines
 	# do not sign images 
 	# FIXME: this should be a proper patch in patches/debian, so
 	# we're warned early on when we bump versions and the syntax
 	# has changed
-	perl -i -pe 's/signed-code:.*/signed-code: false/' $(KERNEL_DIR)/debian/config/*/defines
+	perl -i -pe 's/signed-code:.*/signed-code: false/' $(KERNEL_DIR)/debian/config/*/defines $(KERNEL_DIR)/debian/config/defines
 	cd ${KERNEL_DIR};make -f debian/rules debian/control-real || true
 	# # limit the arch-dep target to untangle kernels
 	# perl -i -pe 's/(binary-arch_.*)/$$1_untangle/' $(KERNEL_DIR)/debian/rules
