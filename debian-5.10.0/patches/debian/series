@@ -1,0 +1,9 @@
+0100-arch-indep-defines.patch
+0120-i386-defines.patch
+0130-amd64-defines.patch
+0140-arm64-defines.patch
+0200-kernel-config.patch
+0210-kernel-config-no-system-trusted-keys.patch
+0220-serial-config.patch
+0300-relax-gencontrol-version-check.patch
+0400-build-profiles.patch

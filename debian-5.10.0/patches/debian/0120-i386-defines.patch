@@ -1,0 +1,21 @@
+diff -u -N -r ./debian/config/i386/defines ./debian/config/i386/defines
+--- ./debian/config/i386/defines	2014-11-03 10:45:50.000000000 -0800
++++ ./debian/config/i386/defines	2014-12-11 05:33:37.000000000 -0800
+@@ -1,6 +1,7 @@
+ [base]
+ featuresets:
+  none
++ untangle
+  rt
+ kernel-arch: x86
+ 
+diff -u -N -r ./debian/config/i386/untangle/defines ./debian/config/i386/untangle/defines
+--- ./debian/config/i386/untangle/defines	1969-12-31 16:00:00.000000000 -0800
++++ ./debian/config/i386/untangle/defines	2014-12-11 05:33:37.000000000 -0800
+@@ -0,0 +1,6 @@
++[base]
++flavours:
++ 686-pae
++
++[686-pae_image]
++provides: linux-image-untangle, linux-image-4.19-untangle, linux-image-4.19-untangle-686-pae

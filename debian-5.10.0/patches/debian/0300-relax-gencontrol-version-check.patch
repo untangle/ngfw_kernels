@@ -1,0 +1,17 @@
+--- linux-4.19.67/debian/bin/gencontrol.py.bak	2019-11-22 09:01:13.982936058 +0100
++++ linux-4.19.67/debian/bin/gencontrol.py	2019-11-22 09:01:30.774622244 +0100
+@@ -633,12 +633,8 @@
+                                                 + self.abiname_part)}
+ 
+         distribution = self.changelog[0].distribution
+-        if distribution in ('unstable', ):
+-            if version.linux_revision_experimental or \
+-               version.linux_revision_backports or \
+-               version.linux_revision_other:
+-                raise RuntimeError("Can't upload to %s with a version of %s" %
+-                                   (distribution, version))
++        if distribution in ('unstable', 'buster'):
++            pass
+         if distribution in ('experimental', ):
+             if not version.linux_revision_experimental:
+                 raise RuntimeError("Can't upload to %s with a version of %s" %
