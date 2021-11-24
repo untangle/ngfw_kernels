@@ -197,7 +197,7 @@ index ec60367..7a1a6e7 100644
 +
 +		if (optlen != sizeof(struct ip_sendnfmark_opts))
 +			goto e_inval;
-+		if (copy_from_user(&nfopt, optval, sizeof(struct ip_sendnfmark_opts))) {
++		if (copy_from_sockptr(&nfopt, optval, sizeof(struct ip_sendnfmark_opts))) {
 +			err = -EFAULT;
 +			break;
 +		}
