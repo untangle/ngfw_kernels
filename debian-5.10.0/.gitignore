@@ -1,0 +1,14 @@
+linux-3.*
+linux-4.*
+linux-5.*
+*-stamp
+*untangle*.dsc
+*bz2
+*xz
+tmp
+debian/*.log
+debian/*debhelper
+debian/*substvars
+debian/untangle-linux-image-3.18-linksys-wrt1900acs
+debian/untangle-linux-image-3.18-linksys-wrt3200acm
+debian/files
