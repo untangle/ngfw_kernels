@@ -26,11 +26,12 @@ diff --git a/net/bridge/br_nf_core.c b/net/bridge/br_nf_core.c
 index 8c69f0c..154fd0a 100644
 --- a/net/bridge/br_nf_core.c
 +++ b/net/bridge/br_nf_core.c
-@@ -15,12 +15,25 @@
+@@ -15,12 +15,27 @@
  #include <linux/in_route.h>
  #include <linux/inetdevice.h>
  #include <net/route.h>
 +#include <net/arp.h>
++#include <linux/netfilter_bridge.h>
  
  #include "br_private.h"
  #ifdef CONFIG_SYSCTL
@@ -39,14 +40,15 @@ index 8c69f0c..154fd0a 100644
  
 +static inline struct nf_bridge_info *nf_bridge_alloc(struct sk_buff *skb)
 +{
-+        skb->nf_bridge = kzalloc(sizeof(struct nf_bridge_info), GFP_ATOMIC);
++        struct nf_bridge_info nf_b_i = nf_bridge_info_get(skb);
 +
-+        if (likely(skb->nf_bridge)) {
-+                refcount_set(&(skb->nf_bridge->use), 1);
++        nf_b_i = kzalloc(sizeof(struct nf_bridge_info), GFP_ATOMIC);
++
++        if (likely(nf_b_i)) {
++                refcount_set(&(nf_b_i)->use), 1);
 +        }
 +
-+        return skb->nf_bridge;
-+
++        return nf_b_i;
 +}
 +
  static void fake_update_pmtu(struct dst_entry *dst, struct sock *sk,
@@ -96,7 +98,7 @@ index 8c69f0c..154fd0a 100644
 +	u32 src_ip = 0;
 +    u32 nexthop;
 +
-+	nf_bridge = skb->nf_bridge;
++	nf_bridge = nf_bridge_info_get(skb);
 +	if ((nf_bridge && nf_bridge->physoutdev) ||
 +	    !out || out->netdev_ops->ndo_start_xmit != br_dev_xmit)
 +		return;
