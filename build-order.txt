@@ -1,1 +1,2 @@
 debian-4.19.0/linux-4.19.146 buster
+debian-5.10.0/linux-5.10.70 bullseye
