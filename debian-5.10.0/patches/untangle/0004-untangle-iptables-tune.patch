@@ -1,7 +1,7 @@
-From 916e727c19740ab290210fabbd76f0949d4f6188 Mon Sep 17 00:00:00 2001
+From 7ec02d0bd31f2b4e870f060ba2e1d6c4d0c8ff72 Mon Sep 17 00:00:00 2001
 From: Brett Mastbergen <bmastbergen@untangle.com>
 Date: Mon, 13 Jan 2020 16:33:01 -0500
-Subject: [PATCH 4/8] iptables-tune
+Subject: [PATCH 4/8] untangle: iptables-tune
 
 This adds the "tune" table in netfilter which comes at the very end
 which is used for various tasks in our networking setup.
@@ -15,7 +15,7 @@ which is used for various tasks in our networking setup.
  create mode 100644 net/ipv4/netfilter/iptable_tune.c
 
 diff --git a/include/net/netns/ipv4.h b/include/net/netns/ipv4.h
-index 366e2a60010e..21209ff525d3 100644
+index 8e4fcac..921ebc2 100644
 --- a/include/net/netns/ipv4.h
 +++ b/include/net/netns/ipv4.h
 @@ -77,6 +77,7 @@ struct netns_ipv4 {
@@ -27,10 +27,10 @@ index 366e2a60010e..21209ff525d3 100644
  #ifdef CONFIG_SECURITY
  	struct xt_table		*iptable_security;
 diff --git a/include/uapi/linux/netfilter_ipv4.h b/include/uapi/linux/netfilter_ipv4.h
-index c3b060775e13..8ad7f9da5ab6 100644
+index 155e77d..8366654 100644
 --- a/include/uapi/linux/netfilter_ipv4.h
 +++ b/include/uapi/linux/netfilter_ipv4.h
-@@ -69,7 +69,8 @@ enum nf_ip_hook_priorities {
+@@ -41,7 +41,8 @@ enum nf_ip_hook_priorities {
  	NF_IP_PRI_NAT_SRC = 100,
  	NF_IP_PRI_SELINUX_LAST = 225,
  	NF_IP_PRI_CONNTRACK_HELPER = 300,
@@ -41,10 +41,10 @@ index c3b060775e13..8ad7f9da5ab6 100644
  };
  
 diff --git a/net/ipv4/netfilter/Kconfig b/net/ipv4/netfilter/Kconfig
-index 184bf2e0a1ed..f02cfd1b4fdd 100644
+index a2f4f89..f13dc78 100644
 --- a/net/ipv4/netfilter/Kconfig
 +++ b/net/ipv4/netfilter/Kconfig
-@@ -420,3 +420,15 @@ endif # IP_NF_ARPTABLES
+@@ -358,3 +358,15 @@ endif # IP_NF_ARPTABLES
  
  endmenu
  
@@ -61,10 +61,10 @@ index 184bf2e0a1ed..f02cfd1b4fdd 100644
 +	  <file:Documentation/modules.txt>.  If unsure, say `N'.
 +
 diff --git a/net/ipv4/netfilter/Makefile b/net/ipv4/netfilter/Makefile
-index 367993adf4d3..853da12fe519 100644
+index 7c497c7..25924fe 100644
 --- a/net/ipv4/netfilter/Makefile
 +++ b/net/ipv4/netfilter/Makefile
-@@ -50,6 +50,7 @@ obj-$(CONFIG_IP_NF_FILTER) += iptable_filter.o
+@@ -39,6 +39,7 @@ obj-$(CONFIG_IP_NF_FILTER) += iptable_filter.o
  obj-$(CONFIG_IP_NF_MANGLE) += iptable_mangle.o
  obj-$(CONFIG_IP_NF_NAT) += iptable_nat.o
  obj-$(CONFIG_IP_NF_RAW) += iptable_raw.o
@@ -74,7 +74,7 @@ index 367993adf4d3..853da12fe519 100644
  # matches
 diff --git a/net/ipv4/netfilter/iptable_tune.c b/net/ipv4/netfilter/iptable_tune.c
 new file mode 100644
-index 000000000000..c976e3406229
+index 0000000..c976e34
 --- /dev/null
 +++ b/net/ipv4/netfilter/iptable_tune.c
 @@ -0,0 +1,102 @@
@@ -181,5 +181,5 @@ index 000000000000..c976e3406229
 +module_init(iptable_tune_init);
 +module_exit(iptable_tune_exit);
 -- 
-2.17.1
+2.32.0
 

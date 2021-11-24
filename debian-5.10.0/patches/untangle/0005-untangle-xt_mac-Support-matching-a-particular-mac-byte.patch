@@ -1,7 +1,7 @@
-From 10dbe3d7d872488752e0182fe3cede7be460959c Mon Sep 17 00:00:00 2001
+From a191ef03d7ea6358b4e5e2beb55db2520137e1fc Mon Sep 17 00:00:00 2001
 From: mahotz <mahotz@untangle.com>
 Date: Fri, 20 Dec 2019 12:32:25 -0700
-Subject: [PATCH 5/8] xt_mac: Support matching a particular mac byte
+Subject: [PATCH 5/8] untangle: xt_mac: Support matching a particular mac byte
 
 Changes to iptables mac matcher to allow creating iptables rules
 that match individual bytes of the source MAC address. This is
@@ -16,10 +16,10 @@ address.
  1 file changed, 29 insertions(+), 2 deletions(-)
 
 diff --git a/net/netfilter/xt_mac.c b/net/netfilter/xt_mac.c
-index d5b4fd4f91ed..c6b96f09f782 100644
+index 81649da..d2b2b5e 100644
 --- a/net/netfilter/xt_mac.c
 +++ b/net/netfilter/xt_mac.c
-@@ -20,11 +20,33 @@
+@@ -17,11 +17,33 @@
  #include <linux/netfilter/x_tables.h>
  
  MODULE_LICENSE("GPL");
@@ -54,7 +54,7 @@ index d5b4fd4f91ed..c6b96f09f782 100644
  static bool mac_mt(const struct sk_buff *skb, struct xt_action_param *par)
  {
  	const struct xt_mac_info *info = par->matchinfo;
-@@ -36,7 +58,12 @@ static bool mac_mt(const struct sk_buff *skb, struct xt_action_param *par)
+@@ -33,7 +55,12 @@ static bool mac_mt(const struct sk_buff *skb, struct xt_action_param *par)
  		return false;
  	if (skb_mac_header(skb) + ETH_HLEN > skb->data)
  		return false;
@@ -69,5 +69,5 @@ index d5b4fd4f91ed..c6b96f09f782 100644
  	return ret;
  }
 -- 
-2.17.1
+2.32.0
 
