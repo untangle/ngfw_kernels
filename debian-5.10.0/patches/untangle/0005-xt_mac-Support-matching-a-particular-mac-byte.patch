@@ -1,0 +1,73 @@
+From 10dbe3d7d872488752e0182fe3cede7be460959c Mon Sep 17 00:00:00 2001
+From: mahotz <mahotz@untangle.com>
+Date: Fri, 20 Dec 2019 12:32:25 -0700
+Subject: [PATCH 5/8] xt_mac: Support matching a particular mac byte
+
+Changes to iptables mac matcher to allow creating iptables rules
+that match individual bytes of the source MAC address. This is
+needed so the uvm can pass both the source and destination interface
+marks in the source mac address for packets reinjected on the utun
+device. This allows us to create two rules per interface that
+restore both marks instead of the NxN number of rules that would be
+required without the ability to isolate specific bytes of the MAC
+address.
+---
+ net/netfilter/xt_mac.c | 31 +++++++++++++++++++++++++++++--
+ 1 file changed, 29 insertions(+), 2 deletions(-)
+
+diff --git a/net/netfilter/xt_mac.c b/net/netfilter/xt_mac.c
+index d5b4fd4f91ed..c6b96f09f782 100644
+--- a/net/netfilter/xt_mac.c
++++ b/net/netfilter/xt_mac.c
+@@ -20,11 +20,33 @@
+ #include <linux/netfilter/x_tables.h>
+ 
+ MODULE_LICENSE("GPL");
+-MODULE_AUTHOR("Netfilter Core Team <coreteam@netfilter.org>");
++MODULE_AUTHOR("Netfilter Core Team <coreteam@netfilter.org> + Untangle");
+ MODULE_DESCRIPTION("Xtables: MAC address match");
+ MODULE_ALIAS("ipt_mac");
+ MODULE_ALIAS("ip6t_mac");
+ 
++/*
++ 	NGFW-12726
++ 	Added a special feature to the MAC matcher that allows us to compare
++ 	individual bytes of the MAC address. When info->srcaddr[0] is 0xFF
++ 	we read the comparison offset from info->srcaddr[1] and then return
++ 	the boolean result of comparing the single byte at that offset within
++ 	the same offset location in the MAC address of the packet. Bytes 0 and 1
++ 	are used by our mechanism for the tag and offset, so the offset should
++ 	be a value between 2 and 5. This logic is needed to create rules that
++ 	extract the src and dst interface marks for packets that are reinjecting
++ 	by the uvm via the utun device. The uvm encodes the interfaces in the
++	MAC address it puts in the reinjected packets.
++ 	eth_hdr(skb)->h_source[5] = src interface
++ 	eth_hdr(skb)->h_source[4] = dst interface
++
++ 	The src and dst interfaces are encoded in src_mac here:
++ 	ngfw_src/libnetcap/src/netcap_virtual_interface.c
++
++ 	The script that creates the iptables rules that need this is here:
++ 	sync-settings/sync/debian/interfaces_manager.py
++*/
++
+ static bool mac_mt(const struct sk_buff *skb, struct xt_action_param *par)
+ {
+ 	const struct xt_mac_info *info = par->matchinfo;
+@@ -36,7 +58,12 @@ static bool mac_mt(const struct sk_buff *skb, struct xt_action_param *par)
+ 		return false;
+ 	if (skb_mac_header(skb) + ETH_HLEN > skb->data)
+ 		return false;
+-	ret  = ether_addr_equal(eth_hdr(skb)->h_source, info->srcaddr);
++	if (info->srcaddr[0] == 0xFF && info->srcaddr[1] > 1 && info->srcaddr[1] < 6) {
++		ret = (eth_hdr(skb)->h_source[info->srcaddr[1]] == info->srcaddr[info->srcaddr[1]] ? true : false);
++	} else {
++		ret = ether_addr_equal(eth_hdr(skb)->h_source, info->srcaddr);
++	}
++
+ 	ret ^= info->invert;
+ 	return ret;
+ }
+-- 
+2.17.1
+

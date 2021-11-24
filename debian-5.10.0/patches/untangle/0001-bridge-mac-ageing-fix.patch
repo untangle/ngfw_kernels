@@ -1,0 +1,35 @@
+From 504db20066fa87ca7f8aaca11039089971c74d2d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
+Date: Thu, 18 May 2017 11:16:03 +0200
+Subject: [PATCH 1/8] bridge mac ageing fix
+
+This patch allows ingress shaping and shaping over multiple
+interfaces.  Patch retreived from:
+
+https://github.com/imq/linuximq/blob/master/kernel/v4.x/linux-4.16-imq.diff
+---
+ net/bridge/br_input.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/net/bridge/br_input.c b/net/bridge/br_input.c
+index 2532c1a19645..401e0805f4e5 100644
+--- a/net/bridge/br_input.c
++++ b/net/bridge/br_input.c
+@@ -227,6 +227,14 @@ rx_handler_result_t br_handle_frame(struct sk_buff **pskb)
+ 			goto drop;
+ 	}
+ 
++	if (p->state == BR_STATE_LEARNING ||
++            p->state == BR_STATE_FORWARDING) {
++               u16 vid = 0;
++               br_vlan_get_tag(skb, &vid);
++	       br_fdb_update(p->br, p, eth_hdr(skb)->h_source, vid, false);
++        }
++
++
+ 	if (unlikely(is_link_local_ether_addr(dest))) {
+ 		u16 fwd_mask = p->br->group_fwd_mask_required;
+ 
+-- 
+2.17.1
+

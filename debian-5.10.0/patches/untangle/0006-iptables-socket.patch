@@ -1,0 +1,37 @@
+From 3af5b1b8d14bcdf3e43a13cd411fbc62a4ffee70 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=A9bastien=20Delafond?= <sdelafond@gmail.com>
+Date: Thu, 18 May 2017 11:26:41 +0200
+Subject: [PATCH 6/8] iptables socket
+
+This changes the "-m socket" iptables match to modify the packet
+with the socket's mark if a socket is found.  This is a total hack
+as an iptable match shouldn't modify the packet, but the issue is
+that there is no conntrack entry for packets returning to nonlocal
+sockets.  So we have no way to restore the QoS/bandwidth control
+mark so TCP ingress QoS doesn't work without this hack.
+---
+ net/netfilter/xt_socket.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/net/netfilter/xt_socket.c b/net/netfilter/xt_socket.c
+index ada144e5645b..9c6a1480425b 100644
+--- a/net/netfilter/xt_socket.c
++++ b/net/netfilter/xt_socket.c
+@@ -90,6 +90,14 @@ socket_match(const struct sk_buff *skb, struct xt_action_param *par,
+ 			sk = NULL;
+ 	}
+ 
++	/* Untangle hack - or the socket mark to the packet if found
++	 * We do this because there is no conntrack, and it is necessary
++	 * to restore the QoS/bandwidth control mark on packets
++	 * returning to nonlocally bound sockets */
++	if (sk != NULL) {
++		pskb->mark |= (sk->sk_mark & 0xFFFF0000);
++	}
++
+ 	return sk != NULL;
+ }
+ 
+-- 
+2.17.1
+
