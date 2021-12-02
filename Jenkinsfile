@@ -11,6 +11,7 @@ void buildKernel(String repository, String architecture, String upload, String b
     sh "docker pull untangleinc/ngfw:${repository}-build-multiarch"
     // sh "PKGTOOLS_COMMIT=origin/${env.BRANCH_NAME} docker-compose -f ${buildDir}/docker-compose.build.yml run pkgtools"
     sh "REPOSITORY=${repository} ARCHITECTURE=${architecture} VERBOSE=1 UPLOAD=${upload} docker-compose -f ${buildDir}/docker-compose.build.yml run build bash -c 'ssh-add -l'"
+  }
 }
 
 pipeline {
