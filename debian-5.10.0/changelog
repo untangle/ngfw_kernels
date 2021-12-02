@@ -1,3 +1,9 @@
+linux (5.10.70-1+untangle2bullseye2) current; urgency=medium
+
+  * Clean patchset and build systemd
+
+ -- Sebastien Delafond <sdelafond@gmail.com>  Thu, 02 Dec 2021 14:04:06 +0100
+
 linux (5.10.70-1+untangle1bullseye) current; urgency=medium
 
   * Latest official bullseye kernel
