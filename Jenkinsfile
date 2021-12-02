@@ -1,15 +1,17 @@
-def architectures = ['amd64',
-                     'arm64']
+def architectures = ['amd64', 'arm64']
 
-def repositories = ['buster',
-                    'bullseye']
+def repositories = ['bullseye']
 
 def jobs = [:] // dynamically populated later on
 
-void buildKernel(String repository, String architecture, String upload, String buildDir) {
-  sh "docker pull untangleinc/ngfw:${repository}-build-multiarch"
-  sh "PKGTOOLS_COMMIT=origin/${env.BRANCH_NAME} docker-compose -f ${buildDir}/docker-compose.build.yml run pkgtools"
-  sh "REPOSITORY=${repository} ARCHITECTURE=${architecture} VERBOSE=1 UPLOAD=${upload} docker-compose -f ${buildDir}/docker-compose.build.yml run build"
+def credentialsId = 'buildbot'
+
+void buildKernel(String repository, String architecture, String upload, String buildDir, String credentialsId) {
+  sshagent (credentials:[credentialsId]) {
+    sh "docker pull untangleinc/ngfw:${repository}-build-multiarch"
+    sh "PKGTOOLS_COMMIT=origin/${env.BRANCH_NAME} docker-compose -f ${buildDir}/docker-compose.build.yml run pkgtools"
+    sh "REPOSITORY=${repository} ARCHITECTURE=${architecture} VERBOSE=1 UPLOAD=${upload} docker-compose -f ${buildDir}/docker-compose.build.yml run build"
+  }
 }
 
 pipeline {
@@ -26,27 +28,18 @@ pipeline {
 	      def name = "${arch}/${repo}"
 
               jobs[name] = {
-                stage(name) {
-                  agent { label 'docker && internal' }
+                node('docker') {
+		  stage(name) {
+                    def upload = "scp"
+                    def buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${arch}"
 
-		  environment {
-		    upload = "ftp"
-		    buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${arch}-${env.BUILD_NUMBER}"
-		  }
+                    dir(buildDir) {
+                      checkout scm
 
-		  stages {
-		    stage("Prep WS ${name}") {
-		      steps { 
-			dir(buildDir) { checkout scm } }
-		    }
-
-		    stage("Build ${name}") {
-		      steps {
-			buildKernel(repo, arch, upload, buildDir)
-		      }
+                      buildKernel(repo, arch, upload, buildDir, credentialsId)
 		    }
 		  }
-		}
+                }
               }
             }
           }

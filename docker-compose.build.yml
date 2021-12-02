@@ -37,6 +37,7 @@ services:
         TRAVIS_BRANCH: ${TRAVIS_BRANCH:-master}
         TRAVIS_PULL_REQUEST_BRANCH:
         TRAVIS_REPO_SLUG:
+        SSH_AUTH_SOCK: /ssh-agent
 #      privileged: ${PRIVILEGED:-false}
       extra_hosts:
         # from the outside, pass package-server's outside IP instead
@@ -46,6 +47,7 @@ services:
         - pkgtools:/opt/untangle/ngfw_pkgtools:ro
         - /tmp/travis-buildbot.rsa:/tmp/travis-buildbot.rsa
         - /etc/apt/apt.conf.d/01proxy:/etc/apt/apt.conf.d/01proxy
+        - ${SSH_AUTH_SOCK}:/ssh-agent
 
 volumes:
   pkgtools:
