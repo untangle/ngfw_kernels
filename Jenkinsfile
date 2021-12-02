@@ -6,7 +6,7 @@ def jobs = [:] // dynamically populated later on
 
 def credentialsId = 'buildbot'
 
-void buildKernel(String repository, String architecture, String upload, String buildDir) {
+void buildKernel(String repository, String architecture, String upload, String buildDir, String credentialsId) {
   sshagent (credentials:[credentialsId]) {
     sh "docker pull untangleinc/ngfw:${repository}-build-multiarch"
     // sh "PKGTOOLS_COMMIT=origin/${env.BRANCH_NAME} docker-compose -f ${buildDir}/docker-compose.build.yml run pkgtools"
@@ -36,7 +36,7 @@ pipeline {
                     dir(buildDir) {
                       checkout scm
 
-                      buildKernel(repo, arch, upload, buildDir)
+                      buildKernel(repo, arch, upload, buildDir, credentialsId)
 		    }
 		  }
                 }
