@@ -28,17 +28,10 @@ pipeline {
               jobs[name] = {
                 node('docker') {
 		  stage(name) {
-		    stages {
-		      stage("Prep WS ${name}") {
-			steps { 
-			  dir(buildDir) { checkout scm } }
-		      }
+                    dir(buildDir) {
+                      checkout scm
 
-		      stage("Build ${name}") {
-			steps {
-			  buildKernel(repo, arch, upload, buildDir)
-			}
-		      }
+                      buildKernel(repo, arch, upload, buildDir)
 		    }
 		  }
                 }
