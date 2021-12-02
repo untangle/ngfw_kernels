@@ -22,12 +22,13 @@ pipeline {
               def arch = "${architecture}" // FIXME: cmon now
               def repo = "${repository}" // FIXME: cmon now
 	      def name = "${arch}/${repo}"
-              def upload = "ftp"
-              def buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${arch}-${env.BUILD_NUMBER}"
 
               jobs[name] = {
                 node('docker') {
 		  stage(name) {
+                    def upload = "ftp"
+                    def buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${arch}"
+
                     dir(buildDir) {
                       checkout scm
 
