@@ -1,15 +1,13 @@
-def architectures = ['amd64',
-                     'arm64']
+def architectures = ['amd64']
 
-def repositories = ['buster',
-                    'bullseye']
+def repositories = ['bullseye']
 
 def jobs = [:] // dynamically populated later on
 
 void buildKernel(String repository, String architecture, String upload, String buildDir) {
   sh "docker pull untangleinc/ngfw:${repository}-build-multiarch"
-  sh "PKGTOOLS_COMMIT=origin/${env.BRANCH_NAME} docker-compose -f ${buildDir}/docker-compose.build.yml run pkgtools"
-  sh "REPOSITORY=${repository} ARCHITECTURE=${architecture} VERBOSE=1 UPLOAD=${upload} docker-compose -f ${buildDir}/docker-compose.build.yml run build"
+//  sh "PKGTOOLS_COMMIT=origin/${env.BRANCH_NAME} docker-compose -f ${buildDir}/docker-compose.build.yml run pkgtools"
+  sh "REPOSITORY=${repository} ARCHITECTURE=${architecture} VERBOSE=1 UPLOAD=${upload} docker-compose -f ${buildDir}/docker-compose.build.yml run build bash -c 'ls'"
 }
 
 pipeline {
