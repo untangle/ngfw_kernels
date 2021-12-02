@@ -22,29 +22,26 @@ pipeline {
               def arch = "${architecture}" // FIXME: cmon now
               def repo = "${repository}" // FIXME: cmon now
 	      def name = "${arch}/${repo}"
+              def upload = "ftp"
+              def buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${arch}-${env.BUILD_NUMBER}"
 
               jobs[name] = {
-                stage(name) {
-                  agent { label 'docker && internal' }
+                node('docker') {
+		  stage(name) {
+		    stages {
+		      stage("Prep WS ${name}") {
+			steps { 
+			  dir(buildDir) { checkout scm } }
+		      }
 
-		  environment {
-		    upload = "ftp"
-		    buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${arch}-${env.BUILD_NUMBER}"
-		  }
-
-		  stages {
-		    stage("Prep WS ${name}") {
-		      steps { 
-			dir(buildDir) { checkout scm } }
-		    }
-
-		    stage("Build ${name}") {
-		      steps {
-			buildKernel(repo, arch, upload, buildDir)
+		      stage("Build ${name}") {
+			steps {
+			  buildKernel(repo, arch, upload, buildDir)
+			}
 		      }
 		    }
 		  }
-		}
+                }
               }
             }
           }
