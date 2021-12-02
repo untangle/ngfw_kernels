@@ -9,8 +9,8 @@ def credentialsId = 'buildbot'
 void buildKernel(String repository, String architecture, String upload, String buildDir, String credentialsId) {
   sshagent (credentials:[credentialsId]) {
     sh "docker pull untangleinc/ngfw:${repository}-build-multiarch"
-    // sh "PKGTOOLS_COMMIT=origin/${env.BRANCH_NAME} docker-compose -f ${buildDir}/docker-compose.build.yml run pkgtools"
-    sh "REPOSITORY=${repository} ARCHITECTURE=${architecture} VERBOSE=1 UPLOAD=${upload} docker-compose -f ${buildDir}/docker-compose.build.yml run build bash -c 'ssh buildbot@package-server ls /var/www/public/bullseye'"
+    sh "PKGTOOLS_COMMIT=origin/${env.BRANCH_NAME} docker-compose -f ${buildDir}/docker-compose.build.yml run pkgtools"
+    sh "REPOSITORY=${repository} ARCHITECTURE=${architecture} VERBOSE=1 UPLOAD=${upload} docker-compose -f ${buildDir}/docker-compose.build.yml run build"
   }
 }
 
@@ -30,7 +30,7 @@ pipeline {
               jobs[name] = {
                 node('docker') {
 		  stage(name) {
-                    def upload = "ftp"
+                    def upload = "scp"
                     def buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${arch}"
 
                     dir(buildDir) {
