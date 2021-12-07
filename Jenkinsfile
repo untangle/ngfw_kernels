@@ -1,4 +1,4 @@
-def architectures = ['amd64']
+def architectures = ['amd64', 'arm64']
 
 def repositories = ['bullseye']
 
