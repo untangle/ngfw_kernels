@@ -1,4 +1,4 @@
-linux (5.10.70-1+untangle2bullseye2) current; urgency=medium
+linux (5.10.70-1+untangle2bullseye) current; urgency=medium
 
   * Clean patchset and build systemd
 
