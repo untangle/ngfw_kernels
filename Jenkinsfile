@@ -31,7 +31,7 @@ pipeline {
                 node('docker') {
 		  stage(name) {
                     def upload = "scp"
-                    def buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${arch}"
+                    def buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${arch}-${env.BUILD_NUMBER}"
 
                     dir(buildDir) {
                       checkout scm
