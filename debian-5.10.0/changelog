@@ -1,3 +1,9 @@
+linux (5.10.70-1+untangle3bullseye) unstable; urgency=medium
+
+  * Correct provides for virtual dependencies
+
+ -- Sebastien Delafond <sdelafond@gmail.com>  Thu, 20 Jan 2022 10:12:23 +0100
+
 linux (5.10.70-1+untangle2bullseye) current; urgency=medium
 
   * Clean patchset and build systemd
