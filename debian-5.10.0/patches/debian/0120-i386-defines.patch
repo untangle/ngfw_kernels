@@ -18,4 +18,4 @@ diff -u -N -r ./debian/config/i386/untangle/defines ./debian/config/i386/untangl
 + 686-pae
 +
 +[686-pae_image]
-+provides: linux-image-untangle, linux-image-4.19-untangle, linux-image-4.19-untangle-686-pae
++provides: linux-image-untangle, linux-image-5.10-untangle, linux-image-5.10-untangle-686-pae
