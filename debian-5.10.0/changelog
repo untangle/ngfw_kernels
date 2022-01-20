@@ -1,4 +1,4 @@
-linux (5.10.70-1+untangle3bullseye) unstable; urgency=medium
+linux (5.10.70-1+untangle3bullseye) current; urgency=medium
 
   * Correct provides for virtual dependencies
 
