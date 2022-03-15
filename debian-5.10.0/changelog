@@ -1,3 +1,9 @@
+linux (5.10.103-1+untangle1bullseye) unstable; urgency=medium
+
+  * Latest bullseye-security kernel
+
+ -- Sebastien Delafond <sdelafond@gmail.com>  Thu, 10 Mar 2022 08:42:44 +0100
+
 linux (5.10.70-1+untangle3bullseye) current; urgency=medium
 
   * Correct provides for virtual dependencies
