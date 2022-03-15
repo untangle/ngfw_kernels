@@ -1,6 +1,6 @@
 --- linux-4.19.67/debian/bin/gencontrol.py.bak	2019-11-22 09:01:13.982936058 +0100
 +++ linux-4.19.67/debian/bin/gencontrol.py	2019-11-22 09:01:30.774622244 +0100
-@@ -633,12 +633,8 @@
+@@ -688,12 +688,8 @@
                                                  + self.abiname_part)}
  
          distribution = self.changelog[0].distribution
