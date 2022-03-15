@@ -1,4 +1,4 @@
-linux (5.10.103-1+untangle1bullseye) unstable; urgency=medium
+linux (5.10.103-1+untangle1bullseye) current; urgency=medium
 
   * Latest bullseye-security kernel
 
