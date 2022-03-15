@@ -37,7 +37,7 @@ index 1873ef6..bf4d559 100644
  #include <linux/errno.h>
  #include <uapi/linux/in.h>
 diff --git a/include/net/ip.h b/include/net/ip.h
-index 5538e54..7766491 100644
+index de2dc22..5476ad5 100644
 --- a/include/net/ip.h
 +++ b/include/net/ip.h
 @@ -74,6 +74,11 @@ struct ipcm_cookie {
@@ -103,10 +103,10 @@ index b71b836..4836212 100644
  	ipc.addr = iph->saddr;
  	ipc.opt = &icmp_param.replyopts.opt;
 diff --git a/net/ipv4/ip_output.c b/net/ipv4/ip_output.c
-index 10d4cde..872ead4 100644
+index 5e48b3d..5c29335 100644
 --- a/net/ipv4/ip_output.c
 +++ b/net/ipv4/ip_output.c
-@@ -964,7 +964,7 @@ static int __ip_append_data(struct sock *sk,
+@@ -971,7 +971,7 @@ static int __ip_append_data(struct sock *sk,
  			    struct page_frag *pfrag,
  			    int getfrag(void *from, char *to, int offset,
  					int len, int odd, struct sk_buff *skb),
@@ -115,7 +115,7 @@ index 10d4cde..872ead4 100644
  			    unsigned int flags)
  {
  	struct inet_sock *inet = inet_sk(sk);
-@@ -1130,6 +1130,8 @@ static int __ip_append_data(struct sock *sk,
+@@ -1137,6 +1137,8 @@ static int __ip_append_data(struct sock *sk,
  						 fragheaderlen);
  			data += fragheaderlen + exthdrlen;
  
@@ -124,7 +124,7 @@ index 10d4cde..872ead4 100644
  			if (fraggap) {
  				skb->csum = skb_copy_and_csum_bits(
  					skb_prev, maxfraglen,
-@@ -1327,7 +1329,7 @@ int ip_append_data(struct sock *sk, struct flowi4 *fl4,
+@@ -1334,7 +1336,7 @@ int ip_append_data(struct sock *sk, struct flowi4 *fl4,
  
  	return __ip_append_data(sk, fl4, &sk->sk_write_queue, &inet->cork.base,
  				sk_page_frag(sk), getfrag,
@@ -133,7 +133,7 @@ index 10d4cde..872ead4 100644
  }
  
  ssize_t	ip_append_page(struct sock *sk, struct flowi4 *fl4, struct page *page,
-@@ -1548,7 +1550,7 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
+@@ -1555,7 +1557,7 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
  	}
  
  	skb->priority = (cork->tos != -1) ? cork->priority: sk->sk_priority;
@@ -142,7 +142,7 @@ index 10d4cde..872ead4 100644
  	skb->tstamp = cork->transmit_time;
  	/*
  	 * Steal rt from cork.dst to avoid a pair of atomic_inc/atomic_dec
-@@ -1638,7 +1640,7 @@ struct sk_buff *ip_make_skb(struct sock *sk,
+@@ -1645,7 +1647,7 @@ struct sk_buff *ip_make_skb(struct sock *sk,
  
  	err = __ip_append_data(sk, fl4, &queue, cork,
  			       &current->task_frag, getfrag,
@@ -151,7 +151,7 @@ index 10d4cde..872ead4 100644
  	if (err) {
  		__ip_flush_pending_frames(sk, &queue, cork);
  		return ERR_PTR(err);
-@@ -1682,6 +1684,7 @@ void ip_send_unicast_reply(struct sock *sk, struct sk_buff *skb,
+@@ -1689,6 +1691,7 @@ void ip_send_unicast_reply(struct sock *sk, struct sk_buff *skb,
  	if (__ip_options_echo(net, &replyopts.opt.opt, skb, sopt))
  		return;
  
@@ -160,7 +160,7 @@ index 10d4cde..872ead4 100644
  	ipc.addr = daddr;
  	ipc.sockc.transmit_time = transmit_time;
 diff --git a/net/ipv4/ip_sockglue.c b/net/ipv4/ip_sockglue.c
-index ec60367..7a1a6e7 100644
+index ec60367..989951d 100644
 --- a/net/ipv4/ip_sockglue.c
 +++ b/net/ipv4/ip_sockglue.c
 @@ -317,6 +317,22 @@ int ip_cmsg_send(struct sock *sk, struct msghdr *msg, struct ipcm_cookie *ipc,
@@ -237,7 +237,7 @@ index ec60367..7a1a6e7 100644
  		val = (inet->cmsg_flags & IP_CMSG_RECVFRAGSIZE) != 0;
  		break;
 diff --git a/net/ipv4/raw.c b/net/ipv4/raw.c
-index 7d26e0f..eb79bdd 100644
+index 5d95f80..9cddbb6 100644
 --- a/net/ipv4/raw.c
 +++ b/net/ipv4/raw.c
 @@ -558,6 +558,8 @@ static int raw_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
@@ -250,10 +250,10 @@ index 7d26e0f..eb79bdd 100644
  
  	if (msg->msg_controllen) {
 diff --git a/net/ipv4/udp.c b/net/ipv4/udp.c
-index e733125..f20e8cb 100644
+index ef2068a..9edfd40 100644
 --- a/net/ipv4/udp.c
 +++ b/net/ipv4/udp.c
-@@ -885,7 +885,8 @@ static int udp_send_skb(struct sk_buff *skb, struct flowi4 *fl4,
+@@ -886,7 +886,8 @@ static int udp_send_skb(struct sk_buff *skb, struct flowi4 *fl4,
  	 * Create a UDP header
  	 */
  	uh = udp_hdr(skb);
@@ -263,7 +263,7 @@ index e733125..f20e8cb 100644
  	uh->dest = fl4->fl4_dport;
  	uh->len = htons(len);
  	uh->check = 0;
-@@ -990,6 +991,14 @@ static int __udp_cmsg_send(struct cmsghdr *cmsg, u16 *gso_size)
+@@ -991,6 +992,14 @@ static int __udp_cmsg_send(struct cmsghdr *cmsg, u16 *gso_size)
  			return -EINVAL;
  		*gso_size = *(__u16 *)CMSG_DATA(cmsg);
  		return 0;
@@ -278,7 +278,7 @@ index e733125..f20e8cb 100644
  	default:
  		return -EINVAL;
  	}
-@@ -1032,7 +1041,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
+@@ -1033,7 +1042,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
  	int free = 0;
  	int connected = 0;
  	__be32 daddr, faddr, saddr;
@@ -286,8 +286,8 @@ index e733125..f20e8cb 100644
 +	__be16 dport, sport;
  	u8  tos;
  	int err, is_udplite = IS_UDPLITE(sk);
- 	int corkreq = up->corkflag || msg->msg_flags&MSG_MORE;
-@@ -1096,6 +1105,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
+ 	int corkreq = READ_ONCE(up->corkflag) || msg->msg_flags&MSG_MORE;
+@@ -1097,6 +1106,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
  		connected = 1;
  	}
  
@@ -295,7 +295,7 @@ index e733125..f20e8cb 100644
  	ipcm_init_sk(&ipc, inet);
  	ipc.gso_size = READ_ONCE(up->gso_size);
  
-@@ -1141,6 +1151,11 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
+@@ -1142,6 +1152,11 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
  		}
  	}
  
@@ -307,7 +307,7 @@ index e733125..f20e8cb 100644
  	saddr = ipc.addr;
  	ipc.addr = faddr = daddr;
  
-@@ -1194,7 +1209,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
+@@ -1195,7 +1210,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
  		flowi4_init_output(fl4, ipc.oif, ipc.sockc.mark, tos,
  				   RT_SCOPE_UNIVERSE, sk->sk_protocol,
  				   flow_flags,
@@ -316,7 +316,7 @@ index e733125..f20e8cb 100644
  				   sk->sk_uid);
  
  		security_sk_classify_flow(sk, flowi4_to_flowi(fl4));
-@@ -1253,7 +1268,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
+@@ -1254,7 +1269,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
  	fl4->daddr = daddr;
  	fl4->saddr = saddr;
  	fl4->fl4_dport = dport;
