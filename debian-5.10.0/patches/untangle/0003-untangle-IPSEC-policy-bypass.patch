@@ -12,11 +12,11 @@ http://bugzilla.untangle.com/show_bug.cgi?id=8948
  net/ipv4/tcp_ipv4.c | 3 +++
  1 file changed, 3 insertions(+)
 
-diff --git a/net/ipv4/tcp_ipv4.c b/net/ipv4/tcp_ipv4.c
-index 71395e7..0b7aba5 100644
---- a/net/ipv4/tcp_ipv4.c
-+++ b/net/ipv4/tcp_ipv4.c
-@@ -2022,6 +2022,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
+Index: linux-5.10.113/net/ipv4/tcp_ipv4.c
+===================================================================
+--- linux-5.10.113.orig/net/ipv4/tcp_ipv4.c
++++ linux-5.10.113/net/ipv4/tcp_ipv4.c
+@@ -2035,6 +2035,7 @@ process:
  		goto discard_and_relse;
  	}
  
@@ -24,7 +24,7 @@ index 71395e7..0b7aba5 100644
  	if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb))
  		goto discard_and_relse;
  
-@@ -2068,6 +2069,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
+@@ -2081,6 +2082,7 @@ put_and_return:
  	return ret;
  
  no_tcp_socket:
@@ -32,7 +32,7 @@ index 71395e7..0b7aba5 100644
  	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb))
  		goto discard_it;
  
-@@ -2094,6 +2096,7 @@ int tcp_v4_rcv(struct sk_buff *skb)
+@@ -2107,6 +2109,7 @@ discard_and_relse:
  	goto discard_it;
  
  do_time_wait:
@@ -40,6 +40,3 @@ index 71395e7..0b7aba5 100644
  	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb)) {
  		inet_twsk_put(inet_twsk(sk));
  		goto discard_it;
--- 
-2.32.0
-
