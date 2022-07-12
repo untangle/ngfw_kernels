@@ -61,8 +61,8 @@ Index: linux-5.10.113/include/uapi/linux/in.h
  #define IP_RECVERR_RFC4884	26
  
 +/* Extensions */
-+#define IP_SADDR	26
-+#define IP_SENDNFMARK	27
++#define IP_SADDR	27
++#define IP_SENDNFMARK	28
 +
  /* IP_MTU_DISCOVER values */
  #define IP_PMTUDISC_DONT		0	/* Never send DF frames */
