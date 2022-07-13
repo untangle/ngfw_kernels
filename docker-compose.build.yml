@@ -38,9 +38,9 @@ services:
         TRAVIS_PULL_REQUEST_BRANCH:
         TRAVIS_REPO_SLUG:
         SSH_AUTH_SOCK: /ssh-agent
-      # extra_hosts:
-      # from the outside, pass package-server's outside IP instead
-      # - "package-server:${PACKAGE_SERVER_IP:-}"
+      extra_hosts:
+        # use package-server's public EIP by default
+        - "package-server:${PACKAGE_SERVER_IP:-52.2.228.218}"
       volumes:
         - .:/opt/untangle/build
         - pkgtools:/opt/untangle/ngfw_pkgtools:ro

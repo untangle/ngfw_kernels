@@ -6,11 +6,13 @@ def jobs = [:] // dynamically populated later on
 
 def credentialsId = 'buildbot'
 
+def packageServerIp = '172.30.0.60'
+
 void buildKernel(String repository, String architecture, String upload, String buildDir, String credentialsId) {
   sshagent (credentials:[credentialsId]) {
     sh "docker pull untangleinc/ngfw:${repository}-build-multiarch"
     sh "PKGTOOLS_COMMIT=origin/${env.BRANCH_NAME} docker-compose -f ${buildDir}/docker-compose.build.yml run pkgtools"
-    sh "REPOSITORY=${repository} ARCHITECTURE=${architecture} VERBOSE=1 UPLOAD=${upload} docker-compose -f ${buildDir}/docker-compose.build.yml run build"
+    sh "REPOSITORY=${repository} ARCHITECTURE=${architecture} PACKAGE_SERVER_IP=${packageServerIp} VERBOSE=1 UPLOAD=${upload} docker-compose -f ${buildDir}/docker-compose.build.yml run build"
   }
 }
 
