@@ -1,3 +1,9 @@
+linux (5.10.205-2+untangle1bullseye) current; urgency=medium
+
+  * Latest bullseye-security kernel
+
+ -- Sebastien Delafond <sdelafond@gmail.com>  Tue, 09 Jan 2024 09:22:31 +0100
+
 linux (5.10.113-1+untangle3bullseye) current; urgency=medium
 
   * Update imq patch for 5.10
