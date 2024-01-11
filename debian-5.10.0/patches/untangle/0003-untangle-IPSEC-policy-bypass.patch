@@ -12,11 +12,11 @@ http://bugzilla.untangle.com/show_bug.cgi?id=8948
  net/ipv4/tcp_ipv4.c | 3 +++
  1 file changed, 3 insertions(+)
 
-Index: linux-5.10.113/net/ipv4/tcp_ipv4.c
+Index: linux-5.10.205-untangle-3/net/ipv4/tcp_ipv4.c
 ===================================================================
---- linux-5.10.113.orig/net/ipv4/tcp_ipv4.c
-+++ linux-5.10.113/net/ipv4/tcp_ipv4.c
-@@ -2035,6 +2035,7 @@ process:
+--- linux-5.10.205-untangle-3.orig/net/ipv4/tcp_ipv4.c	2024-01-09 14:13:11.145546194 +0100
++++ linux-5.10.205-untangle-3/net/ipv4/tcp_ipv4.c	2024-01-09 14:13:11.137546304 +0100
+@@ -2053,6 +2053,7 @@
  		goto discard_and_relse;
  	}
  
@@ -24,7 +24,7 @@ Index: linux-5.10.113/net/ipv4/tcp_ipv4.c
  	if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb))
  		goto discard_and_relse;
  
-@@ -2081,6 +2082,7 @@ put_and_return:
+@@ -2099,6 +2100,7 @@
  	return ret;
  
  no_tcp_socket:
@@ -32,7 +32,7 @@ Index: linux-5.10.113/net/ipv4/tcp_ipv4.c
  	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb))
  		goto discard_it;
  
-@@ -2107,6 +2109,7 @@ discard_and_relse:
+@@ -2125,6 +2127,7 @@
  	goto discard_it;
  
  do_time_wait:

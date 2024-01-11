@@ -19,10 +19,10 @@ receive UDP packets.
  net/ipv4/udp.c           | 23 ++++++++++++++----
  9 files changed, 101 insertions(+), 8 deletions(-)
 
-Index: linux-5.10.113/include/linux/in.h
+Index: linux-5.10.205-untangle-3/include/linux/in.h
 ===================================================================
---- linux-5.10.113.orig/include/linux/in.h
-+++ linux-5.10.113/include/linux/in.h
+--- linux-5.10.205-untangle-3.orig/include/linux/in.h	2024-01-09 15:46:29.081564194 +0100
++++ linux-5.10.205-untangle-3/include/linux/in.h	2024-01-09 15:46:29.065564402 +0100
 @@ -14,6 +14,12 @@
  #ifndef _LINUX_IN_H
  #define _LINUX_IN_H
@@ -36,14 +36,14 @@ Index: linux-5.10.113/include/linux/in.h
  
  #include <linux/errno.h>
  #include <uapi/linux/in.h>
-Index: linux-5.10.113/include/net/ip.h
+Index: linux-5.10.205-untangle-3/include/net/ip.h
 ===================================================================
---- linux-5.10.113.orig/include/net/ip.h
-+++ linux-5.10.113/include/net/ip.h
-@@ -74,6 +74,11 @@ struct ipcm_cookie {
- 	__be32			addr;
+--- linux-5.10.205-untangle-3.orig/include/net/ip.h	2024-01-09 15:46:29.081564194 +0100
++++ linux-5.10.205-untangle-3/include/net/ip.h	2024-01-09 15:46:29.065564402 +0100
+@@ -77,6 +77,11 @@
  	int			oif;
  	struct ip_options_rcu	*opt;
+ 	__u8			protocol;
 +
 +	/* Extensions */
 +	u16 pkt_udp_sport;
@@ -52,11 +52,11 @@ Index: linux-5.10.113/include/net/ip.h
  	__u8			ttl;
  	__s16			tos;
  	char			priority;
-Index: linux-5.10.113/include/uapi/linux/in.h
+Index: linux-5.10.205-untangle-3/include/uapi/linux/in.h
 ===================================================================
---- linux-5.10.113.orig/include/uapi/linux/in.h
-+++ linux-5.10.113/include/uapi/linux/in.h
-@@ -125,6 +125,10 @@ struct in_addr {
+--- linux-5.10.205-untangle-3.orig/include/uapi/linux/in.h	2024-01-09 15:46:29.081564194 +0100
++++ linux-5.10.205-untangle-3/include/uapi/linux/in.h	2024-01-09 15:46:29.069564349 +0100
+@@ -125,6 +125,10 @@
  #define IP_RECVFRAGSIZE	25
  #define IP_RECVERR_RFC4884	26
  
@@ -67,11 +67,11 @@ Index: linux-5.10.113/include/uapi/linux/in.h
  /* IP_MTU_DISCOVER values */
  #define IP_PMTUDISC_DONT		0	/* Never send DF frames */
  #define IP_PMTUDISC_WANT		1	/* Use per route hints	*/
-Index: linux-5.10.113/include/uapi/linux/udp.h
+Index: linux-5.10.205-untangle-3/include/uapi/linux/udp.h
 ===================================================================
---- linux-5.10.113.orig/include/uapi/linux/udp.h
-+++ linux-5.10.113/include/uapi/linux/udp.h
-@@ -35,6 +35,9 @@ struct udphdr {
+--- linux-5.10.205-untangle-3.orig/include/uapi/linux/udp.h	2024-01-09 15:46:29.081564194 +0100
++++ linux-5.10.205-untangle-3/include/uapi/linux/udp.h	2024-01-09 15:46:29.069564349 +0100
+@@ -35,6 +35,9 @@
  #define UDP_SEGMENT	103	/* Set GSO segmentation size */
  #define UDP_GRO		104	/* This socket can receive UDP GRO packets */
  
@@ -81,11 +81,11 @@ Index: linux-5.10.113/include/uapi/linux/udp.h
  /* UDP encapsulation types */
  #define UDP_ENCAP_ESPINUDP_NON_IKE	1 /* draft-ietf-ipsec-nat-t-ike-00/01 */
  #define UDP_ENCAP_ESPINUDP	2 /* draft-ietf-ipsec-udp-encaps-06 */
-Index: linux-5.10.113/net/ipv4/icmp.c
+Index: linux-5.10.205-untangle-3/net/ipv4/icmp.c
 ===================================================================
---- linux-5.10.113.orig/net/ipv4/icmp.c
-+++ linux-5.10.113/net/ipv4/icmp.c
-@@ -426,6 +426,8 @@ static void icmp_reply(struct icmp_bxm *
+--- linux-5.10.205-untangle-3.orig/net/ipv4/icmp.c	2024-01-09 15:46:29.081564194 +0100
++++ linux-5.10.205-untangle-3/net/ipv4/icmp.c	2024-01-09 15:46:29.069564349 +0100
+@@ -428,6 +428,8 @@
  		goto out_bh_enable;
  	inet = inet_sk(sk);
  
@@ -94,7 +94,7 @@ Index: linux-5.10.113/net/ipv4/icmp.c
  	icmp_param->data.icmph.checksum = 0;
  
  	ipcm_init(&ipc);
-@@ -732,6 +734,7 @@ void __icmp_send(struct sk_buff *skb_in,
+@@ -734,6 +736,7 @@
  	icmp_param.skb	  = skb_in;
  	icmp_param.offset = skb_network_offset(skb_in);
  	inet_sk(sk)->tos = tos;
@@ -102,11 +102,11 @@ Index: linux-5.10.113/net/ipv4/icmp.c
  	ipcm_init(&ipc);
  	ipc.addr = iph->saddr;
  	ipc.opt = &icmp_param.replyopts.opt;
-Index: linux-5.10.113/net/ipv4/ip_output.c
+Index: linux-5.10.205-untangle-3/net/ipv4/ip_output.c
 ===================================================================
---- linux-5.10.113.orig/net/ipv4/ip_output.c
-+++ linux-5.10.113/net/ipv4/ip_output.c
-@@ -971,7 +971,7 @@ static int __ip_append_data(struct sock
+--- linux-5.10.205-untangle-3.orig/net/ipv4/ip_output.c	2024-01-09 15:46:29.081564194 +0100
++++ linux-5.10.205-untangle-3/net/ipv4/ip_output.c	2024-01-09 15:46:29.069564349 +0100
+@@ -971,7 +971,7 @@
  			    struct page_frag *pfrag,
  			    int getfrag(void *from, char *to, int offset,
  					int len, int odd, struct sk_buff *skb),
@@ -115,7 +115,7 @@ Index: linux-5.10.113/net/ipv4/ip_output.c
  			    unsigned int flags)
  {
  	struct inet_sock *inet = inet_sk(sk);
-@@ -1137,6 +1137,8 @@ alloc_new_skb:
+@@ -1137,6 +1137,8 @@
  						 fragheaderlen);
  			data += fragheaderlen + exthdrlen;
  
@@ -124,7 +124,7 @@ Index: linux-5.10.113/net/ipv4/ip_output.c
  			if (fraggap) {
  				skb->csum = skb_copy_and_csum_bits(
  					skb_prev, maxfraglen,
-@@ -1334,7 +1336,7 @@ int ip_append_data(struct sock *sk, stru
+@@ -1334,7 +1336,7 @@
  
  	return __ip_append_data(sk, fl4, &sk->sk_write_queue, &inet->cork.base,
  				sk_page_frag(sk), getfrag,
@@ -133,7 +133,7 @@ Index: linux-5.10.113/net/ipv4/ip_output.c
  }
  
  ssize_t	ip_append_page(struct sock *sk, struct flowi4 *fl4, struct page *page,
-@@ -1555,7 +1557,7 @@ struct sk_buff *__ip_make_skb(struct soc
+@@ -1555,7 +1557,7 @@
  	}
  
  	skb->priority = (cork->tos != -1) ? cork->priority: sk->sk_priority;
@@ -142,7 +142,7 @@ Index: linux-5.10.113/net/ipv4/ip_output.c
  	skb->tstamp = cork->transmit_time;
  	/*
  	 * Steal rt from cork.dst to avoid a pair of atomic_inc/atomic_dec
-@@ -1645,7 +1647,7 @@ struct sk_buff *ip_make_skb(struct sock
+@@ -1655,7 +1657,7 @@
  
  	err = __ip_append_data(sk, fl4, &queue, cork,
  			       &current->task_frag, getfrag,
@@ -151,7 +151,7 @@ Index: linux-5.10.113/net/ipv4/ip_output.c
  	if (err) {
  		__ip_flush_pending_frames(sk, &queue, cork);
  		return ERR_PTR(err);
-@@ -1689,6 +1691,7 @@ void ip_send_unicast_reply(struct sock *
+@@ -1699,6 +1701,7 @@
  	if (__ip_options_echo(net, &replyopts.opt.opt, skb, sopt))
  		return;
  
@@ -159,13 +159,13 @@ Index: linux-5.10.113/net/ipv4/ip_output.c
  	ipcm_init(&ipc);
  	ipc.addr = daddr;
  	ipc.sockc.transmit_time = transmit_time;
-Index: linux-5.10.113/net/ipv4/ip_sockglue.c
+Index: linux-5.10.205-untangle-3/net/ipv4/ip_sockglue.c
 ===================================================================
---- linux-5.10.113.orig/net/ipv4/ip_sockglue.c
-+++ linux-5.10.113/net/ipv4/ip_sockglue.c
-@@ -317,6 +317,22 @@ int ip_cmsg_send(struct sock *sk, struct
- 			ipc->tos = val;
- 			ipc->priority = rt_tos2priority(ipc->tos);
+--- linux-5.10.205-untangle-3.orig/net/ipv4/ip_sockglue.c	2024-01-09 15:46:29.081564194 +0100
++++ linux-5.10.205-untangle-3/net/ipv4/ip_sockglue.c	2024-01-09 16:31:05.500590307 +0100
+@@ -325,6 +325,22 @@
+ 				return -EINVAL;
+ 			ipc->protocol = val;
  			break;
 +		case IP_SADDR:
 +		{
@@ -183,14 +183,13 @@ Index: linux-5.10.113/net/ipv4/ip_sockglue.c
 +			ipc->nfmark = *(u32 *)CMSG_DATA(cmsg);
 +			break;
 +		}
- 
  		default:
  			return -EINVAL;
-@@ -1041,6 +1057,25 @@ static int do_ip_setsockopt(struct sock
+ 		}
+@@ -1048,6 +1064,24 @@
  		else
  			inet->cmsg_flags &= ~IP_CMSG_RECVFRAGSIZE;
  		break;
-+
 +	case IP_SENDNFMARK:
 +	{
 +		struct ip_sendnfmark_opts nfopt;
@@ -212,7 +211,7 @@ Index: linux-5.10.113/net/ipv4/ip_sockglue.c
  	case IP_TOS:	/* This sets both TOS and Precedence */
  		__ip_sock_set_tos(sk, val);
  		break;
-@@ -1587,6 +1622,23 @@ static int do_ip_getsockopt(struct sock
+@@ -1594,6 +1628,23 @@
  	case IP_CHECKSUM:
  		val = (inet->cmsg_flags & IP_CMSG_CHECKSUM) != 0;
  		break;
@@ -236,24 +235,24 @@ Index: linux-5.10.113/net/ipv4/ip_sockglue.c
  	case IP_RECVFRAGSIZE:
  		val = (inet->cmsg_flags & IP_CMSG_RECVFRAGSIZE) != 0;
  		break;
-Index: linux-5.10.113/net/ipv4/raw.c
+Index: linux-5.10.205-untangle-3/net/ipv4/raw.c
 ===================================================================
---- linux-5.10.113.orig/net/ipv4/raw.c
-+++ linux-5.10.113/net/ipv4/raw.c
-@@ -558,6 +558,8 @@ static int raw_sendmsg(struct sock *sk,
+--- linux-5.10.205-untangle-3.orig/net/ipv4/raw.c	2024-01-09 15:46:29.081564194 +0100
++++ linux-5.10.205-untangle-3/net/ipv4/raw.c	2024-01-09 15:46:29.073564298 +0100
+@@ -558,6 +558,8 @@
  		daddr = inet->inet_daddr;
  	}
  
 +	memset(&ipc, 0, sizeof(ipc));
 +
  	ipcm_init_sk(&ipc, inet);
- 
- 	if (msg->msg_controllen) {
-Index: linux-5.10.113/net/ipv4/udp.c
+ 	/* Keep backward compat */
+ 	if (hdrincl)
+Index: linux-5.10.205-untangle-3/net/ipv4/udp.c
 ===================================================================
---- linux-5.10.113.orig/net/ipv4/udp.c
-+++ linux-5.10.113/net/ipv4/udp.c
-@@ -892,7 +892,8 @@ static int udp_send_skb(struct sk_buff *
+--- linux-5.10.205-untangle-3.orig/net/ipv4/udp.c	2024-01-09 15:46:29.081564194 +0100
++++ linux-5.10.205-untangle-3/net/ipv4/udp.c	2024-01-09 15:46:29.073564298 +0100
+@@ -902,7 +902,8 @@
  	 * Create a UDP header
  	 */
  	uh = udp_hdr(skb);
@@ -263,7 +262,7 @@ Index: linux-5.10.113/net/ipv4/udp.c
  	uh->dest = fl4->fl4_dport;
  	uh->len = htons(len);
  	uh->check = 0;
-@@ -997,6 +998,14 @@ static int __udp_cmsg_send(struct cmsghd
+@@ -1007,6 +1008,14 @@
  			return -EINVAL;
  		*gso_size = *(__u16 *)CMSG_DATA(cmsg);
  		return 0;
@@ -278,7 +277,7 @@ Index: linux-5.10.113/net/ipv4/udp.c
  	default:
  		return -EINVAL;
  	}
-@@ -1039,7 +1048,7 @@ int udp_sendmsg(struct sock *sk, struct
+@@ -1049,7 +1058,7 @@
  	int free = 0;
  	int connected = 0;
  	__be32 daddr, faddr, saddr;
@@ -287,7 +286,7 @@ Index: linux-5.10.113/net/ipv4/udp.c
  	u8  tos;
  	int err, is_udplite = IS_UDPLITE(sk);
  	int corkreq = READ_ONCE(up->corkflag) || msg->msg_flags&MSG_MORE;
-@@ -1103,6 +1112,7 @@ int udp_sendmsg(struct sock *sk, struct
+@@ -1113,6 +1122,7 @@
  		connected = 1;
  	}
  
@@ -295,7 +294,7 @@ Index: linux-5.10.113/net/ipv4/udp.c
  	ipcm_init_sk(&ipc, inet);
  	ipc.gso_size = READ_ONCE(up->gso_size);
  
-@@ -1148,6 +1158,11 @@ int udp_sendmsg(struct sock *sk, struct
+@@ -1158,6 +1168,11 @@
  		}
  	}
  
@@ -307,7 +306,7 @@ Index: linux-5.10.113/net/ipv4/udp.c
  	saddr = ipc.addr;
  	ipc.addr = faddr = daddr;
  
-@@ -1201,7 +1216,7 @@ int udp_sendmsg(struct sock *sk, struct
+@@ -1211,7 +1226,7 @@
  		flowi4_init_output(fl4, ipc.oif, ipc.sockc.mark, tos,
  				   RT_SCOPE_UNIVERSE, sk->sk_protocol,
  				   flow_flags,
@@ -315,8 +314,8 @@ Index: linux-5.10.113/net/ipv4/udp.c
 +				   faddr, saddr, dport, sport,
  				   sk->sk_uid);
  
- 		security_sk_classify_flow(sk, flowi4_to_flowi(fl4));
-@@ -1260,7 +1275,7 @@ back_from_confirm:
+ 		security_sk_classify_flow(sk, flowi4_to_flowi_common(fl4));
+@@ -1270,7 +1285,7 @@
  	fl4->daddr = daddr;
  	fl4->saddr = saddr;
  	fl4->fl4_dport = dport;

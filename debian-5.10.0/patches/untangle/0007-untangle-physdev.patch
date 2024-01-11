@@ -22,10 +22,10 @@ https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/patch/net/netfil
  net/netfilter/xt_physdev.c | 48 +++++++++++++---------
  2 files changed, 110 insertions(+), 19 deletions(-)
 
-diff --git a/net/bridge/br_nf_core.c b/net/bridge/br_nf_core.c
-index 8c69f0c..2150519 100644
---- a/net/bridge/br_nf_core.c
-+++ b/net/bridge/br_nf_core.c
+Index: linux-5.10.205-untangle-3/net/bridge/br_nf_core.c
+===================================================================
+--- linux-5.10.205-untangle-3.orig/net/bridge/br_nf_core.c	2024-01-09 14:13:21.717400777 +0100
++++ linux-5.10.205-untangle-3/net/bridge/br_nf_core.c	2024-01-09 14:13:21.705400942 +0100
 @@ -15,6 +15,9 @@
  #include <linux/in_route.h>
  #include <linux/inetdevice.h>
@@ -36,7 +36,7 @@ index 8c69f0c..2150519 100644
  
  #include "br_private.h"
  #ifdef CONFIG_SYSCTL
-@@ -89,3 +92,81 @@ void br_nf_core_fini(void)
+@@ -89,3 +92,81 @@
  {
  	dst_entries_destroy(&fake_dst_ops);
  }
@@ -118,10 +118,10 @@ index 8c69f0c..2150519 100644
 +}
 +
 +EXPORT_SYMBOL(get_outdev);
-diff --git a/net/netfilter/xt_physdev.c b/net/netfilter/xt_physdev.c
-index ec6ed6f..dc17cad 100644
---- a/net/netfilter/xt_physdev.c
-+++ b/net/netfilter/xt_physdev.c
+Index: linux-5.10.205-untangle-3/net/netfilter/xt_physdev.c
+===================================================================
+--- linux-5.10.205-untangle-3.orig/net/netfilter/xt_physdev.c	2024-01-09 14:13:21.717400777 +0100
++++ linux-5.10.205-untangle-3/net/netfilter/xt_physdev.c	2024-01-09 14:13:21.709400888 +0100
 @@ -13,6 +13,8 @@
  #include <linux/netfilter/x_tables.h>
  #include <uapi/linux/netfilter/xt_physdev.h>
@@ -131,7 +131,7 @@ index ec6ed6f..dc17cad 100644
  MODULE_LICENSE("GPL");
  MODULE_AUTHOR("Bart De Schuymer <bdschuym@pandora.be>");
  MODULE_DESCRIPTION("Xtables: Bridge physical device match");
-@@ -26,7 +28,9 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
+@@ -26,7 +28,9 @@
  	const struct xt_physdev_info *info = par->matchinfo;
  	const struct net_device *physdev;
  	unsigned long ret;
@@ -142,7 +142,7 @@ index ec6ed6f..dc17cad 100644
  
  	/* Not a bridged IP packet or no info available yet:
  	 * LOCAL_OUT/mangle and LOCAL_OUT/nat don't know if
-@@ -39,16 +43,10 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
+@@ -39,16 +43,10 @@
  		if ((info->bitmask & XT_PHYSDEV_OP_ISIN) &&
  		    !(info->invert & XT_PHYSDEV_OP_ISIN))
  			return false;
@@ -160,7 +160,7 @@ index ec6ed6f..dc17cad 100644
  	}
  
  	physdev = nf_bridge_get_physoutdev(skb);
-@@ -63,9 +61,7 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
+@@ -63,9 +61,7 @@
  	indev = physdev ? physdev->name : NULL;
  
  	if ((info->bitmask & XT_PHYSDEV_OP_ISIN &&
@@ -171,7 +171,7 @@ index ec6ed6f..dc17cad 100644
  		return false;
  
  	if (!(info->bitmask & XT_PHYSDEV_OP_IN))
-@@ -80,8 +76,29 @@ physdev_mt(const struct sk_buff *skb, struct xt_action_param *par)
+@@ -80,8 +76,29 @@
  	}
  
  match_outdev:
@@ -202,7 +202,7 @@ index ec6ed6f..dc17cad 100644
  
  	if (!outdev)
  		return false;
-@@ -99,13 +116,6 @@ static int physdev_mt_check(const struct xt_mtchk_param *par)
+@@ -99,13 +116,6 @@
  	if (!(info->bitmask & XT_PHYSDEV_OP_MASK) ||
  	    info->bitmask & ~XT_PHYSDEV_OP_MASK)
  		return -EINVAL;
@@ -216,6 +216,3 @@ index ec6ed6f..dc17cad 100644
  
  	if (!brnf_probed) {
  		brnf_probed = true;
--- 
-2.32.0
-

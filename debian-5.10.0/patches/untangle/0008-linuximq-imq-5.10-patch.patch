@@ -43,11 +43,11 @@ Patch retrieved from linuximq's official tree[0]
  create mode 100644 include/linux/netfilter_ipv6/ip6t_IMQ.h
  create mode 100644 net/netfilter/xt_IMQ.c
 
-diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
-index f20808024305..c8254c62407b 100644
---- a/drivers/net/Kconfig
-+++ b/drivers/net/Kconfig
-@@ -338,6 +338,125 @@ config RIONET_RX_SIZE
+Index: linux-5.10.205-untangle-3/drivers/net/Kconfig
+===================================================================
+--- linux-5.10.205-untangle-3.orig/drivers/net/Kconfig	2024-01-09 14:13:26.477335303 +0100
++++ linux-5.10.205-untangle-3/drivers/net/Kconfig	2024-01-09 14:13:26.457335578 +0100
+@@ -338,6 +338,125 @@
  	depends on RIONET
  	default "128"
  
@@ -173,11 +173,11 @@ index f20808024305..c8254c62407b 100644
  config TUN
  	tristate "Universal TUN/TAP device driver support"
  	depends on INET
-diff --git a/drivers/net/Makefile b/drivers/net/Makefile
-index 72e18d505d1a..f3454bbe84ca 100644
---- a/drivers/net/Makefile
-+++ b/drivers/net/Makefile
-@@ -14,6 +14,7 @@ obj-$(CONFIG_WIREGUARD) += wireguard/
+Index: linux-5.10.205-untangle-3/drivers/net/Makefile
+===================================================================
+--- linux-5.10.205-untangle-3.orig/drivers/net/Makefile	2024-01-09 14:13:26.477335303 +0100
++++ linux-5.10.205-untangle-3/drivers/net/Makefile	2024-01-09 14:13:26.457335578 +0100
+@@ -14,6 +14,7 @@
  obj-$(CONFIG_EQUALIZER) += eql.o
  obj-$(CONFIG_IFB) += ifb.o
  obj-$(CONFIG_MACSEC) += macsec.o
@@ -185,11 +185,10 @@ index 72e18d505d1a..f3454bbe84ca 100644
  obj-$(CONFIG_MACVLAN) += macvlan.o
  obj-$(CONFIG_MACVTAP) += macvtap.o
  obj-$(CONFIG_MII) += mii.o
-diff --git a/drivers/net/imq.c b/drivers/net/imq.c
-new file mode 100644
-index 000000000000..b64241df0cf3
---- /dev/null
-+++ b/drivers/net/imq.c
+Index: linux-5.10.205-untangle-3/drivers/net/imq.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ linux-5.10.205-untangle-3/drivers/net/imq.c	2024-01-09 14:13:26.457335578 +0100
 @@ -0,0 +1,963 @@
 +/*
 + *             Pseudo-driver for the intermediate queue device.
@@ -1154,11 +1153,10 @@ index 000000000000..b64241df0cf3
 +MODULE_DESCRIPTION("Pseudo-driver for the intermediate queue device. See https://github.com/imq/linuximq/wiki for more information.");
 +MODULE_LICENSE("GPL");
 +MODULE_ALIAS_RTNL_LINK("imq");
-diff --git a/imq.c b/imq.c
-new file mode 100644
-index 000000000000..b64241df0cf3
---- /dev/null
-+++ b/imq.c
+Index: linux-5.10.205-untangle-3/imq.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ linux-5.10.205-untangle-3/imq.c	2024-01-09 14:13:26.457335578 +0100
 @@ -0,0 +1,963 @@
 +/*
 + *             Pseudo-driver for the intermediate queue device.
@@ -2123,11 +2121,10 @@ index 000000000000..b64241df0cf3
 +MODULE_DESCRIPTION("Pseudo-driver for the intermediate queue device. See https://github.com/imq/linuximq/wiki for more information.");
 +MODULE_LICENSE("GPL");
 +MODULE_ALIAS_RTNL_LINK("imq");
-diff --git a/imq.h b/imq.h
-new file mode 100644
-index 000000000000..1babb0978a2a
---- /dev/null
-+++ b/imq.h
+Index: linux-5.10.205-untangle-3/imq.h
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ linux-5.10.205-untangle-3/imq.h	2024-01-09 14:13:26.457335578 +0100
 @@ -0,0 +1,13 @@
 +#ifndef _IMQ_H
 +#define _IMQ_H
@@ -2142,11 +2139,10 @@ index 000000000000..1babb0978a2a
 +
 +#endif /* _IMQ_H */
 +
-diff --git a/include/linux/imq.h b/include/linux/imq.h
-new file mode 100644
-index 000000000000..1babb0978a2a
---- /dev/null
-+++ b/include/linux/imq.h
+Index: linux-5.10.205-untangle-3/include/linux/imq.h
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ linux-5.10.205-untangle-3/include/linux/imq.h	2024-01-09 14:13:26.461335523 +0100
 @@ -0,0 +1,13 @@
 +#ifndef _IMQ_H
 +#define _IMQ_H
@@ -2161,11 +2157,11 @@ index 000000000000..1babb0978a2a
 +
 +#endif /* _IMQ_H */
 +
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-index ed2d53140005..ba21eecd8b75 100644
---- a/include/linux/netdevice.h
-+++ b/include/linux/netdevice.h
-@@ -2028,6 +2028,11 @@ struct net_device {
+Index: linux-5.10.205-untangle-3/include/linux/netdevice.h
+===================================================================
+--- linux-5.10.205-untangle-3.orig/include/linux/netdevice.h	2024-01-09 14:13:26.477335303 +0100
++++ linux-5.10.205-untangle-3/include/linux/netdevice.h	2024-01-09 14:13:26.461335523 +0100
+@@ -2050,6 +2050,11 @@
  /*
   * Cache lines mostly used on receive path (including eth_type_trans())
   */
@@ -2177,7 +2173,7 @@ index ed2d53140005..ba21eecd8b75 100644
  	/* Interface address info used in eth_type_trans() */
  	unsigned char		*dev_addr;
  
-@@ -4355,6 +4360,19 @@ static inline void netif_tx_unlock_bh(struct net_device *dev)
+@@ -4369,6 +4374,19 @@
  	}						\
  }
  
@@ -2197,11 +2193,10 @@ index ed2d53140005..ba21eecd8b75 100644
  static inline void netif_tx_disable(struct net_device *dev)
  {
  	unsigned int i;
-diff --git a/include/linux/netfilter/xt_IMQ.h b/include/linux/netfilter/xt_IMQ.h
-new file mode 100644
-index 000000000000..9b072300fd6b
---- /dev/null
-+++ b/include/linux/netfilter/xt_IMQ.h
+Index: linux-5.10.205-untangle-3/include/linux/netfilter/xt_IMQ.h
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ linux-5.10.205-untangle-3/include/linux/netfilter/xt_IMQ.h	2024-01-09 14:13:26.461335523 +0100
 @@ -0,0 +1,9 @@
 +#ifndef _XT_IMQ_H
 +#define _XT_IMQ_H
@@ -2212,11 +2207,10 @@ index 000000000000..9b072300fd6b
 +
 +#endif /* _XT_IMQ_H */
 +
-diff --git a/include/linux/netfilter_ipv4/ipt_IMQ.h b/include/linux/netfilter_ipv4/ipt_IMQ.h
-new file mode 100644
-index 000000000000..7af320fc70d5
---- /dev/null
-+++ b/include/linux/netfilter_ipv4/ipt_IMQ.h
+Index: linux-5.10.205-untangle-3/include/linux/netfilter_ipv4/ipt_IMQ.h
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ linux-5.10.205-untangle-3/include/linux/netfilter_ipv4/ipt_IMQ.h	2024-01-09 14:13:26.461335523 +0100
 @@ -0,0 +1,10 @@
 +#ifndef _IPT_IMQ_H
 +#define _IPT_IMQ_H
@@ -2228,11 +2222,10 @@ index 000000000000..7af320fc70d5
 +
 +#endif /* _IPT_IMQ_H */
 +
-diff --git a/include/linux/netfilter_ipv6/ip6t_IMQ.h b/include/linux/netfilter_ipv6/ip6t_IMQ.h
-new file mode 100644
-index 000000000000..198ac01f894a
---- /dev/null
-+++ b/include/linux/netfilter_ipv6/ip6t_IMQ.h
+Index: linux-5.10.205-untangle-3/include/linux/netfilter_ipv6/ip6t_IMQ.h
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ linux-5.10.205-untangle-3/include/linux/netfilter_ipv6/ip6t_IMQ.h	2024-01-09 14:13:26.461335523 +0100
 @@ -0,0 +1,10 @@
 +#ifndef _IP6T_IMQ_H
 +#define _IP6T_IMQ_H
@@ -2244,10 +2237,10 @@ index 000000000000..198ac01f894a
 +
 +#endif /* _IP6T_IMQ_H */
 +
-diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
-index acbf1875ad50..7046791a4ecb 100644
---- a/include/linux/skbuff.h
-+++ b/include/linux/skbuff.h
+Index: linux-5.10.205-untangle-3/include/linux/skbuff.h
+===================================================================
+--- linux-5.10.205-untangle-3.orig/include/linux/skbuff.h	2024-01-09 14:13:26.477335303 +0100
++++ linux-5.10.205-untangle-3/include/linux/skbuff.h	2024-01-09 14:13:59.660878829 +0100
 @@ -40,6 +40,9 @@
  #if IS_ENABLED(CONFIG_NF_CONNTRACK)
  #include <linux/netfilter/nf_conntrack_common.h>
@@ -2258,7 +2251,7 @@ index acbf1875ad50..7046791a4ecb 100644
  
  /* The interface for checksum offload between the stack and networking drivers
   * is as follows...
-@@ -746,6 +749,9 @@ struct sk_buff {
+@@ -749,6 +752,9 @@
  	 * first. This is owned by whoever has the skb queued ATM.
  	 */
  	char			cb[48] __aligned(8);
@@ -2268,17 +2261,17 @@ index acbf1875ad50..7046791a4ecb 100644
  
  	union {
  		struct {
-@@ -757,6 +763,9 @@ struct sk_buff {
- 
+@@ -761,6 +767,9 @@
  #if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
  	unsigned long		 _nfct;
-+#endif
+ #endif
 +#if defined(CONFIG_IMQ) || defined(CONFIG_IMQ_MODULE)
 +	struct nf_queue_entry *nf_queue_entry;
- #endif
++#endif
  	unsigned int		len,
  				data_len;
-@@ -847,6 +856,9 @@ struct sk_buff {
+ 	__u16			mac_len,
+@@ -850,6 +859,9 @@
  	__u8			offload_fwd_mark:1;
  	__u8			offload_l3_fwd_mark:1;
  #endif
@@ -2288,7 +2281,7 @@ index acbf1875ad50..7046791a4ecb 100644
  #ifdef CONFIG_NET_CLS_ACT
  	__u8			tc_skip_classify:1;
  	__u8			tc_at_ingress:1;
-@@ -1068,6 +1080,10 @@ static inline void consume_skb(struct sk_buff *skb)
+@@ -1076,6 +1088,10 @@
  
  void __consume_stateless_skb(struct sk_buff *skb);
  void  __kfree_skb(struct sk_buff *skb);
@@ -2299,7 +2292,7 @@ index acbf1875ad50..7046791a4ecb 100644
  extern struct kmem_cache *skbuff_head_cache;
  
  void kfree_skb_partial(struct sk_buff *skb, bool head_stolen);
-@@ -4284,6 +4300,10 @@ static inline void __nf_copy(struct sk_buff *dst, const struct sk_buff *src,
+@@ -4297,6 +4313,10 @@
  	dst->_nfct = src->_nfct;
  	nf_conntrack_get(skb_nfct(src));
  #endif
@@ -2307,14 +2300,14 @@ index acbf1875ad50..7046791a4ecb 100644
 +	dst->imq_flags = src->imq_flags;
 +	dst->nf_queue_entry = src->nf_queue_entry;
 +#endif
- #if IS_ENABLED(CONFIG_NETFILTER_XT_TARGET_TRACE) || defined(CONFIG_NF_TABLES)
+ #if IS_ENABLED(CONFIG_NETFILTER_XT_TARGET_TRACE) || IS_ENABLED(CONFIG_NF_TABLES)
  	if (copy)
  		dst->nf_trace = src->nf_trace;
-diff --git a/include/net/netfilter/nf_queue.h b/include/net/netfilter/nf_queue.h
-index b1d43894296a..bf589ae84493 100644
---- a/include/net/netfilter/nf_queue.h
-+++ b/include/net/netfilter/nf_queue.h
-@@ -40,6 +40,11 @@ void nf_reinject(struct nf_queue_entry *entry, unsigned int verdict);
+Index: linux-5.10.205-untangle-3/include/net/netfilter/nf_queue.h
+===================================================================
+--- linux-5.10.205-untangle-3.orig/include/net/netfilter/nf_queue.h	2024-01-09 14:13:26.477335303 +0100
++++ linux-5.10.205-untangle-3/include/net/netfilter/nf_queue.h	2024-01-09 14:13:26.465335468 +0100
+@@ -40,6 +40,11 @@
  bool nf_queue_entry_get_refs(struct nf_queue_entry *entry);
  void nf_queue_entry_free(struct nf_queue_entry *entry);
  
@@ -2326,11 +2319,11 @@ index b1d43894296a..bf589ae84493 100644
  static inline void init_hashrandom(u32 *jhash_initval)
  {
  	while (*jhash_initval == 0)
-diff --git a/include/net/pkt_sched.h b/include/net/pkt_sched.h
-index 7e58b4470570..e47ccabcd0be 100644
---- a/include/net/pkt_sched.h
-+++ b/include/net/pkt_sched.h
-@@ -121,6 +121,8 @@ bool sch_direct_xmit(struct sk_buff *skb, struct Qdisc *q,
+Index: linux-5.10.205-untangle-3/include/net/pkt_sched.h
+===================================================================
+--- linux-5.10.205-untangle-3.orig/include/net/pkt_sched.h	2024-01-09 14:13:26.477335303 +0100
++++ linux-5.10.205-untangle-3/include/net/pkt_sched.h	2024-01-09 14:13:26.465335468 +0100
+@@ -121,6 +121,8 @@
  
  void __qdisc_run(struct Qdisc *q);
  
@@ -2339,11 +2332,11 @@ index 7e58b4470570..e47ccabcd0be 100644
  static inline void qdisc_run(struct Qdisc *q)
  {
  	if (qdisc_run_begin(q)) {
-diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
-index bed2387af456..99729dab3228 100644
---- a/include/net/sch_generic.h
-+++ b/include/net/sch_generic.h
-@@ -834,6 +834,13 @@ static inline int qdisc_enqueue(struct sk_buff *skb, struct Qdisc *sch,
+Index: linux-5.10.205-untangle-3/include/net/sch_generic.h
+===================================================================
+--- linux-5.10.205-untangle-3.orig/include/net/sch_generic.h	2024-01-09 14:13:26.477335303 +0100
++++ linux-5.10.205-untangle-3/include/net/sch_generic.h	2024-01-09 14:13:26.465335468 +0100
+@@ -834,6 +834,13 @@
  	return sch->enqueue(skb, sch, to_free);
  }
  
@@ -2357,10 +2350,10 @@ index bed2387af456..99729dab3228 100644
  static inline void _bstats_update(struct gnet_stats_basic_packed *bstats,
  				  __u64 bytes, __u32 packets)
  {
-diff --git a/include/uapi/linux/netfilter.h b/include/uapi/linux/netfilter.h
-index ef9a44286e23..6d4b8b8af654 100644
---- a/include/uapi/linux/netfilter.h
-+++ b/include/uapi/linux/netfilter.h
+Index: linux-5.10.205-untangle-3/include/uapi/linux/netfilter.h
+===================================================================
+--- linux-5.10.205-untangle-3.orig/include/uapi/linux/netfilter.h	2024-01-09 14:13:26.477335303 +0100
++++ linux-5.10.205-untangle-3/include/uapi/linux/netfilter.h	2024-01-09 14:13:26.465335468 +0100
 @@ -14,7 +14,8 @@
  #define NF_QUEUE 3
  #define NF_REPEAT 4
@@ -2371,10 +2364,10 @@ index ef9a44286e23..6d4b8b8af654 100644
  
  /* we overload the higher bits for encoding auxiliary data such as the queue
   * number or errno values. Not nice, but better than additional function
-diff --git a/net/core/dev.c b/net/core/dev.c
-index af52050b0f38..e5352de2960c 100644
---- a/net/core/dev.c
-+++ b/net/core/dev.c
+Index: linux-5.10.205-untangle-3/net/core/dev.c
+===================================================================
+--- linux-5.10.205-untangle-3.orig/net/core/dev.c	2024-01-09 14:13:26.477335303 +0100
++++ linux-5.10.205-untangle-3/net/core/dev.c	2024-01-09 14:13:26.469335412 +0100
 @@ -139,6 +139,9 @@
  #include <linux/hrtimer.h>
  #include <linux/netfilter_ingress.h>
@@ -2385,7 +2378,7 @@ index af52050b0f38..e5352de2960c 100644
  #include <linux/sctp.h>
  #include <net/udp_tunnel.h>
  #include <linux/net_namespace.h>
-@@ -3579,6 +3582,13 @@ static int xmit_one(struct sk_buff *skb, struct net_device *dev,
+@@ -3583,6 +3586,13 @@
  	unsigned int len;
  	int rc;
  
@@ -2399,7 +2392,7 @@ index af52050b0f38..e5352de2960c 100644
  	if (dev_nit_active(dev))
  		dev_queue_xmit_nit(skb, dev);
  
-@@ -3619,6 +3629,8 @@ struct sk_buff *dev_hard_start_xmit(struct sk_buff *first, struct net_device *de
+@@ -3623,6 +3633,8 @@
  	return skb;
  }
  
@@ -2408,11 +2401,11 @@ index af52050b0f38..e5352de2960c 100644
  static struct sk_buff *validate_xmit_vlan(struct sk_buff *skb,
  					  netdev_features_t features)
  {
-diff --git a/net/core/skbuff.c b/net/core/skbuff.c
-index 48b6438f2a3d..2f64200e2b26 100644
---- a/net/core/skbuff.c
-+++ b/net/core/skbuff.c
-@@ -87,6 +87,56 @@ static struct kmem_cache *skbuff_ext_cache __ro_after_init;
+Index: linux-5.10.205-untangle-3/net/core/skbuff.c
+===================================================================
+--- linux-5.10.205-untangle-3.orig/net/core/skbuff.c	2024-01-09 14:13:26.477335303 +0100
++++ linux-5.10.205-untangle-3/net/core/skbuff.c	2024-01-09 14:13:26.469335412 +0100
+@@ -87,6 +87,56 @@
  int sysctl_max_skb_frags __read_mostly = MAX_SKB_FRAGS;
  EXPORT_SYMBOL(sysctl_max_skb_frags);
  
@@ -2469,7 +2462,7 @@ index 48b6438f2a3d..2f64200e2b26 100644
  /**
   *	skb_panic - private function for out-of-line support
   *	@skb:	buffer
-@@ -665,6 +715,28 @@ void skb_release_head_state(struct sk_buff *skb)
+@@ -664,6 +714,28 @@
  		WARN_ON(in_irq());
  		skb->destructor(skb);
  	}
@@ -2498,7 +2491,7 @@ index 48b6438f2a3d..2f64200e2b26 100644
  #if IS_ENABLED(CONFIG_NF_CONNTRACK)
  	nf_conntrack_put(skb_nfct(skb));
  #endif
-@@ -944,6 +1016,9 @@ static void __copy_skb_header(struct sk_buff *new, const struct sk_buff *old)
+@@ -943,6 +1015,9 @@
  	skb_dst_copy(new, old);
  	__skb_ext_copy(new, old);
  	__nf_copy(new, old, false);
@@ -2508,7 +2501,7 @@ index 48b6438f2a3d..2f64200e2b26 100644
  
  	/* Note : this field could be in headers_start/headers_end section
  	 * It is not yet because we do not want to have a 16 bit hole
-@@ -4312,6 +4387,13 @@ void __init skb_init(void)
+@@ -4319,6 +4394,13 @@
  						0,
  						SLAB_HWCACHE_ALIGN|SLAB_PANIC,
  						NULL);
@@ -2522,11 +2515,11 @@ index 48b6438f2a3d..2f64200e2b26 100644
  	skb_extensions_init();
  }
  
-diff --git a/net/netfilter/Kconfig b/net/netfilter/Kconfig
-index 6bafd3876aff..7ff8600b1b8c 100644
---- a/net/netfilter/Kconfig
-+++ b/net/netfilter/Kconfig
-@@ -922,6 +922,18 @@ config NETFILTER_XT_TARGET_LOG
+Index: linux-5.10.205-untangle-3/net/netfilter/Kconfig
+===================================================================
+--- linux-5.10.205-untangle-3.orig/net/netfilter/Kconfig	2024-01-09 14:13:26.477335303 +0100
++++ linux-5.10.205-untangle-3/net/netfilter/Kconfig	2024-01-09 14:13:26.469335412 +0100
+@@ -921,6 +921,18 @@
  
  	  To compile it as a module, choose M here.  If unsure, say N.
  
@@ -2545,11 +2538,11 @@ index 6bafd3876aff..7ff8600b1b8c 100644
  config NETFILTER_XT_TARGET_MARK
  	tristate '"MARK" target support'
  	depends on NETFILTER_ADVANCED
-diff --git a/net/netfilter/Makefile b/net/netfilter/Makefile
-index 0e0ded87e27b..030a48eae91f 100644
---- a/net/netfilter/Makefile
-+++ b/net/netfilter/Makefile
-@@ -147,6 +147,7 @@ obj-$(CONFIG_NETFILTER_XT_TARGET_CT) += xt_CT.o
+Index: linux-5.10.205-untangle-3/net/netfilter/Makefile
+===================================================================
+--- linux-5.10.205-untangle-3.orig/net/netfilter/Makefile	2024-01-09 14:13:26.477335303 +0100
++++ linux-5.10.205-untangle-3/net/netfilter/Makefile	2024-01-09 14:13:26.469335412 +0100
+@@ -147,6 +147,7 @@
  obj-$(CONFIG_NETFILTER_XT_TARGET_DSCP) += xt_DSCP.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_HL) += xt_HL.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_HMARK) += xt_HMARK.o
@@ -2557,11 +2550,11 @@ index 0e0ded87e27b..030a48eae91f 100644
  obj-$(CONFIG_NETFILTER_XT_TARGET_LED) += xt_LED.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_LOG) += xt_LOG.o
  obj-$(CONFIG_NETFILTER_XT_TARGET_NETMAP) += xt_NETMAP.o
-diff --git a/net/netfilter/core.c b/net/netfilter/core.c
-index 60332fdb6dd4..44559f8b1161 100644
---- a/net/netfilter/core.c
-+++ b/net/netfilter/core.c
-@@ -597,6 +597,11 @@ int nf_hook_slow(struct sk_buff *skb, struct nf_hook_state *state,
+Index: linux-5.10.205-untangle-3/net/netfilter/core.c
+===================================================================
+--- linux-5.10.205-untangle-3.orig/net/netfilter/core.c	2024-01-09 14:13:26.477335303 +0100
++++ linux-5.10.205-untangle-3/net/netfilter/core.c	2024-01-09 14:13:26.469335412 +0100
+@@ -591,6 +591,11 @@
  			if (ret == 0)
  				ret = -EPERM;
  			return ret;
@@ -2573,10 +2566,10 @@ index 60332fdb6dd4..44559f8b1161 100644
  		case NF_QUEUE:
  			ret = nf_queue(skb, state, s, verdict);
  			if (ret == 1)
-diff --git a/net/netfilter/nf_queue.c b/net/netfilter/nf_queue.c
-index bb8607ff94bc..ff3f54b92206 100644
---- a/net/netfilter/nf_queue.c
-+++ b/net/netfilter/nf_queue.c
+Index: linux-5.10.205-untangle-3/net/netfilter/nf_queue.c
+===================================================================
+--- linux-5.10.205-untangle-3.orig/net/netfilter/nf_queue.c	2024-01-09 14:13:26.477335303 +0100
++++ linux-5.10.205-untangle-3/net/netfilter/nf_queue.c	2024-01-09 14:13:26.469335412 +0100
 @@ -29,6 +29,23 @@
   * receives, no matter what.
   */
@@ -2601,7 +2594,7 @@ index bb8607ff94bc..ff3f54b92206 100644
  /* return EBUSY when somebody else is registered, return EEXIST if the
   * same handler is registered, return 0 in case of success. */
  void nf_register_queue_handler(struct net *net, const struct nf_queue_handler *qh)
-@@ -164,16 +181,28 @@ static void nf_ip6_saveroute(const struct sk_buff *skb,
+@@ -164,16 +181,28 @@
  }
  
  static int __nf_queue(struct sk_buff *skb, const struct nf_hook_state *state,
@@ -2632,7 +2625,7 @@ index bb8607ff94bc..ff3f54b92206 100644
  	if (!qh)
  		return -ESRCH;
  
-@@ -248,8 +277,16 @@ int nf_queue(struct sk_buff *skb, struct nf_hook_state *state,
+@@ -248,8 +277,16 @@
  {
  	int ret;
  
@@ -2650,7 +2643,7 @@ index bb8607ff94bc..ff3f54b92206 100644
  		if (ret == -ESRCH &&
  		    (verdict & NF_VERDICT_FLAG_QUEUE_BYPASS))
  			return 1;
-@@ -352,6 +389,7 @@ void nf_reinject(struct nf_queue_entry *entry, unsigned int verdict)
+@@ -352,6 +389,7 @@
  		local_bh_enable();
  		break;
  	case NF_QUEUE:
@@ -2658,11 +2651,10 @@ index bb8607ff94bc..ff3f54b92206 100644
  		err = nf_queue(skb, &entry->state, i, verdict);
  		if (err == 1)
  			goto next_hook;
-diff --git a/net/netfilter/xt_IMQ.c b/net/netfilter/xt_IMQ.c
-new file mode 100644
-index 000000000000..f9c5817085eb
---- /dev/null
-+++ b/net/netfilter/xt_IMQ.c
+Index: linux-5.10.205-untangle-3/net/netfilter/xt_IMQ.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ linux-5.10.205-untangle-3/net/netfilter/xt_IMQ.c	2024-01-09 14:13:26.473335358 +0100
 @@ -0,0 +1,72 @@
 +/*
 + * This target marks packets to be enqueued to an imq device
@@ -2736,11 +2728,11 @@ index 000000000000..f9c5817085eb
 +MODULE_ALIAS("ipt_IMQ");
 +MODULE_ALIAS("ip6t_IMQ");
 +
-diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index 5d5391adb667..5f4811494cc1 100644
---- a/net/sched/sch_generic.c
-+++ b/net/sched/sch_generic.c
-@@ -296,6 +296,14 @@ static struct sk_buff *dequeue_skb(struct Qdisc *q, bool *validate,
+Index: linux-5.10.205-untangle-3/net/sched/sch_generic.c
+===================================================================
+--- linux-5.10.205-untangle-3.orig/net/sched/sch_generic.c	2024-01-09 14:13:26.477335303 +0100
++++ linux-5.10.205-untangle-3/net/sched/sch_generic.c	2024-01-09 14:13:26.473335358 +0100
+@@ -296,6 +296,14 @@
  	return skb;
  }
  
@@ -2755,6 +2747,3 @@ index 5d5391adb667..5f4811494cc1 100644
  /*
   * Transmit possibly several skbs, and handle the return status as
   * required. Owning running seqcount bit guarantees that
--- 
-2.30.2
-

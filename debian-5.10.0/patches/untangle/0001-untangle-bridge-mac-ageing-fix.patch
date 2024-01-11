@@ -11,11 +11,11 @@ https://github.com/imq/linuximq/blob/master/kernel/v4.x/linux-4.16-imq.diff
  net/bridge/br_input.c | 8 ++++++++
  1 file changed, 8 insertions(+)
 
-diff --git a/net/bridge/br_input.c b/net/bridge/br_input.c
-index 59a318b..f63bc49 100644
---- a/net/bridge/br_input.c
-+++ b/net/bridge/br_input.c
-@@ -283,6 +283,14 @@ static rx_handler_result_t br_handle_frame(struct sk_buff **pskb)
+Index: linux-5.10.205-untangle-3/net/bridge/br_input.c
+===================================================================
+--- linux-5.10.205-untangle-3.orig/net/bridge/br_input.c	2024-01-09 14:10:52.075458792 +0100
++++ linux-5.10.205-untangle-3/net/bridge/br_input.c	2024-01-09 14:10:52.067458901 +0100
+@@ -290,6 +290,14 @@
  			goto drop;
  	}
  
@@ -30,6 +30,3 @@ index 59a318b..f63bc49 100644
  	if (unlikely(is_link_local_ether_addr(dest))) {
  		u16 fwd_mask = p->br->group_fwd_mask_required;
  
--- 
-2.32.0
-

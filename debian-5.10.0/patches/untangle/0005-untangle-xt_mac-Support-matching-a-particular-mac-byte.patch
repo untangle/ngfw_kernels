@@ -15,10 +15,10 @@ address.
  net/netfilter/xt_mac.c | 31 +++++++++++++++++++++++++++++--
  1 file changed, 29 insertions(+), 2 deletions(-)
 
-diff --git a/net/netfilter/xt_mac.c b/net/netfilter/xt_mac.c
-index 81649da..d2b2b5e 100644
---- a/net/netfilter/xt_mac.c
-+++ b/net/netfilter/xt_mac.c
+Index: linux-5.10.205-untangle-3/net/netfilter/xt_mac.c
+===================================================================
+--- linux-5.10.205-untangle-3.orig/net/netfilter/xt_mac.c	2024-01-09 14:13:16.917466801 +0100
++++ linux-5.10.205-untangle-3/net/netfilter/xt_mac.c	2024-01-09 14:13:16.909466911 +0100
 @@ -17,11 +17,33 @@
  #include <linux/netfilter/x_tables.h>
  
@@ -54,7 +54,7 @@ index 81649da..d2b2b5e 100644
  static bool mac_mt(const struct sk_buff *skb, struct xt_action_param *par)
  {
  	const struct xt_mac_info *info = par->matchinfo;
-@@ -33,7 +55,12 @@ static bool mac_mt(const struct sk_buff *skb, struct xt_action_param *par)
+@@ -33,7 +55,12 @@
  		return false;
  	if (skb_mac_header(skb) + ETH_HLEN > skb->data)
  		return false;
@@ -68,6 +68,3 @@ index 81649da..d2b2b5e 100644
  	ret ^= info->invert;
  	return ret;
  }
--- 
-2.32.0
-

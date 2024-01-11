@@ -13,11 +13,11 @@ mark so TCP ingress QoS doesn't work without this hack.
  net/netfilter/xt_socket.c | 8 ++++++++
  1 file changed, 8 insertions(+)
 
-diff --git a/net/netfilter/xt_socket.c b/net/netfilter/xt_socket.c
-index 5f97398..a082592 100644
---- a/net/netfilter/xt_socket.c
-+++ b/net/netfilter/xt_socket.c
-@@ -86,6 +86,14 @@ socket_match(const struct sk_buff *skb, struct xt_action_param *par,
+Index: linux-5.10.205-untangle-3/net/netfilter/xt_socket.c
+===================================================================
+--- linux-5.10.205-untangle-3.orig/net/netfilter/xt_socket.c	2024-01-09 14:13:18.873439897 +0100
++++ linux-5.10.205-untangle-3/net/netfilter/xt_socket.c	2024-01-09 14:13:18.865440006 +0100
+@@ -86,6 +86,14 @@
  			sk = NULL;
  	}
  
@@ -32,6 +32,3 @@ index 5f97398..a082592 100644
  	return sk != NULL;
  }
  
--- 
-2.32.0
-

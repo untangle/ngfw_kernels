@@ -14,11 +14,11 @@ which is used for various tasks in our networking setup.
  5 files changed, 118 insertions(+), 1 deletion(-)
  create mode 100644 net/ipv4/netfilter/iptable_tune.c
 
-diff --git a/include/net/netns/ipv4.h b/include/net/netns/ipv4.h
-index 8e4fcac..921ebc2 100644
---- a/include/net/netns/ipv4.h
-+++ b/include/net/netns/ipv4.h
-@@ -77,6 +77,7 @@ struct netns_ipv4 {
+Index: linux-5.10.205-untangle-3/include/net/netns/ipv4.h
+===================================================================
+--- linux-5.10.205-untangle-3.orig/include/net/netns/ipv4.h	2024-01-09 14:13:14.481500309 +0100
++++ linux-5.10.205-untangle-3/include/net/netns/ipv4.h	2024-01-09 14:13:14.469500473 +0100
+@@ -76,6 +76,7 @@
  	struct xt_table		*iptable_filter;
  	struct xt_table		*iptable_mangle;
  	struct xt_table		*iptable_raw;
@@ -26,11 +26,11 @@ index 8e4fcac..921ebc2 100644
  	struct xt_table		*arptable_filter;
  #ifdef CONFIG_SECURITY
  	struct xt_table		*iptable_security;
-diff --git a/include/uapi/linux/netfilter_ipv4.h b/include/uapi/linux/netfilter_ipv4.h
-index 155e77d..8366654 100644
---- a/include/uapi/linux/netfilter_ipv4.h
-+++ b/include/uapi/linux/netfilter_ipv4.h
-@@ -41,7 +41,8 @@ enum nf_ip_hook_priorities {
+Index: linux-5.10.205-untangle-3/include/uapi/linux/netfilter_ipv4.h
+===================================================================
+--- linux-5.10.205-untangle-3.orig/include/uapi/linux/netfilter_ipv4.h	2024-01-09 14:13:14.481500309 +0100
++++ linux-5.10.205-untangle-3/include/uapi/linux/netfilter_ipv4.h	2024-01-09 14:13:14.469500473 +0100
+@@ -41,7 +41,8 @@
  	NF_IP_PRI_NAT_SRC = 100,
  	NF_IP_PRI_SELINUX_LAST = 225,
  	NF_IP_PRI_CONNTRACK_HELPER = 300,
@@ -40,11 +40,11 @@ index 155e77d..8366654 100644
  	NF_IP_PRI_LAST = INT_MAX,
  };
  
-diff --git a/net/ipv4/netfilter/Kconfig b/net/ipv4/netfilter/Kconfig
-index a2f4f89..f13dc78 100644
---- a/net/ipv4/netfilter/Kconfig
-+++ b/net/ipv4/netfilter/Kconfig
-@@ -358,3 +358,15 @@ endif # IP_NF_ARPTABLES
+Index: linux-5.10.205-untangle-3/net/ipv4/netfilter/Kconfig
+===================================================================
+--- linux-5.10.205-untangle-3.orig/net/ipv4/netfilter/Kconfig	2024-01-09 14:13:14.481500309 +0100
++++ linux-5.10.205-untangle-3/net/ipv4/netfilter/Kconfig	2024-01-09 14:13:14.473500418 +0100
+@@ -358,3 +358,15 @@
  
  endmenu
  
@@ -60,11 +60,11 @@ index a2f4f89..f13dc78 100644
 +	  If you want to compile it as a module, say M here and read
 +	  <file:Documentation/modules.txt>.  If unsure, say `N'.
 +
-diff --git a/net/ipv4/netfilter/Makefile b/net/ipv4/netfilter/Makefile
-index 7c497c7..25924fe 100644
---- a/net/ipv4/netfilter/Makefile
-+++ b/net/ipv4/netfilter/Makefile
-@@ -39,6 +39,7 @@ obj-$(CONFIG_IP_NF_FILTER) += iptable_filter.o
+Index: linux-5.10.205-untangle-3/net/ipv4/netfilter/Makefile
+===================================================================
+--- linux-5.10.205-untangle-3.orig/net/ipv4/netfilter/Makefile	2024-01-09 14:13:14.481500309 +0100
++++ linux-5.10.205-untangle-3/net/ipv4/netfilter/Makefile	2024-01-09 14:13:14.473500418 +0100
+@@ -39,6 +39,7 @@
  obj-$(CONFIG_IP_NF_MANGLE) += iptable_mangle.o
  obj-$(CONFIG_IP_NF_NAT) += iptable_nat.o
  obj-$(CONFIG_IP_NF_RAW) += iptable_raw.o
@@ -72,11 +72,10 @@ index 7c497c7..25924fe 100644
  obj-$(CONFIG_IP_NF_SECURITY) += iptable_security.o
  
  # matches
-diff --git a/net/ipv4/netfilter/iptable_tune.c b/net/ipv4/netfilter/iptable_tune.c
-new file mode 100644
-index 0000000..c976e34
---- /dev/null
-+++ b/net/ipv4/netfilter/iptable_tune.c
+Index: linux-5.10.205-untangle-3/net/ipv4/netfilter/iptable_tune.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ linux-5.10.205-untangle-3/net/ipv4/netfilter/iptable_tune.c	2024-01-09 14:13:14.473500418 +0100
 @@ -0,0 +1,102 @@
 +/* 
 + * 
@@ -180,6 +179,3 @@ index 0000000..c976e34
 +
 +module_init(iptable_tune_init);
 +module_exit(iptable_tune_exit);
--- 
-2.32.0
-
