@@ -1,3 +1,9 @@
+linux (5.10.205-2+untangle2bullseye) unstable; urgency=medium
+
+  * binNMU without notools profile turned on for arm64
+
+ -- Sebastien Delafond <sdelafond@gmail.com>  Thu, 25 Jan 2024 07:30:32 +0100
+
 linux (5.10.205-2+untangle1bullseye) current; urgency=medium
 
   * Latest bullseye-security kernel
