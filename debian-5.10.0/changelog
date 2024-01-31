@@ -1,4 +1,4 @@
-linux (5.10.205-2+untangle2bullseye) unstable; urgency=medium
+linux (5.10.205-2+untangle2bullseye) current; urgency=medium
 
   * binNMU without notools profile turned on for arm64
 
