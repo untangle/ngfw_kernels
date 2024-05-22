@@ -1,3 +1,9 @@
+linux (5.10.205-2+untangle3bullseye) current; urgency=medium
+
+  * Update imq patch for latest 5.10
+
+ -- Chris Blaise <cblaise@arista.com>  Tue, 21 May 2024 07:30:32 +0100
+
 linux (5.10.205-2+untangle2bullseye) current; urgency=medium
 
   * binNMU without notools profile turned on for arm64
