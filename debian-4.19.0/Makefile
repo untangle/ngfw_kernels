@@ -6,7 +6,7 @@
 
 include $(shell dirname $(MAKEFILE_LIST))/kernel.conf
 
-UNTANGLE_MIRROR := https://downloads.untangle.com/public/kernels
+UNTANGLE_MIRROR := https://downloads.edge.arista.com/public/kernels
 ORIG_TARBALL := linux_$(UPSTREAM_VERSION).orig.tar.xz
 ORIG_TARBALL_URL := $(UNTANGLE_MIRROR)/$(ORIG_TARBALL)
 DEBIAN_TARBALL := linux_$(UPSTREAM_VERSION)-$(DEBIAN_VERSION).debian.tar.xz
