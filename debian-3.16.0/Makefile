@@ -9,9 +9,9 @@ KVER=3.16.7
 KDEBVER=2
 
 ORIG_TARBALL := linux_$(KVER).orig.tar.xz
-ORIG_TARBALL_URL := https://downloads.untangle.com/public/kernels//$(ORIG_TARBALL)
+ORIG_TARBALL_URL := https://downloads.edge.arista.com/public/kernels//$(ORIG_TARBALL)
 DEBIAN_TARBALL := linux_$(KVER)-$(KDEBVER).debian.tar.xz
-DEBIAN_TARBALL_URL := https://downloads.untangle.com/public/kernels//$(DEBIAN_TARBALL)
+DEBIAN_TARBALL_URL := https://downloads.edge.arista.com/public/kernels//$(DEBIAN_TARBALL)
 
 KUPVER=${KDEBVER}
 PACKPFX=linux_${KVER}
