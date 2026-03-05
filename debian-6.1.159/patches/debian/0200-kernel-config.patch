@@ -1,0 +1,37 @@
+--- ./debian/config/featureset-untangle/config	1970-01-01 05:30:00.000000000 +0530
++++ ./debian/config/featureset-untangle/config	2026-02-17 18:10:59.181812218 +0530
+@@ -0,0 +1,34 @@
++# Untangle kernel configuration overrides
++# HZ: Override base (250) with 1000 for better latency
++# CONFIG_HZ_250 is not set
++CONFIG_HZ=1000
++CONFIG_HZ_1000=y
++# Custom Untangle netfilter extensions (from kernel patches)
++CONFIG_IP_NF_FRAG_ACCEPT=y
++CONFIG_IP_NF_MATCH_BITMARK=m
++CONFIG_IP_NF_TUNE=m
++CONFIG_IP6_NF_TUNE=m
++CONFIG_NFNETLINK_COPY_UNTANGLE_MODE=y
++# IMQ (Intermediate Queueing Device)
++CONFIG_IMQ=m
++# CONFIG_IMQ_BEHAVIOR_AA is not set
++# CONFIG_IMQ_BEHAVIOR_AB is not set
++# CONFIG_IMQ_BEHAVIOR_BA is not set
++CONFIG_IMQ_BEHAVIOR_BB=y
++CONFIG_NETFILTER_XT_TARGET_IMQ=y
++# Custom dict extensions
++CONFIG_NF_CONNTRACK_DICT=m
++CONFIG_NFT_DICT=m
++# Filesystem and debugging
++CONFIG_UFS_FS=y
++CONFIG_LATENCYTOP=y
++# Preemption
++# CONFIG_PREEMPT_NONE is not set
++CONFIG_PREEMPT_VOLUNTARY=y
++# Networking
++CONFIG_IP_ROUTE_MULTIPATH=y
++# Conntrack and NAT (ensure built-in)
++CONFIG_NF_CONNTRACK=y
++CONFIG_NF_NAT=y
++CONFIG_NETFILTER_XTABLES=y
++CONFIG_NETFILTER_NETLINK=y

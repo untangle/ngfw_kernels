@@ -1,0 +1,88 @@
+From 6942696d9a784419f3ec73a1a63d7e76e33af367 Mon Sep 17 00:00:00 2001
+From: singhrohit23 <rohitsingh@arista.com>
+Date: Tue, 17 Feb 2026 17:34:35 +0530
+Subject: [PATCH 6/6] Port whitespace fix issues
+
+---
+ net/ipv4/tcp_ipv4.c | 41 ++++++++++++++++++++++++-----------------
+ 1 file changed, 24 insertions(+), 17 deletions(-)
+
+diff --git a/net/ipv4/tcp_ipv4.c b/net/ipv4/tcp_ipv4.c
+index 825013680..54d0f73a3 100644
+--- a/net/ipv4/tcp_ipv4.c
++++ b/net/ipv4/tcp_ipv4.c
+@@ -2002,13 +2002,18 @@ int tcp_v4_rcv(struct sk_buff *skb)
+ 		struct sock *nsk;
+ 
+ 		sk = req->rsk_listener;
+-		if (!(skb->mark & 0x10000000))
+-		if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb))
+-			drop_reason = SKB_DROP_REASON_XFRM_POLICY;
+-		else
++		if (!(skb->mark & 0x10000000)) {
++			if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb))
++				drop_reason = SKB_DROP_REASON_XFRM_POLICY;
++			else
++				drop_reason = tcp_inbound_md5_hash(sk, skb,
++							   &iph->saddr, &iph->daddr,
++							   AF_INET, dif, sdif);
++		} else {
+ 			drop_reason = tcp_inbound_md5_hash(sk, skb,
+ 						   &iph->saddr, &iph->daddr,
+ 						   AF_INET, dif, sdif);
++		}
+ 		if (unlikely(drop_reason)) {
+ 			sk_drops_add(sk, skb);
+ 			reqsk_put(req);
+@@ -2079,10 +2084,11 @@ int tcp_v4_rcv(struct sk_buff *skb)
+ 		}
+ 	}
+ 
+-	if (!(skb->mark & 0x10000000))
+-	if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb)) {
+-		drop_reason = SKB_DROP_REASON_XFRM_POLICY;
+-		goto discard_and_relse;
++	if (!(skb->mark & 0x10000000)) {
++		if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb)) {
++			drop_reason = SKB_DROP_REASON_XFRM_POLICY;
++			goto discard_and_relse;
++		}
+ 	}
+ 
+ 	drop_reason = tcp_inbound_md5_hash(sk, skb, &iph->saddr,
+@@ -2128,9 +2134,10 @@ int tcp_v4_rcv(struct sk_buff *skb)
+ 
+ no_tcp_socket:
+ 	drop_reason = SKB_DROP_REASON_NO_SOCKET;
+-	if (!(skb->mark & 0x10000000))
+-	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb))
+-		goto discard_it;
++	if (!(skb->mark & 0x10000000)) {
++		if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb))
++			goto discard_it;
++	}
+ 
+ 	tcp_v4_fill_cb(skb, iph, th);
+ 
+@@ -2158,12 +2165,12 @@ int tcp_v4_rcv(struct sk_buff *skb)
+ 	goto discard_it;
+ 
+ do_time_wait:
+-        if (!(skb->mark&0x10000000))
+-	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb)) {
+-		drop_reason = SKB_DROP_REASON_XFRM_POLICY;
+-	if (!(skb->mark & 0x10000000))
+-		inet_twsk_put(inet_twsk(sk));
+-		goto discard_it;
++	if (!(skb->mark & 0x10000000)) {
++		if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb)) {
++			drop_reason = SKB_DROP_REASON_XFRM_POLICY;
++			inet_twsk_put(inet_twsk(sk));
++			goto discard_it;
++		}
+ 	}
+ 
+ 	tcp_v4_fill_cb(skb, iph, th);
+-- 
+2.34.1
+

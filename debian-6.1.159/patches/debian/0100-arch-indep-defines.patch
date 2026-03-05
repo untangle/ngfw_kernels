@@ -1,0 +1,30 @@
+--- ./debian/config/defines	2026-02-17 18:06:14.652813955 +0530
++++ ./debian/config/defines	2026-02-17 18:08:00.879813307 +0530
+@@ -145,6 +145,7 @@
+ compiler: gcc-12
+ featuresets:
+  none
++ untangle
+  rt
+ 
+ [build]
+@@ -155,6 +156,9 @@
+ [featureset-rt_base]
+ enabled: true
+ 
++[featureset-untangle_base]
++enabled: true
++
+ [description]
+ part-long-up: This kernel is not suitable for SMP (multi-processor,
+  multi-core or hyper-threaded) systems.
+--- ./debian/config/featureset-untangle/defines	1970-01-01 05:30:00.000000000 +0530
++++ ./debian/config/featureset-untangle/defines	2026-02-17 18:08:20.542813187 +0530
+@@ -0,0 +1,7 @@
++[abi]
++ignore-changes: *
++
++[description]
++part-long-untangle: Enables Untangle Required Kernel Extensions. Intended for IP network gateways.
++part-short-untangle: Untangle kernel 
++parts: untangle

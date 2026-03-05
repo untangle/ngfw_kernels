@@ -1,6 +1,6 @@
 def architectures = ['amd64', 'arm64']
 
-def repositories = ['bullseye']
+def repositories = (env.REPOSITORIES ?: 'bullseye').split(',') as List
 
 def jobs = [:] // dynamically populated later on
 

@@ -1,0 +1,24 @@
+--- a/debian/bin/gencontrol.py
++++ b/debian/bin/gencontrol.py
+@@ -615,6 +615,7 @@
+
+         # Select an appropriate prefix for the target release
+         for release_name, release_prefix in [
++                ('current',    ''),
+                 ('UNRELEASED', ''),
+                 ('bookworm',   ''),
+                 ('bullseye',   '0.deb11.'),
+@@ -661,11 +662,7 @@
+
+         distribution = self.changelog[0].distribution
+-        if distribution in ('unstable', ):
+-            if version.linux_revision_experimental or \
+-               version.linux_revision_backports or \
+-               version.linux_revision_other:
+-                raise RuntimeError("Can't upload to %s with a version of %s" %
+-                                   (distribution, version))
++        if distribution in ('unstable', 'bookworm', 'current'):
++            pass
+         if distribution in ('experimental', ):
+             if not version.linux_revision_experimental:
+                 raise RuntimeError("Can't upload to %s with a version of %s" %

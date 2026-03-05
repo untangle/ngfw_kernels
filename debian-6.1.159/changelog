@@ -1,0 +1,11 @@
+linux (6.1.159-1+untangle1bookworm) current; urgency=medium
+
+  * Initial Bookworm kernel with Untangle patches
+  * Port bridge MAC ageing fix to 6.1.159
+  * Port extensions patch (IP_SADDR, IP_SENDNFMARK) to 6.1.159
+  * Port IPsec policy bypass to 6.1.159
+  * Port socket mark restoration to 6.1.159
+  * Port MAC byte matching support to 6.1.159
+
+ -- Rohit Singh <rohit@arista.com>  Mon, 17 Feb 2026 12:00:00 +0530
+

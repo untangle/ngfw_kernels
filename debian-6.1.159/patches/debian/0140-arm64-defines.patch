@@ -1,0 +1,19 @@
+--- ./debian/config/arm64/defines	2026-02-17 18:06:14.650813955 +0530
++++ ./debian/config/arm64/defines	2026-02-17 18:10:04.406812553 +0530
+@@ -2,6 +2,7 @@
+ cross-compile-compat: arm-linux-gnueabihf-
+ kernel-arch: arm64
+ featuresets:
++ untangle
+  none
+  rt
+ 
+--- ./debian/config/arm64/untangle/defines	1970-01-01 05:30:00.000000000 +0530
++++ ./debian/config/arm64/untangle/defines	2026-02-17 18:10:31.454812388 +0530
+@@ -0,0 +1,6 @@
++[base]
++flavours:
++ arm64
++
++[arm64_image]
++provides: linux-image-untangle, linux-image-6.1-untangle, linux-image-6.1-untangle-arm64

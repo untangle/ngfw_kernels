@@ -1,0 +1,326 @@
+From d9e34338ee8d6bea598be97d4180322c27fa94eb Mon Sep 17 00:00:00 2001
+From: singhrohit23 <rohitsingh@arista.com>
+Date: Wed, 4 Feb 2026 14:51:58 +0530
+Subject: [PATCH 2/6] Port 0002: Extensions patch (IP_SADDR, IP_SENDNFMARK) to
+ kernel 6.1.159
+
+---
+ include/linux/in.h       |  6 +++++
+ include/net/ip.h         |  5 ++++
+ include/uapi/linux/in.h  |  4 ++++
+ include/uapi/linux/udp.h |  3 +++
+ net/ipv4/icmp.c          |  3 +++
+ net/ipv4/ip_output.c     | 11 +++++----
+ net/ipv4/ip_sockglue.c   | 51 ++++++++++++++++++++++++++++++++++++++++
+ net/ipv4/raw.c           |  2 ++
+ net/ipv4/udp.c           | 23 ++++++++++++++----
+ 9 files changed, 100 insertions(+), 8 deletions(-)
+
+diff --git a/include/linux/in.h b/include/linux/in.h
+index 1873ef642..bf4d559e3 100644
+--- a/include/linux/in.h
++++ b/include/linux/in.h
+@@ -14,6 +14,12 @@
+ #ifndef _LINUX_IN_H
+ #define _LINUX_IN_H
+ 
++#include <linux/types.h>
++
++struct ip_sendnfmark_opts {
++	u32 on;
++	u32 mark;
++};
+ 
+ #include <linux/errno.h>
+ #include <uapi/linux/in.h>
+diff --git a/include/net/ip.h b/include/net/ip.h
+index 4ee23eb08..0a07a3972 100644
+--- a/include/net/ip.h
++++ b/include/net/ip.h
+@@ -78,6 +78,11 @@ struct ipcm_cookie {
+ 	int			oif;
+ 	struct ip_options_rcu	*opt;
+ 	__u8			protocol;
++
++	/* Extensions */
++	u16 pkt_udp_sport;
++	u32 nfmark;
++
+ 	__u8			ttl;
+ 	__s16			tos;
+ 	char			priority;
+diff --git a/include/uapi/linux/in.h b/include/uapi/linux/in.h
+index e682ab628..c7638edc9 100644
+--- a/include/uapi/linux/in.h
++++ b/include/uapi/linux/in.h
+@@ -128,6 +128,10 @@ struct in_addr {
+ #define IP_RECVFRAGSIZE	25
+ #define IP_RECVERR_RFC4884	26
+ 
++/* Extensions */
++#define IP_SADDR	27
++#define IP_SENDNFMARK	28
++
+ /* IP_MTU_DISCOVER values */
+ #define IP_PMTUDISC_DONT		0	/* Never send DF frames */
+ #define IP_PMTUDISC_WANT		1	/* Use per route hints	*/
+diff --git a/include/uapi/linux/udp.h b/include/uapi/linux/udp.h
+index 4828794ef..76b5a429f 100644
+--- a/include/uapi/linux/udp.h
++++ b/include/uapi/linux/udp.h
+@@ -35,6 +35,9 @@ struct udphdr {
+ #define UDP_SEGMENT	103	/* Set GSO segmentation size */
+ #define UDP_GRO		104	/* This socket can receive UDP GRO packets */
+ 
++/* UDP ancillary data types */
++#define PKT_UDP_SPORT 1
++
+ /* UDP encapsulation types */
+ #define UDP_ENCAP_ESPINUDP_NON_IKE	1 /* draft-ietf-ipsec-nat-t-ike-00/01 */
+ #define UDP_ENCAP_ESPINUDP	2 /* draft-ietf-ipsec-udp-encaps-06 */
+diff --git a/net/ipv4/icmp.c b/net/ipv4/icmp.c
+index b17549c4e..493fde947 100644
+--- a/net/ipv4/icmp.c
++++ b/net/ipv4/icmp.c
+@@ -433,6 +433,8 @@ static void icmp_reply(struct icmp_bxm *icmp_param, struct sk_buff *skb)
+ 		goto out_bh_enable;
+ 	inet = inet_sk(sk);
+ 
++	memset(&ipc, 0, sizeof(ipc));
++
+ 	icmp_param->data.icmph.checksum = 0;
+ 
+ 	ipcm_init(&ipc);
+@@ -740,6 +742,7 @@ void __icmp_send(struct sk_buff *skb_in, int type, int code, __be32 info,
+ 	icmp_param.skb	  = skb_in;
+ 	icmp_param.offset = skb_network_offset(skb_in);
+ 	inet_sk(sk)->tos = tos;
++        memset(&ipc, 0, sizeof(ipc));
+ 	ipcm_init(&ipc);
+ 	ipc.addr = iph->saddr;
+ 	ipc.opt = &icmp_param.replyopts.opt;
+diff --git a/net/ipv4/ip_output.c b/net/ipv4/ip_output.c
+index 543d02910..6b4c878ad 100644
+--- a/net/ipv4/ip_output.c
++++ b/net/ipv4/ip_output.c
+@@ -963,7 +963,7 @@ static int __ip_append_data(struct sock *sk,
+ 			    struct page_frag *pfrag,
+ 			    int getfrag(void *from, char *to, int offset,
+ 					int len, int odd, struct sk_buff *skb),
+-			    void *from, int length, int transhdrlen,
++			    void *from, int length, int transhdrlen, struct ipcm_cookie *ipc,
+ 			    unsigned int flags)
+ {
+ 	struct inet_sock *inet = inet_sk(sk);
+@@ -1148,6 +1148,8 @@ static int __ip_append_data(struct sock *sk,
+ 						 fragheaderlen);
+ 			data += fragheaderlen + exthdrlen;
+ 
++			skb->mark = ipc->nfmark;
++
+ 			if (fraggap) {
+ 				skb->csum = skb_copy_and_csum_bits(
+ 					skb_prev, maxfraglen,
+@@ -1345,7 +1347,7 @@ int ip_append_data(struct sock *sk, struct flowi4 *fl4,
+ 
+ 	return __ip_append_data(sk, fl4, &sk->sk_write_queue, &inet->cork.base,
+ 				sk_page_frag(sk), getfrag,
+-				from, length, transhdrlen, flags);
++				from, length, transhdrlen, ipc, flags);
+ }
+ 
+ ssize_t	ip_append_page(struct sock *sk, struct flowi4 *fl4, struct page *page,
+@@ -1564,7 +1566,7 @@ struct sk_buff *__ip_make_skb(struct sock *sk,
+ 	}
+ 
+ 	skb->priority = (cork->tos != -1) ? cork->priority: sk->sk_priority;
+-	skb->mark = cork->mark;
++	skb->mark |= cork->mark;
+ 	skb->tstamp = cork->transmit_time;
+ 	/*
+ 	 * Steal rt from cork.dst to avoid a pair of atomic_inc/atomic_dec
+@@ -1665,7 +1667,7 @@ struct sk_buff *ip_make_skb(struct sock *sk,
+ 
+ 	err = __ip_append_data(sk, fl4, &queue, cork,
+ 			       &current->task_frag, getfrag,
+-			       from, length, transhdrlen, flags);
++			       from, length, transhdrlen, ipc, flags);
+ 	if (err) {
+ 		__ip_flush_pending_frames(sk, &queue, cork);
+ 		return ERR_PTR(err);
+@@ -1709,6 +1711,7 @@ void ip_send_unicast_reply(struct sock *sk, struct sk_buff *skb,
+ 	if (__ip_options_echo(net, &replyopts.opt.opt, skb, sopt))
+ 		return;
+ 
++	memset(&ipc, 0, sizeof(ipc));
+ 	ipcm_init(&ipc);
+ 	ipc.addr = daddr;
+ 	ipc.sockc.transmit_time = transmit_time;
+diff --git a/net/ipv4/ip_sockglue.c b/net/ipv4/ip_sockglue.c
+index a00ba2d51..c93b3ca17 100644
+--- a/net/ipv4/ip_sockglue.c
++++ b/net/ipv4/ip_sockglue.c
+@@ -325,6 +325,22 @@ int ip_cmsg_send(struct sock *sk, struct msghdr *msg, struct ipcm_cookie *ipc,
+ 				return -EINVAL;
+ 			ipc->protocol = val;
+ 			break;
++		case IP_SADDR:
++		{
++			struct in_addr *in;
++			if (cmsg->cmsg_len != CMSG_LEN(sizeof(struct in_addr)))
++				return -EINVAL;
++			in = (struct in_addr *)CMSG_DATA(cmsg);
++			ipc->addr = in->s_addr;
++			break;
++		}
++		case IP_SENDNFMARK:
++		{
++			if (cmsg->cmsg_len != CMSG_LEN(sizeof(u32)))
++				return -EINVAL;
++			ipc->nfmark = *(u32 *)CMSG_DATA(cmsg);
++			break;
++		}
+ 		default:
+ 			return -EINVAL;
+ 		}
+@@ -1051,6 +1067,24 @@ int do_ip_setsockopt(struct sock *sk, int level, int optname,
+ 		else
+ 			inet->cmsg_flags &= ~IP_CMSG_RECVFRAGSIZE;
+ 		break;
++	case IP_SENDNFMARK:
++	{
++		struct ip_sendnfmark_opts nfopt;
++
++		if (optlen != sizeof(struct ip_sendnfmark_opts))
++			goto e_inval;
++		if (copy_from_sockptr(&nfopt, optval, sizeof(struct ip_sendnfmark_opts))) {
++			err = -EFAULT;
++			break;
++		}
++		/* Changed semantics for version 2.6.32 and above -- reset to 0 when
++		not 'on' */
++		if (nfopt.on)
++			sk->sk_mark = nfopt.mark;
++		else
++			sk->sk_mark = 0;
++		break;
++	}
+ 	case IP_TOS:	/* This sets both TOS and Precedence */
+ 		__ip_sock_set_tos(sk, val);
+ 		break;
+@@ -1625,6 +1659,23 @@ int do_ip_getsockopt(struct sock *sk, int level, int optname,
+ 	case IP_CHECKSUM:
+ 		val = (inet->cmsg_flags & IP_CMSG_CHECKSUM) != 0;
+ 		break;
++	case IP_SENDNFMARK:
++	{
++		struct ip_sendnfmark_opts opts;
++
++		/* Changed semantics for version 2.6.32 and above -- always on */
++		opts.on = 1;
++		opts.mark =  sk->sk_mark;
++		release_sock(sk);
++
++		if (len < sizeof(struct ip_sendnfmark_opts)) {
++			return -EINVAL;
++		}
++		if(copy_to_user(optval, &opts, sizeof(struct ip_sendnfmark_opts))) {
++			return -EFAULT;
++		}
++		return 0;
++	}
+ 	case IP_RECVFRAGSIZE:
+ 		val = (inet->cmsg_flags & IP_CMSG_RECVFRAGSIZE) != 0;
+ 		break;
+diff --git a/net/ipv4/raw.c b/net/ipv4/raw.c
+index c109bc376..5bd00a74c 100644
+--- a/net/ipv4/raw.c
++++ b/net/ipv4/raw.c
+@@ -532,6 +532,8 @@ static int raw_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
+ 		daddr = inet->inet_daddr;
+ 	}
+ 
++	memset(&ipc, 0, sizeof(ipc));
++
+ 	ipcm_init_sk(&ipc, inet);
+ 	/* Keep backward compat */
+ 	if (hdrincl)
+diff --git a/net/ipv4/udp.c b/net/ipv4/udp.c
+index da96252dd..bb74d0345 100644
+--- a/net/ipv4/udp.c
++++ b/net/ipv4/udp.c
+@@ -930,7 +930,8 @@ static int udp_send_skb(struct sk_buff *skb, struct flowi4 *fl4,
+ 	 * Create a UDP header
+ 	 */
+ 	uh = udp_hdr(skb);
+-	uh->source = inet->inet_sport;
++	//uh->source = inet->inet_sport;
++	uh->source = fl4->fl4_sport;
+ 	uh->dest = fl4->fl4_dport;
+ 	uh->len = htons(len);
+ 	uh->check = 0;
+@@ -1035,6 +1036,14 @@ static int __udp_cmsg_send(struct cmsghdr *cmsg, u16 *gso_size)
+ 			return -EINVAL;
+ 		*gso_size = *(__u16 *)CMSG_DATA(cmsg);
+ 		return 0;
++        case PKT_UDP_SPORT:
++		{
++			struct ipcm_cookie *ipc = container_of(gso_size, struct ipcm_cookie, gso_size);
++			if (cmsg->cmsg_len != CMSG_LEN(sizeof(__u16)))
++				return -EINVAL;
++			ipc->pkt_udp_sport = *(__u16 *)CMSG_DATA(cmsg);
++			return 0;
++		}
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -1077,7 +1086,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
+ 	int free = 0;
+ 	int connected = 0;
+ 	__be32 daddr, faddr, saddr;
+-	__be16 dport;
++	__be16 dport, sport;
+ 	u8  tos;
+ 	int err, is_udplite = IS_UDPLITE(sk);
+ 	int corkreq = udp_test_bit(CORK, sk) || msg->msg_flags & MSG_MORE;
+@@ -1141,6 +1150,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
+ 		connected = 1;
+ 	}
+ 
++	memset(&ipc, 0, sizeof(ipc));
+ 	ipcm_init_sk(&ipc, inet);
+ 	ipc.gso_size = READ_ONCE(up->gso_size);
+ 
+@@ -1187,6 +1197,11 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
+ 		}
+ 	}
+ 
++	sport = inet->inet_sport;
++
++	if (ipc.pkt_udp_sport)
++		sport = ipc.pkt_udp_sport;
++
+ 	saddr = ipc.addr;
+ 	ipc.addr = faddr = daddr;
+ 
+@@ -1240,7 +1255,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
+ 		flowi4_init_output(fl4, ipc.oif, ipc.sockc.mark, tos,
+ 				   RT_SCOPE_UNIVERSE, sk->sk_protocol,
+ 				   flow_flags,
+-				   faddr, saddr, dport, inet->inet_sport,
++				   faddr, saddr, dport, sport,
+ 				   sk->sk_uid);
+ 
+ 		security_sk_classify_flow(sk, flowi4_to_flowi_common(fl4));
+@@ -1299,7 +1314,7 @@ int udp_sendmsg(struct sock *sk, struct msghdr *msg, size_t len)
+ 	fl4->daddr = daddr;
+ 	fl4->saddr = saddr;
+ 	fl4->fl4_dport = dport;
+-	fl4->fl4_sport = inet->inet_sport;
++	fl4->fl4_sport = sport;
+ 	WRITE_ONCE(up->pending, AF_INET);
+ 
+ do_append_data:
+-- 
+2.34.1
+
