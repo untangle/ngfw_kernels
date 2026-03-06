@@ -19,6 +19,10 @@ void buildKernel(String repository, String architecture, String upload, String b
 pipeline {
   agent none
 
+  parameters {
+    string(name: 'REPOSITORIES', defaultValue: 'bullseye', description: 'Comma-separated list of repositories to build (e.g. bullseye, bookworm, bullseye,bookworm)')
+  }
+
   stages {
     stage('Build') {
       steps {
