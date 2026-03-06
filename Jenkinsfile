@@ -1,4 +1,4 @@
-def architectures = ['amd64', 'arm64']
+def architectures = (env.ARCHITECTURES ?: 'amd64').split(',') as List
 
 def repositories = (env.REPOSITORIES ?: 'bullseye').split(',') as List
 
@@ -21,6 +21,8 @@ pipeline {
 
   parameters {
     string(name: 'REPOSITORIES', defaultValue: 'bullseye', description: 'Comma-separated list of repositories to build (e.g. bullseye, bookworm, bullseye,bookworm)')
+    string(name: 'ARCHITECTURES', defaultValue: 'amd64', description: 'Comma-separated list of architectures to build (e.g. amd64, arm64, amd64,arm64)')
+    string(name: 'NODE_LABEL', defaultValue: 'docker', description: 'Jenkins node label to run builds on (e.g. docker, aws-build-03)')
   }
 
   stages {
@@ -34,7 +36,7 @@ pipeline {
 	      def name = "${arch}/${repo}"
 
               jobs[name] = {
-                node('docker') {
+                node(env.NODE_LABEL ?: 'docker') {
 		  stage(name) {
                     def upload = "scp"
                     def buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${arch}-${env.BUILD_NUMBER}"
