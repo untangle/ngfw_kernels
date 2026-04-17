@@ -65,6 +65,10 @@ patch-untangle: patch-untangle-stamp
 patch-untangle-stamp: extract-stamp patches/untangle/*
 	mkdir -p $(KERNEL_DIR)/debian/patches-untangle
 	cp patches/untangle/* $(KERNEL_DIR)/debian/patches-untangle
+	while read patch ; do \
+	  echo "Applying untangle patch: $$patch" ; \
+	  patch -d $(KERNEL_DIR) -p1 < patches/untangle/$$patch || exit 1 ; \
+	done < $(UNTANGLE_PATCH_SERIES)
 	touch $@
 
 version: version-stamp
