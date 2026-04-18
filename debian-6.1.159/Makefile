@@ -63,8 +63,14 @@ patch-debian-stamp: extract-stamp patches/debian/*
 
 patch-untangle: patch-untangle-stamp
 patch-untangle-stamp: extract-stamp patches/untangle/*
+	while read patch ; do \
+	  echo "Applying untangle patch: $$patch" ; \
+	  patch -d $(KERNEL_DIR) -p1 < patches/untangle/$$patch || exit 1 ; \
+	done < $(UNTANGLE_PATCH_SERIES)
 	mkdir -p $(KERNEL_DIR)/debian/patches-untangle
-	cp patches/untangle/* $(KERNEL_DIR)/debian/patches-untangle
+	touch $(KERNEL_DIR)/debian/patches-untangle/series
+	# Make quilt tolerate pre-applied patches (outside quilt, survives dh_clean)
+	patch -d $(KERNEL_DIR) -p1 -N < patches/debian/0500-quilt-tolerate-preapplied.patch || true
 	touch $@
 
 version: version-stamp

@@ -1,48 +1,55 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: singhrohit23 <rohitsingh@arista.com>
 Date: Fri, 18 Apr 2026 10:00:00 +0530
-Subject: [PATCH 7/7] nfqueue: confirm conntrack on NF_DROP for marked packets
+Subject: [PATCH 7/7] nfqueue: confirm conntrack on NF_DROP for marked UDP
 
-In kernel 6.1, nfqnl_reinject() only calls ct_hook->update()
-(which confirms conntrack entries) for NF_ACCEPT/REPEAT/STOP
-verdicts. For NF_DROP, the unconfirmed conntrack entry is
-destroyed when the skb is freed via kfree_skb().
+In kernel 6.1, conntrack entries remain unconfirmed until
+nf_conntrack_confirm() runs at POSTROUTING INT_MAX priority.
+When NFQUEUE (at lower priority) issues NF_DROP, the packet
+never reaches INT_MAX, and the unconfirmed entry is destroyed
+when the skb is freed via kfree_skb().
 
 This breaks UDP proxy architectures (like Untangle/NGFW) where:
-1. NFQUEUE intercepts a forwarded UDP packet
+1. NFQUEUE intercepts a forwarded UDP packet at POSTROUTING
+   priority 999, after NAT (priority 100)
 2. Userspace reads the data, drops the original (NF_DROP)
 3. Userspace sends its own copy via a separate socket
 4. The server reply needs to match the original conntrack
    entry for proper NAT de-translation and forwarding
 
-On kernel 5.10, conntrack entries created prior to NFQUEUE were
-observed to survive NF_DROP in this use case, allowing reply
-matching. On 6.1, entries remain unconfirmed and are destroyed
-when the skb is freed.
+On kernel 5.10, conntrack entries survived NF_DROP in this use
+case, allowing reply matching. On 6.1, entries remain
+unconfirmed and are destroyed when the skb is freed.
 
-This patch adds a mark-gated opt-in mechanism: when the module
-parameter nfqueue_confirm_drop_mark is set to a non-zero value,
-packets whose skb->mark matches that mask will have their
-conntrack entry confirmed before NF_DROP processing. This
-preserves the conntrack state needed for reply matching.
+Note: ct_hook->update() cannot be used because it calls
+nf_confirm_cthelper() which returns early without confirming
+when no conntrack helper is attached (common for plain UDP).
+Confirmed via kprobes: nf_conntrack_update() returns 0 but
+__nf_conntrack_confirm() is never called from that path.
+
+This patch calls __nf_conntrack_confirm() directly with guards:
+- Only unconfirmed entries (nf_ct_is_confirmed check)
+- Only tracked packets (nf_ct_get check)
+- Only UDP protocol (ip_hdr protocol check)
+- Only marked packets (nfqueue_confirm_drop_mark mask)
 
 Usage:
   echo 255 > /sys/module/nfnetlink_queue/parameters/nfqueue_confirm_drop_mark
 
-Only packets with the matching mark are affected; all other
-NF_DROP behavior remains unchanged.
-
 Signed-off-by: singhrohit23 <rohitsingh@arista.com>
 ---
- net/netfilter/nfnetlink_queue.c | 24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
+ net/netfilter/nfnetlink_queue.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
 --- a/net/netfilter/nfnetlink_queue.c	2026-04-18 11:02:50.458929429 +0530
-+++ b/net/netfilter/nfnetlink_queue.c	2026-04-18 11:03:14.968929279 +0530
-@@ -36,6 +36,12 @@
++++ b/net/netfilter/nfnetlink_queue.c	2026-04-18 18:02:46.962775641 +0530
+@@ -36,6 +36,15 @@
  
  #include <linux/atomic.h>
  
++#include <linux/ip.h>
++#include <net/netfilter/nf_conntrack_core.h>
++
 +static unsigned int nfqueue_confirm_drop_mark __read_mostly;
 +module_param(nfqueue_confirm_drop_mark, uint, 0644);
 +MODULE_PARM_DESC(nfqueue_confirm_drop_mark,
@@ -52,40 +59,35 @@ Signed-off-by: singhrohit23 <rohitsingh@arista.com>
  #if IS_ENABLED(CONFIG_BRIDGE_NETFILTER)
  #include "../bridge/br_private.h"
  #endif
-@@ -230,18 +236,25 @@
- 	const struct nf_ct_hook *ct_hook;
- 	int err;
- 
--	if (verdict == NF_ACCEPT ||
--	    verdict == NF_REPEAT ||
--	    verdict == NF_STOP) {
--		rcu_read_lock();
--		ct_hook = rcu_dereference(nf_ct_hook);
--		if (ct_hook) {
-+	rcu_read_lock();
-+	ct_hook = rcu_dereference(nf_ct_hook);
-+	if (ct_hook) {
-+		if (verdict == NF_ACCEPT ||
-+		    verdict == NF_REPEAT ||
-+		    verdict == NF_STOP) {
- 			err = ct_hook->update(entry->state.net, entry->skb);
- 			if (err < 0)
- 				verdict = NF_DROP;
-+		} else if (verdict == NF_DROP &&
-+			   nfqueue_confirm_drop_mark &&
-+			   (entry->skb->mark & nfqueue_confirm_drop_mark)) {
-+			/* Opt-in: confirm CT for marked packets even on DROP
-+			 * to support proxying architectures that re-inject
-+			 * packets from userspace. */
-+			ct_hook->update(entry->state.net, entry->skb);
+@@ -242,6 +250,28 @@
  		}
--		rcu_read_unlock();
+ 		rcu_read_unlock();
  	}
-+	rcu_read_unlock();
++#if IS_ENABLED(CONFIG_NF_CONNTRACK)
++	if (verdict == NF_DROP && nfqueue_confirm_drop_mark &&
++	    (entry->skb->mark & nfqueue_confirm_drop_mark)) {
++		struct nf_conn *ct;
++		enum ip_conntrack_info ctinfo;
++
++		ct = nf_ct_get(entry->skb, &ctinfo);
++		if (ct && !nf_ct_is_confirmed(ct) &&
++		    ip_hdr(entry->skb)->protocol == IPPROTO_UDP) {
++			/* Opt-in: confirm CT for marked UDP packets even
++			 * on DROP to support proxying architectures that
++			 * re-inject packets from userspace.
++			 * Call __nf_conntrack_confirm() directly because
++			 * ct_hook->update() calls nf_confirm_cthelper()
++			 * which skips confirmation when no conntrack
++			 * helper is attached (common for plain UDP). */
++			int ret = __nf_conntrack_confirm(entry->skb);
++			if (ret != NF_ACCEPT)
++				pr_debug_ratelimited("nfqueue: ct confirm failed (%d)\n", ret);
++		}
++	}
++#endif
  	nf_reinject(entry, verdict);
  }
  
 
 -- 
 2.34.1
-

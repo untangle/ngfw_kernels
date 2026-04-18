@@ -1,0 +1,10 @@
+--- a/debian/rules.real
++++ b/debian/rules.real
+@@ -109,7 +109,7 @@
+ 	mkdir -p '$(BUILD_DIR)'
+ 	rm -rf '$(DIR)'
+ 	$(call copy_source,$(DIR))
+-	cd '$(DIR)' && QUILT_PATCHES='$(CURDIR)/debian/patches-$*' QUILT_PC=.pc quilt push --quiltrc - -a -q --fuzz=0
++	-cd '$(DIR)' && QUILT_PATCHES='$(CURDIR)/debian/patches-$*' QUILT_PC=.pc quilt push --quiltrc - -a -q --fuzz=0
+ 	@$(stamp)
+ .PRECIOUS: $(STAMPS_DIR)/source_%

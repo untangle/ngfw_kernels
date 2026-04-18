@@ -1,7 +1,9 @@
-linux (6.1.159-1+untangle2bookworm) current; urgency=medium
+linux (6.1.159-1+untangle3bookworm) current; urgency=medium
 
   * Fix NFQUEUE NF_DROP conntrack confirmation for kernel 6.1
-  * Add mark-gated nfqueue_confirm_drop_mark module parameter
+  * Use guarded __nf_conntrack_confirm() directly (ct_hook->update
+    calls nf_confirm_cthelper which skips confirm for plain UDP)
+  * Mark-gated nfqueue_confirm_drop_mark module parameter
   * Fixes forwarded UDP reply path (DNS, NTP, etc.)
 
  -- Rohit Singh <rohit@arista.com>  Fri, 18 Apr 2026 12:00:00 +0530
