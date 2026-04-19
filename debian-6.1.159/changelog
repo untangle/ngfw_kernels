@@ -1,0 +1,21 @@
+linux (6.1.159-1+untangle3bookworm) current; urgency=medium
+
+  * Fix NFQUEUE NF_DROP conntrack confirmation for kernel 6.1
+  * Use guarded __nf_conntrack_confirm() directly (ct_hook->update
+    calls nf_confirm_cthelper which skips confirm for plain UDP)
+  * Mark-gated nfqueue_confirm_drop_mark module parameter
+  * Fixes forwarded UDP reply path (DNS, NTP, etc.)
+
+ -- Rohit Singh <rohit@arista.com>  Fri, 18 Apr 2026 12:00:00 +0530
+
+linux (6.1.159-1+untangle1bookworm) current; urgency=medium
+
+  * Initial Bookworm kernel with Untangle patches
+  * Port bridge MAC ageing fix to 6.1.159
+  * Port extensions patch (IP_SADDR, IP_SENDNFMARK) to 6.1.159
+  * Port IPsec policy bypass to 6.1.159
+  * Port socket mark restoration to 6.1.159
+  * Port MAC byte matching support to 6.1.159
+
+ -- Rohit Singh <rohit@arista.com>  Mon, 17 Feb 2026 12:00:00 +0530
+

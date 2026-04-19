@@ -1,0 +1,8 @@
+linux-*
+*.deb
+*.udeb
+*.tar.xz
+*.buildinfo
+*.upload
+*.changes
+*stamp

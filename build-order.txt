@@ -1,2 +1,3 @@
 debian-4.19.0/linux-4.19.146 buster
 debian-5.10.0/linux-5.10.205 bullseye
+debian-6.1.159/linux-6.1.159 bookworm
