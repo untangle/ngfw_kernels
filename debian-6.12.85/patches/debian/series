@@ -1,0 +1,5 @@
+0100-amd64-untangle-featureset.patch
+0200-untangle-kernel-config.patch
+0220-serial-config.patch
+0400-build-profiles.patch
+0500-quilt-tolerate-preapplied.patch

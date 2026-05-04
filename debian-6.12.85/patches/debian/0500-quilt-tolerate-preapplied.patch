@@ -1,0 +1,17 @@
+Tolerate pre-applied patches during quilt push (we apply Untangle
+patches directly via patch(1) before invoking the Debian build, so
+quilt finds them already in place and would otherwise fail).
+
+Same single-character change as the Bookworm-era patch; only the line
+offset was rebased for Trixie's debian/rules.real (was line 109, now 120).
+
+--- a/debian/rules.real
++++ b/debian/rules.real
+@@ -117,6 +117,6 @@
+ 	mkdir -p '$(BUILD_DIR)'
+ 	rm -rf '$(DIR)'
+ 	$(call copy_source,$(DIR))
+-	cd '$(DIR)' && QUILT_PATCHES='$(CURDIR)/debian/patches-$*' QUILT_PC=.pc quilt push --quiltrc - -a -q --fuzz=0
++	-cd '$(DIR)' && QUILT_PATCHES='$(CURDIR)/debian/patches-$*' QUILT_PC=.pc quilt push --quiltrc - -a -q --fuzz=0
+ 	@$(stamp)
+ .PRECIOUS: $(STAMPS_DIR)/source_%

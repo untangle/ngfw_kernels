@@ -1,0 +1,284 @@
+diff -ruN orig/include/linux/in.h mod/include/linux/in.h
+--- a/include/linux/in.h	2026-05-04 13:05:25.709504960 +0530
++++ b/include/linux/in.h	2026-05-04 13:06:46.845504465 +0530
+@@ -14,6 +14,12 @@
+ #ifndef _LINUX_IN_H
+ #define _LINUX_IN_H
+ 
++#include <linux/types.h>
++
++struct ip_sendnfmark_opts {
++	u32 on;
++	u32 mark;
++};
+ 
+ #include <linux/errno.h>
+ #include <uapi/linux/in.h>
+diff -ruN orig/include/net/ip.h mod/include/net/ip.h
+--- a/include/net/ip.h	2026-05-04 13:05:25.717504960 +0530
++++ b/include/net/ip.h	2026-05-04 13:06:46.846504465 +0530
+@@ -79,6 +79,11 @@
+ 	int			oif;
+ 	struct ip_options_rcu	*opt;
+ 	__u8			protocol;
++
++	/* Untangle extensions */
++	__u16			pkt_udp_sport;
++	__u32			nfmark;
++
+ 	__u8			ttl;
+ 	__s16			tos;
+ 	char			priority;
+diff -ruN orig/include/uapi/linux/in.h mod/include/uapi/linux/in.h
+--- a/include/uapi/linux/in.h	2026-05-04 13:05:25.725504960 +0530
++++ b/include/uapi/linux/in.h	2026-05-04 13:06:46.846504465 +0530
+@@ -130,6 +130,10 @@
+ #define IP_RECVFRAGSIZE	25
+ #define IP_RECVERR_RFC4884	26
+ 
++/* Untangle extensions */
++#define IP_SADDR	27
++#define IP_SENDNFMARK	28
++
+ /* IP_MTU_DISCOVER values */
+ #define IP_PMTUDISC_DONT		0	/* Never send DF frames */
+ #define IP_PMTUDISC_WANT		1	/* Use per route hints	*/
+diff -ruN orig/include/uapi/linux/udp.h mod/include/uapi/linux/udp.h
+--- a/include/uapi/linux/udp.h	2026-05-04 13:05:25.734504960 +0530
++++ b/include/uapi/linux/udp.h	2026-05-04 13:06:46.846504465 +0530
+@@ -35,6 +35,9 @@
+ #define UDP_SEGMENT	103	/* Set GSO segmentation size */
+ #define UDP_GRO		104	/* This socket can receive UDP GRO packets */
+ 
++/* Untangle UDP ancillary data types */
++#define PKT_UDP_SPORT 1
++
+ /* UDP encapsulation types */
+ #define UDP_ENCAP_ESPINUDP_NON_IKE	1 /* unused  draft-ietf-ipsec-nat-t-ike-00/01 */
+ #define UDP_ENCAP_ESPINUDP	2 /* draft-ietf-ipsec-udp-encaps-06 */
+diff -ruN orig/net/ipv4/icmp.c mod/net/ipv4/icmp.c
+--- a/net/ipv4/icmp.c	2026-05-04 13:05:25.746504960 +0530
++++ b/net/ipv4/icmp.c	2026-05-04 13:06:46.847504465 +0530
+@@ -431,6 +431,7 @@
+ 
+ 	icmp_param->data.icmph.checksum = 0;
+ 
++	memset(&ipc, 0, sizeof(ipc));
+ 	ipcm_init(&ipc);
+ 	inet->tos = ip_hdr(skb)->tos;
+ 	ipc.sockc.mark = mark;
+@@ -757,6 +758,7 @@
+ 	icmp_param.skb	  = skb_in;
+ 	icmp_param.offset = skb_network_offset(skb_in);
+ 	inet_sk(sk)->tos = tos;
++	memset(&ipc, 0, sizeof(ipc));
+ 	ipcm_init(&ipc);
+ 	ipc.addr = iph->saddr;
+ 	ipc.opt = &icmp_param.replyopts.opt;
+diff -ruN orig/net/ipv4/ip_output.c mod/net/ipv4/ip_output.c
+--- a/net/ipv4/ip_output.c	2026-05-04 13:05:25.756504960 +0530
++++ b/net/ipv4/ip_output.c	2026-05-04 13:06:46.850504465 +0530
+@@ -962,6 +962,7 @@
+ 			    int getfrag(void *from, char *to, int offset,
+ 					int len, int odd, struct sk_buff *skb),
+ 			    void *from, int length, int transhdrlen,
++			    struct ipcm_cookie *ipc,
+ 			    unsigned int flags)
+ {
+ 	struct inet_sock *inet = inet_sk(sk);
+@@ -1155,6 +1156,8 @@
+ 						 fragheaderlen);
+ 			data += fragheaderlen + exthdrlen;
+ 
++			skb->mark = ipc->nfmark;
++
+ 			if (fraggap) {
+ 				skb->csum = skb_copy_and_csum_bits(
+ 					skb_prev, maxfraglen,
+@@ -1370,7 +1373,7 @@
+ 
+ 	return __ip_append_data(sk, fl4, &sk->sk_write_queue, &inet->cork.base,
+ 				sk_page_frag(sk), getfrag,
+-				from, length, transhdrlen, flags);
++				from, length, transhdrlen, ipc, flags);
+ }
+ 
+ static void ip_cork_release(struct inet_cork *cork)
+@@ -1462,7 +1465,7 @@
+ 	}
+ 
+ 	skb->priority = (cork->tos != -1) ? cork->priority: READ_ONCE(sk->sk_priority);
+-	skb->mark = cork->mark;
++	skb->mark |= cork->mark;
+ 	if (sk_is_tcp(sk))
+ 		skb_set_delivery_time(skb, cork->transmit_time, SKB_CLOCK_MONOTONIC);
+ 	else
+@@ -1566,7 +1569,7 @@
+ 
+ 	err = __ip_append_data(sk, fl4, &queue, cork,
+ 			       &current->task_frag, getfrag,
+-			       from, length, transhdrlen, flags);
++			       from, length, transhdrlen, ipc, flags);
+ 	if (err) {
+ 		__ip_flush_pending_frames(sk, &queue, cork);
+ 		return ERR_PTR(err);
+@@ -1610,6 +1613,7 @@
+ 	if (__ip_options_echo(net, &replyopts.opt.opt, skb, sopt))
+ 		return;
+ 
++	memset(&ipc, 0, sizeof(ipc));
+ 	ipcm_init(&ipc);
+ 	ipc.addr = daddr;
+ 	ipc.sockc.transmit_time = transmit_time;
+diff -ruN orig/net/ipv4/ip_sockglue.c mod/net/ipv4/ip_sockglue.c
+--- a/net/ipv4/ip_sockglue.c	2026-05-04 13:05:25.765504960 +0530
++++ b/net/ipv4/ip_sockglue.c	2026-05-04 13:06:46.851504465 +0530
+@@ -325,6 +325,22 @@
+ 				return -EINVAL;
+ 			ipc->protocol = val;
+ 			break;
++		case IP_SADDR:
++		{
++			struct in_addr *in;
++			if (cmsg->cmsg_len != CMSG_LEN(sizeof(struct in_addr)))
++				return -EINVAL;
++			in = (struct in_addr *)CMSG_DATA(cmsg);
++			ipc->addr = in->s_addr;
++			break;
++		}
++		case IP_SENDNFMARK:
++		{
++			if (cmsg->cmsg_len != CMSG_LEN(sizeof(__u32)))
++				return -EINVAL;
++			ipc->nfmark = *(__u32 *)CMSG_DATA(cmsg);
++			break;
++		}
+ 		default:
+ 			return -EINVAL;
+ 		}
+@@ -1054,6 +1070,20 @@
+ 		return 0;
+ 	case IP_MTU_DISCOVER:
+ 		return ip_sock_set_mtu_discover(sk, val);
++	case IP_SENDNFMARK:
++	{
++		struct ip_sendnfmark_opts nfopt;
++
++		if (optlen != sizeof(struct ip_sendnfmark_opts))
++			return -EINVAL;
++		if (copy_from_sockptr(&nfopt, optval, sizeof(struct ip_sendnfmark_opts)))
++			return -EFAULT;
++		if (nfopt.on)
++			WRITE_ONCE(sk->sk_mark, nfopt.mark);
++		else
++			WRITE_ONCE(sk->sk_mark, 0);
++		return 0;
++	}
+ 	case IP_TOS:	/* This sets both TOS and Precedence */
+ 		ip_sock_set_tos(sk, val);
+ 		return 0;
+@@ -1549,6 +1579,19 @@
+ 	case IP_CHECKSUM:
+ 		val = inet_test_bit(CHECKSUM, sk);
+ 		goto copyval;
++	case IP_SENDNFMARK:
++	{
++		struct ip_sendnfmark_opts opts;
++
++		opts.on = 1;
++		opts.mark = READ_ONCE(sk->sk_mark);
++
++		if (len < sizeof(struct ip_sendnfmark_opts))
++			return -EINVAL;
++		if (copy_to_sockptr(optval, &opts, sizeof(struct ip_sendnfmark_opts)))
++			return -EFAULT;
++		return 0;
++	}
+ 	case IP_RECVFRAGSIZE:
+ 		val = inet_test_bit(RECVFRAGSIZE, sk);
+ 		goto copyval;
+diff -ruN orig/net/ipv4/raw.c mod/net/ipv4/raw.c
+--- a/net/ipv4/raw.c	2026-05-04 13:05:25.775504960 +0530
++++ b/net/ipv4/raw.c	2026-05-04 13:06:46.852504465 +0530
+@@ -537,6 +537,7 @@
+ 		daddr = inet->inet_daddr;
+ 	}
+ 
++	memset(&ipc, 0, sizeof(ipc));
+ 	ipcm_init_sk(&ipc, inet);
+ 	/* Keep backward compat */
+ 	if (hdrincl)
+diff -ruN orig/net/ipv4/udp.c mod/net/ipv4/udp.c
+--- a/net/ipv4/udp.c	2026-05-04 13:05:25.785504960 +0530
++++ b/net/ipv4/udp.c	2026-05-04 13:06:46.856504465 +0530
+@@ -976,7 +976,7 @@
+ 	 * Create a UDP header
+ 	 */
+ 	uh = udp_hdr(skb);
+-	uh->source = inet->inet_sport;
++	uh->source = fl4->fl4_sport;
+ 	uh->dest = fl4->fl4_dport;
+ 	uh->len = htons(len);
+ 	uh->check = 0;
+@@ -1083,6 +1083,14 @@
+ 			return -EINVAL;
+ 		*gso_size = *(__u16 *)CMSG_DATA(cmsg);
+ 		return 0;
++	case PKT_UDP_SPORT:
++	{
++		struct ipcm_cookie *ipc = container_of(gso_size, struct ipcm_cookie, gso_size);
++		if (cmsg->cmsg_len != CMSG_LEN(sizeof(__u16)))
++			return -EINVAL;
++		ipc->pkt_udp_sport = *(__u16 *)CMSG_DATA(cmsg);
++		return 0;
++	}
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -1126,7 +1134,7 @@
+ 	int connected = 0;
+ 	__be32 daddr, faddr, saddr;
+ 	u8 tos, scope;
+-	__be16 dport;
++	__be16 dport, sport;
+ 	int err, is_udplite = IS_UDPLITE(sk);
+ 	int corkreq = udp_test_bit(CORK, sk) || msg->msg_flags & MSG_MORE;
+ 	int (*getfrag)(void *, char *, int, int, int, struct sk_buff *);
+@@ -1190,6 +1198,7 @@
+ 		connected = 1;
+ 	}
+ 
++	memset(&ipc, 0, sizeof(ipc));
+ 	ipcm_init_sk(&ipc, inet);
+ 	ipc.gso_size = READ_ONCE(up->gso_size);
+ 
+@@ -1238,6 +1247,11 @@
+ 		}
+ 	}
+ 
++	sport = inet->inet_sport;
++
++	if (ipc.pkt_udp_sport)
++		sport = ipc.pkt_udp_sport;
++
+ 	saddr = ipc.addr;
+ 	ipc.addr = faddr = daddr;
+ 
+@@ -1288,7 +1302,7 @@
+ 
+ 		flowi4_init_output(fl4, ipc.oif, ipc.sockc.mark, tos, scope,
+ 				   sk->sk_protocol, flow_flags, faddr, saddr,
+-				   dport, inet->inet_sport, sk->sk_uid);
++				   dport, sport, sk->sk_uid);
+ 
+ 		security_sk_classify_flow(sk, flowi4_to_flowi_common(fl4));
+ 		rt = ip_route_output_flow(net, fl4, sk);
+@@ -1346,7 +1360,7 @@
+ 	fl4->daddr = daddr;
+ 	fl4->saddr = saddr;
+ 	fl4->fl4_dport = dport;
+-	fl4->fl4_sport = inet->inet_sport;
++	fl4->fl4_sport = sport;
+ 	WRITE_ONCE(up->pending, AF_INET);
+ 
+ do_append_data:

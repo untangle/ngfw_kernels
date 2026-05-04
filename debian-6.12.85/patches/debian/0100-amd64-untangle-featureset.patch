@@ -1,0 +1,36 @@
+diff -ruN orig/debian/config/amd64/defines.toml mod/debian/config/amd64/defines.toml
+--- a/debian/config/amd64/defines.toml	2026-05-04 13:58:18.182485597 +0530
++++ b/debian/config/amd64/defines.toml	2026-05-04 13:58:21.202485579 +0530
+@@ -27,6 +27,12 @@
+ [[featureset.flavour]]
+ name = 'amd64'
+ 
++[[featureset]]
++name = 'untangle'
++# Override available flavours in untangle featureset
++[[featureset.flavour]]
++name = 'amd64'
++
+ [build]
+ enable_signed = true
+ enable_vdso = true
+diff -ruN orig/debian/config/defines.toml mod/debian/config/defines.toml
+--- a/debian/config/defines.toml	2026-05-04 13:58:18.179485597 +0530
++++ b/debian/config/defines.toml	2026-05-04 13:58:21.202485579 +0530
+@@ -94,6 +94,16 @@
+   [featureset.description.short]
+   rt = 'PREEMPT_RT'
+ 
++[[featureset]]
++name = 'untangle'
++enable = true
++  [featureset.description]
++  parts = ['untangle']
++  [featureset.description.long]
++  untangle = 'Enables Untangle Required Kernel Extensions. Intended for IP network gateways.'
++  [featureset.description.short]
++  untangle = 'Untangle'
++
+ [[debianrelease]]
+ name_regex = 'UNRELEASED'
+ abi_version_full = false

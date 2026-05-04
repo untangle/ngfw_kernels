@@ -1,0 +1,46 @@
+Untangle kernel configuration overrides for Trixie 6.12.
+
+Slimmed from the Bookworm-era 24-line patch. Removed lines that targeted
+kernel symbols no longer carried in our patch series:
+
+  IMQ + IMQ_BEHAVIOR_*  -> replaced by mainline IFB + tc mirred
+  IP_NF_TUNE / IP6_NF_TUNE -> replaced by 'nft table inet tune'
+  IP_NF_MATCH_BITMARK   -> replaced by native nft 'meta mark & 0xff'
+  NFNETLINK_COPY_UNTANGLE_MODE, NF_CONNTRACK_DICT, NFT_DICT,
+  IP_NF_FRAG_ACCEPT     -> tied to unported patches; no userspace
+                           consumes them
+
+Also removed PREEMPT_VOLUNTARY (Trixie default) and IP_ROUTE_MULTIPATH
+(Trixie default) and UFS_FS (no NGFW use case).
+
+Result: 8 effective overrides — HZ tuning, force core netfilter built-in,
+and latency profiling.
+
+--- /dev/null
++++ b/debian/config/featureset-untangle/config
+@@ -0,0 +1,25 @@
++##
++## file: kernel/Kconfig.hz
++##
++## choice: Timer frequency
++# CONFIG_HZ_250 is not set
++CONFIG_HZ_1000=y
++## end choice
++CONFIG_HZ=1000
++
++##
++## file: net/netfilter/Kconfig
++##
++# Force core netfilter built-in to eliminate boot-time modprobe races.
++# UVM, sync-settings, and all rule-loading scripts assume these are
++# present unconditionally before any iptables/nft rules are loaded.
++CONFIG_NETFILTER_NETLINK=y
++CONFIG_NF_CONNTRACK=y
++CONFIG_NF_NAT=y
++CONFIG_NETFILTER_XTABLES=y
++
++##
++## file: lib/Kconfig.debug
++##
++# Latency profiling support (/proc/latency_stats). Low overhead.
++CONFIG_LATENCYTOP=y

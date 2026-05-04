@@ -1,0 +1,49 @@
+diff -ruN orig/net/netfilter/nfnetlink_queue.c mod/net/netfilter/nfnetlink_queue.c
+--- a/net/netfilter/nfnetlink_queue.c	2026-05-04 13:16:07.641501042 +0530
++++ b/net/netfilter/nfnetlink_queue.c	2026-05-04 13:17:35.725500505 +0530
+@@ -40,6 +40,15 @@
+ 
+ #include <linux/atomic.h>
+ 
++#include <linux/ip.h>
++#include <net/netfilter/nf_conntrack_core.h>
++
++static unsigned int nfqueue_confirm_drop_mark __read_mostly;
++module_param(nfqueue_confirm_drop_mark, uint, 0644);
++MODULE_PARM_DESC(nfqueue_confirm_drop_mark,
++	"Confirm conntrack on NF_DROP for packets with this skb mark mask "
++	"(0 = disabled, non-zero = confirm when skb->mark & value)");
++
+ #if IS_ENABLED(CONFIG_BRIDGE_NETFILTER)
+ #include "../bridge/br_private.h"
+ #endif
+@@ -471,6 +480,29 @@
+ 			verdict = NF_DROP;
+ 	}
+ 
++#if IS_ENABLED(CONFIG_NF_CONNTRACK)
++	if (verdict == NF_DROP && nfqueue_confirm_drop_mark &&
++	    (entry->skb->mark & nfqueue_confirm_drop_mark)) {
++		struct nf_conn *ct;
++		enum ip_conntrack_info ctinfo;
++
++		ct = nf_ct_get(entry->skb, &ctinfo);
++		if (ct && !nf_ct_is_confirmed(ct) &&
++		    ip_hdr(entry->skb)->protocol == IPPROTO_UDP) {
++			/* Opt-in: confirm CT for marked UDP packets even
++			 * on DROP to support proxying architectures that
++			 * re-inject packets from userspace.
++			 * Call __nf_conntrack_confirm() directly because
++			 * ct_hook->update() calls nf_confirm_cthelper()
++			 * which skips confirmation when no conntrack
++			 * helper is attached (common for plain UDP). */
++			int ret = __nf_conntrack_confirm(entry->skb);
++			if (ret != NF_ACCEPT)
++				pr_debug_ratelimited("nfqueue: ct confirm failed (%d)\n", ret);
++		}
++	}
++#endif
++
+ 	nf_reinject(entry, verdict);
+ }
+ 
