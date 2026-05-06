@@ -1,3 +1,14 @@
+linux (6.12.85-1+untangle2trixie) current; urgency=medium
+
+  * NGFW-15749: emit installer udebs from unsigned source build
+  * Trixie split installer udebs into separate linux-signed-amd64
+    source pkg; we don't build that pipeline. Patch gencontrol.py
+    to register real udeb packages against the unsigned bundle so
+    kernel-wedge runs and ~50 *-di_*.udeb get built.
+  * Required for bootable Trixie d-i ISO with matching kernel ABI.
+
+ -- Rohit Singh <rohit@arista.com>  Wed, 06 May 2026 12:00:00 +0530
+
 linux (6.12.85-1+untangle1trixie) current; urgency=medium
 
   * Initial Trixie kernel with Untangle patches

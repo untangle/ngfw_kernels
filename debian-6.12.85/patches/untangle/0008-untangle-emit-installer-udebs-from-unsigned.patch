@@ -1,0 +1,19 @@
+diff -ruN orig/debian/bin/gencontrol.py mod/debian/bin/gencontrol.py
+--- a/debian/bin/gencontrol.py	2026-05-06 12:00:00.000000000 +0530
++++ b/debian/bin/gencontrol.py	2026-05-06 12:00:00.000000000 +0530
+@@ -537,7 +537,15 @@
+                 (config.name_debianarch, config.name_featureset, config.name_flavour),
+                 makeflags_local, arch=arch,
+             )
+ 
++            # NGFW-15749: emit real installer udebs from unsigned source
++            # since we do not yet build the linux-signed-amd64 source pkg.
++            self.bundle.add_packages(
++                udeb_packages,
++                (config.name_debianarch, config.name_featureset, config.name_flavour),
++                makeflags_local, arch=arch,
++            )
++
+             if build_signed:
+                 # XXX This is a hack to exclude the udebs from
+                 # the package list while still being able to
