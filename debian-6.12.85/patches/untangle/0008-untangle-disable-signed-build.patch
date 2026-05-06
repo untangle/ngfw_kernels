@@ -1,0 +1,12 @@
+diff -ruN orig/debian/config/amd64/defines.toml mod/debian/config/amd64/defines.toml
+--- a/debian/config/amd64/defines.toml	2026-05-06 12:00:00.000000000 +0530
++++ b/debian/config/amd64/defines.toml	2026-05-06 12:00:00.000000000 +0530
+@@ -34,7 +34,7 @@
+ name = 'amd64'
+ 
+ [build]
+-enable_signed = true
++enable_signed = false
+ enable_vdso = true
+ kernel_file = 'arch/x86/boot/bzImage'
+ kernel_stem = 'vmlinuz'

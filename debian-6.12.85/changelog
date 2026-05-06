@@ -1,3 +1,22 @@
+linux (6.12.85-1+untangle3trixie) current; urgency=medium
+
+  * NGFW-15749: disable enable_signed in amd64/defines.toml.
+  * Trixie's gencontrol.py splits image+meta+udeb packages into
+    a separate linux-signed-amd64 source bundle when enable_signed
+    is true. We don't build that pipeline (NGFW kernels are not
+    Secure-Boot signed -- confirmed via sbverify on bookworm).
+  * Setting enable_signed=false routes all packages back to the
+    unsigned source bundle, restoring bookworm-equivalent behavior:
+    bare-named linux-image-untangle-amd64, image meta, headers
+    meta, AND ~45 installer udebs all emitted from one build.
+  * Replaces the previous gencontrol.py udeb patch from untangle2,
+    which is now redundant and would cause duplicate package
+    registration if kept.
+  * signed-template package is no longer emitted (unused; nothing
+    downstream consumes it).
+
+ -- Rohit Singh <rohit@arista.com>  Wed, 06 May 2026 14:00:00 +0530
+
 linux (6.12.85-1+untangle2trixie) current; urgency=medium
 
   * NGFW-15749: emit installer udebs from unsigned source build
