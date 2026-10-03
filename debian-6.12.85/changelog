@@ -1,3 +1,19 @@
+linux (6.12.85-1+untangle4trixie) current; urgency=medium
+
+  * NGFW-16021: port physdev patch from 5.10 to 6.12
+  * Adds FDB lookup to xt_physdev match so physdev-out is populated
+    for IP-forwarded bridge traffic. Required for per-port dst-intf
+    marking in bridge mode with ebtables broute.
+  * br_nf_core.c: br_nf_get_outdev() helper performs RCU-safe FDB
+    lookup via br_fdb_find_rcu() + neighbor/ARP resolution. Device
+    pointer extracted inside RCU critical section.
+  * xt_physdev.c: calls br_nf_get_outdev() before match_outdev when
+    physoutdev is not yet set.
+  * Restores Bullseye-equivalent physdev-out behavior for physical
+    egress port reporting and hairpin NAT connmark accuracy.
+
+ -- Rohit Singh <rohit@arista.com>  Fri, 03 Oct 2026 10:00:00 +0530
+
 linux (6.12.85-1+untangle3trixie) current; urgency=medium
 
   * NGFW-15749: disable enable_signed in amd64/defines.toml.
