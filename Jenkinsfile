@@ -20,7 +20,7 @@ pipeline {
   agent none
 
   parameters {
-    string(name: 'REPOSITORIES', defaultValue: 'bullseye', description: 'Comma-separated list of repositories to build (e.g. bullseye, bookworm, bullseye,bookworm)')
+    string(name: 'REPOSITORIES', defaultValue: 'trixie', description: 'Comma-separated list of repositories to build (e.g. bullseye, bookworm, trixie)')
     string(name: 'ARCHITECTURES', defaultValue: 'amd64', description: 'Comma-separated list of architectures to build (e.g. amd64, arm64, amd64,arm64)')
     string(name: 'NODE_LABEL', defaultValue: 'docker', description: 'Jenkins node label to run builds on (e.g. docker, aws-build-03)')
   }
