@@ -59,3 +59,8 @@
 
   Allow ingress shaping and shaping over multiple interfaces. From
   https://github.com/imq/linuximq/blob/master/kernel/v4.x/linux-4.9-imq.diff
+
+0009-cve-2026-98432-ipv4-options-rcu.patch
+
+  Defer freeing IPv4 socket and request-socket options until after an RCU
+  grace period. Backport of the Linux stable 5.10 fix for CVE-2026-98432.

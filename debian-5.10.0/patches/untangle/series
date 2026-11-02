@@ -6,3 +6,4 @@
 0006-untangle-iptables-socket.patch
 0007-untangle-physdev.patch
 0008-linuximq-imq-5.10-patch.patch
+0009-cve-2026-98432-ipv4-options-rcu.patch
