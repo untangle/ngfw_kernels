@@ -19,6 +19,10 @@ void buildKernel(String repository, String architecture, String upload, String b
 pipeline {
   agent none
 
+  parameters {
+    string(name: 'NODE_LABEL', defaultValue: 'aws-build-03', description: 'Jenkins node label to run kernel builds on')
+  }
+
   stages {
     stage('Build') {
       steps {
@@ -30,7 +34,7 @@ pipeline {
 	      def name = "${arch}/${repo}"
 
               jobs[name] = {
-                node('docker') {
+                node(env.NODE_LABEL ?: 'aws-build-03') {
 		  stage(name) {
                     def upload = "scp"
                     def buildDir = "${env.HOME}/build-ngfw_kernels-${env.BRANCH_NAME}-${arch}-${env.BUILD_NUMBER}"

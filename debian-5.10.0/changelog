@@ -1,3 +1,9 @@
+linux (5.10.205-2+untangle4bullseye) current; urgency=medium
+
+  * NGFW-16105: Backport CVE-2026-98432 IPv4 socket options RCU fix
+
+ -- Untangle Buildbot <buildbot@untangle.com>  Mon, 02 Nov 2026 13:11:49 +0530
+
 linux (5.10.205-2+untangle3bullseye) current; urgency=medium
 
   * Update imq patch for latest 5.10
