@@ -1,4 +1,4 @@
-def architectures = ['amd64', 'arm64']
+def supportedArchitectures = ['amd64', 'arm64']
 
 def repositories = ['bullseye']
 
@@ -21,12 +21,16 @@ pipeline {
 
   parameters {
     string(name: 'NODE_LABEL', defaultValue: 'aws-build-03', description: 'Jenkins node label to run kernel builds on')
+    choice(name: 'ARCHITECTURE', choices: ['both', 'amd64', 'arm64'], description: 'Architecture(s) to build')
   }
 
   stages {
     stage('Build') {
       steps {
         script {
+          def selectedArchitecture = params.ARCHITECTURE ?: 'both'
+          def architectures = selectedArchitecture == 'both' ? supportedArchitectures : [selectedArchitecture]
+
           for (repository in repositories) {
             for (architecture in architectures) {
               def arch = "${architecture}" // FIXME: cmon now
