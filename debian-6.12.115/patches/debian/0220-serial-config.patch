@@ -1,0 +1,15 @@
+Force CONFIG_MFD_INTEL_LPSS_PCI built-in for serial console support
+on certain Intel platforms (LPSS provides UART hardware).
+
+Same change as the Bookworm-era patch; only the line offset was rebased
+for Trixie 6.12.85's kernelarch-x86/config (was line 956, now ~1025).
+
+--- a/debian/config/kernelarch-x86/config
++++ b/debian/config/kernelarch-x86/config
+@@ -1023,5 +1023,5 @@
+ CONFIG_INTEL_SOC_PMIC_CHTDC_TI=m
+ CONFIG_MFD_INTEL_LPSS_ACPI=m
+-CONFIG_MFD_INTEL_LPSS_PCI=m
++CONFIG_MFD_INTEL_LPSS_PCI=y
+ CONFIG_MFD_INTEL_PMC_BXT=m
+ CONFIG_MFD_KEMPLD=m

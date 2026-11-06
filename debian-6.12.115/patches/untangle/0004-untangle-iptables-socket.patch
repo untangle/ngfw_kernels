@@ -1,0 +1,31 @@
+From 8e11d49189d938aa3cf8879416b36b0ca92b1744 Mon Sep 17 00:00:00 2001
+From: singhrohit23 <rohitsingh@arista.com>
+Date: Wed, 4 Feb 2026 14:56:48 +0530
+Subject: [PATCH 4/6] Port 0006: Socket mark restoration to kernel 6.1.159
+
+---
+ net/netfilter/xt_socket.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/net/netfilter/xt_socket.c b/net/netfilter/xt_socket.c
+index 76e01f292..800090306 100644
+--- a/net/netfilter/xt_socket.c
++++ b/net/netfilter/xt_socket.c
+@@ -86,6 +86,14 @@ socket_match(const struct sk_buff *skb, struct xt_action_param *par,
+ 			sk = NULL;
+ 	}
+ 
++	/* Untangle hack - or the socket mark to the packet if found
++	 * We do this because there is no conntrack, and it is necessary
++	 * to restore the QoS/bandwidth control mark on packets
++	 * returning to nonlocally bound sockets */
++	if (sk != NULL) {
++		pskb->mark |= (sk->sk_mark & 0xFFFF0000);
++	}
++
+ 	return sk != NULL;
+ }
+ 
+-- 
+2.34.1
+

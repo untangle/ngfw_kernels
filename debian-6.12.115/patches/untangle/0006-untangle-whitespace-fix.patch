@@ -1,0 +1,75 @@
+diff -ruN orig/net/ipv4/tcp_ipv4.c mod/net/ipv4/tcp_ipv4.c
+--- a/net/ipv4/tcp_ipv4.c	2026-05-04 13:12:51.622502239 +0530
++++ b/net/ipv4/tcp_ipv4.c	2026-05-04 13:13:45.957501907 +0530
+@@ -2233,13 +2233,18 @@
+ 		struct sock *nsk;
+ 
+ 		sk = req->rsk_listener;
+-		if (!(skb->mark & 0x10000000))
+-		if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb))
+-			drop_reason = SKB_DROP_REASON_XFRM_POLICY;
+-		else
++		if (!(skb->mark & 0x10000000)) {
++			if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb))
++				drop_reason = SKB_DROP_REASON_XFRM_POLICY;
++			else
++				drop_reason = tcp_inbound_hash(sk, req, skb,
++							       &iph->saddr, &iph->daddr,
++							       AF_INET, dif, sdif);
++		} else {
+ 			drop_reason = tcp_inbound_hash(sk, req, skb,
+ 						       &iph->saddr, &iph->daddr,
+ 						       AF_INET, dif, sdif);
++		}
+ 		if (unlikely(drop_reason)) {
+ 			sk_drops_add(sk, skb);
+ 			reqsk_put(req);
+@@ -2317,10 +2322,11 @@
+ 		}
+ 	}
+ 
+-	if (!(skb->mark & 0x10000000))
+-	if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb)) {
+-		drop_reason = SKB_DROP_REASON_XFRM_POLICY;
+-		goto discard_and_relse;
++	if (!(skb->mark & 0x10000000)) {
++		if (!xfrm4_policy_check(sk, XFRM_POLICY_IN, skb)) {
++			drop_reason = SKB_DROP_REASON_XFRM_POLICY;
++			goto discard_and_relse;
++		}
+ 	}
+ 
+ 	drop_reason = tcp_inbound_hash(sk, NULL, skb, &iph->saddr, &iph->daddr,
+@@ -2366,9 +2372,10 @@
+ 
+ no_tcp_socket:
+ 	drop_reason = SKB_DROP_REASON_NO_SOCKET;
+-	if (!(skb->mark & 0x10000000))
+-	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb))
+-		goto discard_it;
++	if (!(skb->mark & 0x10000000)) {
++		if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb))
++			goto discard_it;
++	}
+ 
+ 	tcp_v4_fill_cb(skb, iph, th);
+ 
+@@ -2396,12 +2403,12 @@
+ 	goto discard_it;
+ 
+ do_time_wait:
+-        if (!(skb->mark&0x10000000))
+-	if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb)) {
+-		drop_reason = SKB_DROP_REASON_XFRM_POLICY;
+-	if (!(skb->mark & 0x10000000))
+-		inet_twsk_put(inet_twsk(sk));
+-		goto discard_it;
++	if (!(skb->mark & 0x10000000)) {
++		if (!xfrm4_policy_check(NULL, XFRM_POLICY_IN, skb)) {
++			drop_reason = SKB_DROP_REASON_XFRM_POLICY;
++			inet_twsk_put(inet_twsk(sk));
++			goto discard_it;
++		}
+ 	}
+ 
+ 	tcp_v4_fill_cb(skb, iph, th);
