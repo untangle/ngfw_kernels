@@ -1,3 +1,9 @@
+linux (6.12.115-2+untangle2trixie) current; urgency=medium
+
+  * NGFW-16109: use a unique Debian package version for the Jenkins rebuild.
+
+ -- Rohit Singh <rohit@arista.com>  Wed, 11 Nov 2026 00:00:00 +0530
+
 linux (6.12.115-2+untangle1trixie) current; urgency=medium
 
   * NGFW-16109: rebase the Untangle Trixie kernel on Debian linux 6.12.115-2.
